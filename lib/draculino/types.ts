@@ -16,6 +16,8 @@ export type TrainingCategory =
   | "Open Mat / Sparing"
   | "Other";
 
+export type TrainingStatus = "upcoming" | "in_progress" | "past";
+
 export interface TrainingUnit {
   time: string; // e.g. "18:00 - 19:30"
   title: string; // e.g. "BJJ Gi Pokročilí"
@@ -25,6 +27,11 @@ export interface TrainingUnit {
   branchId: string; // e.g. "frydek-mistek"
   branchName: string; // e.g. "Frýdek-Místek"
   notes?: string;
+  status?: TrainingStatus;
+  startTime?: string;
+  endTime?: string;
+  startMinutes?: number;
+  endMinutes?: number;
 }
 
 export interface GymBranch {
@@ -54,10 +61,19 @@ export interface WhereQueryResult {
   day: DayOfWeek;
   dayNameCz: string;
   dateStr: string;
+  isToday: boolean;
+  currentTimeStr?: string;
   sitemap: SitemapItem[];
   branches: {
     branch: GymBranch;
     units: TrainingUnit[];
+    upcomingUnits?: TrainingUnit[];
+    inProgressUnits?: TrainingUnit[];
+    pastUnits?: TrainingUnit[];
   }[];
   totalUnits: number;
+  upcomingCount?: number;
+  inProgressCount?: number;
+  pastCount?: number;
+  remainingCount?: number; // upcoming + inProgress
 }

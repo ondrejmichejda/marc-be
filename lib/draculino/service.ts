@@ -5,6 +5,7 @@ import {
   DayOfWeek,
   GymBranch,
   TrainingCategory,
+  TrainingStatus,
   TrainingUnit,
   WhereQueryResult,
 } from "./types";
@@ -48,17 +49,52 @@ export class DraculinoService {
     dayNameCz: string;
     dateStr: string;
   } {
+    const timeInfo = this.getCurrentTimeInPrague();
+    return {
+      day: timeInfo.day,
+      dayNameCz: timeInfo.dayNameCz,
+      dateStr: timeInfo.dateStr,
+    };
+  }
+
+  /**
+   * Returns current day, date, and exact time in Central European (Prague) time.
+   */
+  static getCurrentTimeInPrague(): {
+    day: DayOfWeek;
+    dayNameCz: string;
+    dateStr: string;
+    timeStr: string;
+    hours: number;
+    minutes: number;
+    totalMinutes: number;
+  } {
     const now = new Date();
-    // Format to Europe/Prague timezone
-    const pragueDateStr = now.toLocaleString("en-US", {
+
+    // Format weekday in Europe/Prague timezone
+    const pragueDateParts = new Intl.DateTimeFormat("en-US", {
       timeZone: "Europe/Prague",
       weekday: "long",
       year: "numeric",
       month: "numeric",
       day: "numeric",
-    });
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    }).formatToParts(now);
 
-    const weekdayStr = pragueDateStr.split(",")[0].toLowerCase();
+    let weekdayStr = "";
+    let hours = 0;
+    let minutes = 0;
+
+    for (const part of pragueDateParts) {
+      if (part.type === "weekday") weekdayStr = part.value.toLowerCase();
+      if (part.type === "hour") hours = parseInt(part.value, 10) || 0;
+      if (part.type === "minute") minutes = parseInt(part.value, 10) || 0;
+    }
+
+    // Handle 24 hour wrap-around edge case in some ICU formats
+    if (hours === 24) hours = 0;
 
     let day: DayOfWeek = "monday";
     if (weekdayStr.includes("mon")) day = "monday";
@@ -77,10 +113,41 @@ export class DraculinoService {
       year: "numeric",
     });
 
+    const timeStr = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+
     return {
       day,
       dayNameCz,
       dateStr: dateFormatted,
+      timeStr,
+      hours,
+      minutes,
+      totalMinutes: hours * 60 + minutes,
+    };
+  }
+
+  /**
+   * Helper to parse time string range (e.g. "18:00 - 19:30") into start/end values.
+   */
+  static parseTimeRange(timeStr: string): {
+    startTime: string;
+    endTime: string;
+    startMinutes: number;
+    endMinutes: number;
+  } | null {
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/);
+    if (!match) return null;
+
+    const startH = parseInt(match[1], 10);
+    const startM = parseInt(match[2], 10);
+    const endH = parseInt(match[3], 10);
+    const endM = parseInt(match[4], 10);
+
+    return {
+      startTime: `${startH.toString().padStart(2, "0")}:${startM.toString().padStart(2, "0")}`,
+      endTime: `${endH.toString().padStart(2, "0")}:${endM.toString().padStart(2, "0")}`,
+      startMinutes: startH * 60 + startM,
+      endMinutes: endH * 60 + endM,
     };
   }
 
@@ -164,14 +231,17 @@ export class DraculinoService {
 
   /**
    * Queries training units for a given day (defaults to today) and optional branch.
+   * When querying for today, calculates each unit's real-time status (upcoming, in_progress, past).
    */
   static async getTrainingUnits(options?: {
     day?: DayOfWeek;
     branchId?: string;
+    referenceTimeMinutes?: number;
   }): Promise<WhereQueryResult> {
-    const prague = this.getCurrentDayInPrague();
-    const day = options?.day || prague.day;
-    const dayNameCz = CZECH_DAY_NAMES[day];
+    const prague = this.getCurrentTimeInPrague();
+    const targetDay = options?.day || prague.day;
+    const isToday = targetDay === prague.day;
+    const currentMinutes = options?.referenceTimeMinutes ?? prague.totalMinutes;
 
     const sitemap = await fetchDraculinoSitemap();
 
@@ -183,38 +253,154 @@ export class DraculinoService {
     }
 
     let totalUnits = 0;
-    const branchResults: { branch: GymBranch; units: TrainingUnit[] }[] = [];
+    let upcomingCount = 0;
+    let inProgressCount = 0;
+    let pastCount = 0;
+
+    const branchResults: {
+      branch: GymBranch;
+      units: TrainingUnit[];
+      upcomingUnits: TrainingUnit[];
+      inProgressUnits: TrainingUnit[];
+      pastUnits: TrainingUnit[];
+    }[] = [];
 
     for (const branch of targetBranches) {
-      const units = branch.schedule[day] || [];
-      totalUnits += units.length;
+      const rawUnits = branch.schedule[targetDay] || [];
+      const enrichedUnits: TrainingUnit[] = [];
+      const upcomingUnits: TrainingUnit[] = [];
+      const inProgressUnits: TrainingUnit[] = [];
+      const pastUnits: TrainingUnit[] = [];
+
+      for (const u of rawUnits) {
+        const parsedTime = this.parseTimeRange(u.time);
+        let status: TrainingStatus | undefined = undefined;
+
+        if (parsedTime) {
+          if (isToday) {
+            if (currentMinutes < parsedTime.startMinutes) {
+              status = "upcoming";
+              const enriched: TrainingUnit = {
+                ...u,
+                status,
+                startTime: parsedTime.startTime,
+                endTime: parsedTime.endTime,
+                startMinutes: parsedTime.startMinutes,
+                endMinutes: parsedTime.endMinutes,
+              };
+              upcomingUnits.push(enriched);
+              enrichedUnits.push(enriched);
+              upcomingCount++;
+            } else if (
+              currentMinutes >= parsedTime.startMinutes &&
+              currentMinutes < parsedTime.endMinutes
+            ) {
+              status = "in_progress";
+              const enriched: TrainingUnit = {
+                ...u,
+                status,
+                startTime: parsedTime.startTime,
+                endTime: parsedTime.endTime,
+                startMinutes: parsedTime.startMinutes,
+                endMinutes: parsedTime.endMinutes,
+              };
+              inProgressUnits.push(enriched);
+              enrichedUnits.push(enriched);
+              inProgressCount++;
+            } else {
+              status = "past";
+              const enriched: TrainingUnit = {
+                ...u,
+                status,
+                startTime: parsedTime.startTime,
+                endTime: parsedTime.endTime,
+                startMinutes: parsedTime.startMinutes,
+                endMinutes: parsedTime.endMinutes,
+              };
+              pastUnits.push(enriched);
+              enrichedUnits.push(enriched);
+              pastCount++;
+            }
+          } else {
+            enrichedUnits.push({
+              ...u,
+              startTime: parsedTime.startTime,
+              endTime: parsedTime.endTime,
+              startMinutes: parsedTime.startMinutes,
+              endMinutes: parsedTime.endMinutes,
+            });
+          }
+        } else {
+          enrichedUnits.push(u);
+        }
+      }
+
+      totalUnits += enrichedUnits.length;
       branchResults.push({
         branch,
-        units,
+        units: enrichedUnits,
+        upcomingUnits,
+        inProgressUnits,
+        pastUnits,
       });
     }
 
+    const currentHours = Math.floor(currentMinutes / 60);
+    const currentMins = currentMinutes % 60;
+    const computedTimeStr =
+      options?.referenceTimeMinutes !== undefined
+        ? `${currentHours.toString().padStart(2, "0")}:${currentMins.toString().padStart(2, "0")}`
+        : prague.timeStr;
+
     return {
-      day,
-      dayNameCz,
+      day: targetDay,
+      dayNameCz: CZECH_DAY_NAMES[targetDay],
       dateStr: prague.dateStr,
+      isToday,
+      currentTimeStr: isToday ? computedTimeStr : undefined,
       sitemap,
       branches: branchResults,
       totalUnits,
+      upcomingCount: isToday ? upcomingCount : undefined,
+      inProgressCount: isToday ? inProgressCount : undefined,
+      pastCount: isToday ? pastCount : undefined,
+      remainingCount: isToday ? upcomingCount + inProgressCount : undefined,
     };
   }
 
   /**
+   * Formats Czech plural nouns for training units.
+   */
+  private static formatTrainingUnitsCzech(count: number): string {
+    if (count === 1) return "1 trénink";
+    if (count >= 2 && count <= 4) return `${count} tréninky`;
+    return `${count} tréninků`;
+  }
+
+  private static formatRemainingCzech(count: number): string {
+    if (count === 1) return "1 ještě zbývá";
+    if (count >= 2 && count <= 4) return `${count} ještě zbývají`;
+    return `${count} ještě zbývá`;
+  }
+
+  private static formatInProgressCzech(count: number): string {
+    if (count === 1) return "1 právě probíhá";
+    if (count >= 2 && count <= 4) return `${count} právě probíhají`;
+    return `${count} právě probíhá`;
+  }
+
+  /**
    * Formats the training units report into user-friendly Markdown for Telegram.
+   * Distinguishes upcoming, in-progress, and concluded sessions when reporting for today.
    */
   static formatWhereSummaryMarkdown(
     result: WhereQueryResult,
     options?: { showSitemap?: boolean; filterBranchName?: string }
   ): string {
-    const isToday =
-      result.day === this.getCurrentDayInPrague().day;
+    const isToday = result.isToday;
+    const timeSuffix = isToday && result.currentTimeStr ? `, čas: ${result.currentTimeStr}` : "";
     const dayHeader = isToday
-      ? `🥋 *Draculino — Dnešní Tréninky (${result.dayNameCz}, ${result.dateStr})*`
+      ? `🥋 *Draculino — Dnešní Tréninky (${result.dayNameCz}, ${result.dateStr}${timeSuffix})*`
       : `🥋 *Draculino — Tréninky na ${result.dayNameCz}*`;
 
     let out = `${dayHeader}\n\n`;
@@ -236,23 +422,78 @@ export class DraculinoService {
       return out;
     }
 
-    out += `🎯 *Dnes se koná celkem ${result.totalUnits} tréninkových jednotek:*\n\n`;
+    if (isToday) {
+      const remaining = result.remainingCount ?? 0;
+      const inProg = result.inProgressCount ?? 0;
+      const upcoming = result.upcomingCount ?? 0;
 
-    const activeBranches = result.branches.filter((b) => b.units.length > 0);
+      if (remaining > 0) {
+        if (inProg > 0 && upcoming > 0) {
+          out += `🎯 *Dnes se koná celkem ${this.formatTrainingUnitsCzech(result.totalUnits)}* (⏳ ${this.formatInProgressCzech(inProg)}, 🟢 ${this.formatRemainingCzech(upcoming)}):\n\n`;
+        } else if (inProg > 0) {
+          out += `🎯 *Dnes se koná celkem ${this.formatTrainingUnitsCzech(result.totalUnits)}* (⏳ ${this.formatInProgressCzech(inProg)}):\n\n`;
+        } else {
+          const remainingPrefix = upcoming === 1 ? "zbývá ještě" : upcoming >= 2 && upcoming <= 4 ? "zbývají ještě" : "zbývá ještě";
+          out += `🎯 *Dnes ${remainingPrefix} ${this.formatTrainingUnitsCzech(upcoming)}* (z celkem ${result.totalUnits} dnes):\n\n`;
+        }
+      } else {
+        out += `ℹ️ *Všechny dnešní tréninky (${result.totalUnits}) již proběhly.*\n`;
+        out += `👉 *Podívej se na rozvrh na zítra* pomocí tlačítka níže nebo příkazu \`/where zitra\`.\n\n`;
+        out += `📋 *Přehled dnešních tréninků (${result.dayNameCz}):*\n\n`;
+      }
+    } else {
+      out += `🎯 *V tento den se koná celkem ${this.formatTrainingUnitsCzech(result.totalUnits)}:*\n\n`;
+    }
+
+    // Sort active branches: branches with remaining sessions first when isToday
+    let activeBranches = result.branches.filter((b) => b.units.length > 0);
+    if (isToday) {
+      activeBranches = [...activeBranches].sort((a, b) => {
+        const aRemaining = (a.upcomingUnits?.length || 0) + (a.inProgressUnits?.length || 0);
+        const bRemaining = (b.upcomingUnits?.length || 0) + (b.inProgressUnits?.length || 0);
+        if (aRemaining > 0 && bRemaining === 0) return -1;
+        if (aRemaining === 0 && bRemaining > 0) return 1;
+        return 0;
+      });
+    }
 
     for (const item of activeBranches) {
       const branch = item.branch;
-      out += `📍 *[${branch.name}](${branch.url})*\n`;
+      const branchRemaining = (item.upcomingUnits?.length || 0) + (item.inProgressUnits?.length || 0);
+
+      out += `📍 *[${branch.name}](${branch.url})*`;
+      if (isToday && (item.units.length > 0)) {
+        if (branchRemaining > 0) {
+          const remText = branchRemaining === 1 ? "1 zbývá/probíhá" : branchRemaining >= 2 && branchRemaining <= 4 ? `${branchRemaining} zbývají/probíhají` : `${branchRemaining} zbývá/probíhá`;
+          out += ` _(${remText})_`;
+        } else {
+          out += ` _(vše proběhlo)_`;
+        }
+      }
+      out += `\n`;
+
       if (branch.address) {
         out += `🏢 _${branch.address}_\n`;
       }
 
       for (const unit of item.units) {
-        const emoji = CATEGORY_EMOJI[unit.category] || "🥋";
+        const categoryEmoji = CATEGORY_EMOJI[unit.category] || "🥋";
         const coachInfo = unit.coach ? ` (Trenér: ${unit.coach})` : "";
         const levelInfo = unit.level ? ` • _${unit.level}_` : "";
 
-        out += `  ${emoji} \`${unit.time}\` *${unit.title}*${levelInfo}${coachInfo}\n`;
+        if (isToday) {
+          if (unit.status === "in_progress") {
+            out += `  ⏳ \`${unit.time}\` *${unit.title}*${levelInfo}${coachInfo} *(Právě probíhá)*\n`;
+          } else if (unit.status === "upcoming") {
+            out += `  🟢 \`${unit.time}\` *${unit.title}*${levelInfo}${coachInfo}\n`;
+          } else if (unit.status === "past") {
+            out += `  ✓ \`${unit.time}\` ${unit.title}${levelInfo}${coachInfo} _(Proběhlo)_\n`;
+          } else {
+            out += `  ${categoryEmoji} \`${unit.time}\` *${unit.title}*${levelInfo}${coachInfo}\n`;
+          }
+        } else {
+          out += `  ${categoryEmoji} \`${unit.time}\` *${unit.title}*${levelInfo}${coachInfo}\n`;
+        }
       }
       out += `\n`;
     }

@@ -76,7 +76,11 @@ export function registerCommandHandlers(bot: Bot<BotContext>): void {
       // Create a background task entry to track the request in TaskService
       await TaskService.createTask({
         title: `Where to train (${result.dayNameCz}${targetBranch ? ` - ${targetBranch.name}` : ""})`,
-        description: `Queried Draculino timetables for ${result.dayNameCz}. Found ${result.totalUnits} training units.`,
+        description: `Queried Draculino timetables for ${result.dayNameCz}. Found ${result.totalUnits} training units${
+          result.isToday && result.currentTimeStr
+            ? ` (${result.remainingCount ?? 0} active/upcoming at ${result.currentTimeStr})`
+            : ""
+        }.`,
         priority: "low",
         telegramChatId: chatId,
         telegramUserId: userId,
@@ -86,6 +90,9 @@ export function registerCommandHandlers(bot: Bot<BotContext>): void {
           day: effectiveDay,
           branchId: targetBranch?.id,
           totalUnits: result.totalUnits,
+          remainingUnits: result.remainingCount,
+          currentTime: result.currentTimeStr,
+          isToday: result.isToday,
           sitemapCount: result.sitemap.length,
         },
       });

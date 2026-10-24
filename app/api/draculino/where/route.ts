@@ -28,7 +28,13 @@ export async function GET(req: NextRequest) {
       day: result.day,
       dayNameCz: result.dayNameCz,
       date: result.dateStr,
+      isToday: result.isToday,
+      currentTime: result.currentTimeStr,
       totalUnits: result.totalUnits,
+      upcomingUnitsCount: result.upcomingCount,
+      inProgressUnitsCount: result.inProgressCount,
+      pastUnitsCount: result.pastCount,
+      remainingUnitsCount: result.remainingCount,
       branchesCount: result.branches.length,
       data: result.branches,
     });

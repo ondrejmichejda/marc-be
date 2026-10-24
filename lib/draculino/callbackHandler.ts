@@ -63,7 +63,7 @@ export async function handleWhereCallbackQuery(ctx: Context): Promise<void> {
     await ctx.answerCallbackQuery({
       text: showSitemap
         ? "🗺️ Sitemap načtena"
-        : `Zobrazeno: ${result.dayNameCz}${branchObj ? ` (${branchObj.name})` : ""}`,
+        : `Zobrazeno: ${result.dayNameCz}${result.currentTimeStr ? ` (${result.currentTimeStr})` : ""}${branchObj ? ` • ${branchObj.name}` : ""}`,
     });
   } catch (error) {
     console.error("[WhereCallback] Error handling callback query:", error);
