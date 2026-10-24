@@ -1,0 +1,115 @@
+import { Bot } from "grammy";
+import { BotContext } from "../types";
+import { TaskService } from "./taskHandler";
+import { DraculinoService } from "../../draculino/service";
+
+/**
+ * Registers all bot command handlers (/start, /help, /ping, /where)
+ */
+export function registerCommandHandlers(bot: Bot<BotContext>): void {
+  // /start command
+  bot.command("start", async (ctx) => {
+    const user = ctx.from;
+    const greeting = user?.first_name ? `Hello, ${user.first_name}!` : "Hello!";
+
+    await ctx.reply(
+      `👋 *${greeting} Welcome to your Telegram Task Bot!*\n\n` +
+        `This bot is connected to the backend for managing and tracking tasks.\n\n` +
+        `*Commands:*\n` +
+        `• \`/where\` - Check Draculino training units & timetables for today\n` +
+        `• \`/ping\` - Check backend server health\n` +
+        `• \`/help\` - View available commands`,
+      { parse_mode: "Markdown" }
+    );
+  });
+
+  // /help command
+  bot.command("help", async (ctx) => {
+    await ctx.reply(
+      `📖 *Bot Help & Instructions*\n\n` +
+        `• Receive and manage task notifications from the backend.\n` +
+        `• \`/where\` - Search training units for today across all Draculino gym branches (sitemap & timetables)\n` +
+        `  _Examples:_ \`/where\`, \`/where ostrava\`, \`/where zitra\`, \`/where sitemap\`\n` +
+        `• \`/ping\` - Check server response time and status\n` +
+        `• \`/start\` - Restart bot welcome message\n` +
+        `• \`/help\` - View available commands`,
+      { parse_mode: "Markdown" }
+    );
+  });
+
+  // /ping command
+  bot.command("ping", async (ctx) => {
+    const start = Date.now();
+    await ctx.reply(
+      `🏓 *Pong!*\n\n` +
+        `• Backend: \`Next.js App Router\`\n` +
+        `• Server Time: \`${new Date().toISOString()}\`\n` +
+        `• Latency: \`${Date.now() - start}ms\``,
+      { parse_mode: "Markdown" }
+    );
+  });
+
+  // /where command: checks timetables from www.draculino.cz sitemap & returns training units for today
+  bot.command("where", async (ctx) => {
+    const rawText = ctx.message?.text || "";
+    // Extract argument if provided (e.g. "/where ostrava", "/where zitra", "/where sitemap")
+    const args = rawText.replace(/^\/where(@\w+)?\s*/i, "").trim();
+
+    const user = ctx.from;
+    const chatId = ctx.chat?.id || 0;
+    const userId = user?.id || 0;
+    const username = user?.username || user?.first_name || "User";
+
+    let targetDay = DraculinoService.parseDayArgument(args);
+    let targetBranch = DraculinoService.findBranch(args);
+    const isSitemapRequest = args.toLowerCase() === "sitemap";
+
+    const currentPrague = DraculinoService.getCurrentDayInPrague();
+    const effectiveDay = targetDay || currentPrague.day;
+
+    try {
+      const result = await DraculinoService.getTrainingUnits({
+        day: effectiveDay,
+        branchId: targetBranch?.id,
+      });
+
+      // Create a background task entry to track the request in TaskService
+      await TaskService.createTask({
+        title: `Where to train (${result.dayNameCz}${targetBranch ? ` - ${targetBranch.name}` : ""})`,
+        description: `Queried Draculino timetables for ${result.dayNameCz}. Found ${result.totalUnits} training units.`,
+        priority: "low",
+        telegramChatId: chatId,
+        telegramUserId: userId,
+        telegramUsername: username,
+        metadata: {
+          query: args || "today",
+          day: effectiveDay,
+          branchId: targetBranch?.id,
+          totalUnits: result.totalUnits,
+          sitemapCount: result.sitemap.length,
+        },
+      });
+
+      const messageText = DraculinoService.formatWhereSummaryMarkdown(result, {
+        showSitemap: isSitemapRequest,
+        filterBranchName: targetBranch?.name,
+      });
+
+      const keyboard = DraculinoService.createWhereKeyboard(
+        effectiveDay,
+        targetBranch?.id
+      );
+
+      await ctx.reply(messageText, {
+        parse_mode: "Markdown",
+        reply_markup: keyboard,
+      });
+    } catch (error) {
+      console.error("[CommandHandler] Error executing /where:", error);
+      await ctx.reply(
+        "❌ *Chyba při načítání rozvrhu Draculino.*\nZkuste to prosím znovu za chvíli.",
+        { parse_mode: "Markdown" }
+      );
+    }
+  });
+}
