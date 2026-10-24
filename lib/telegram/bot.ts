@@ -4,7 +4,6 @@ import { getTelegramConfig } from "./config";
 import { registerCommandHandlers } from "./handlers/commandHandler";
 import { registerMessageHandlers } from "./handlers/messageHandler";
 import { handleTaskCallbackQuery } from "./handlers/taskHandler";
-import { handleWhereCallbackQuery } from "../draculino/callbackHandler";
 import { BotContext } from "./types";
 
 declare global {
@@ -79,7 +78,9 @@ export function createTelegramBot(botInfo?: UserFromGetMe): Bot<BotContext> {
   bot.on("callback_query:data", async (ctx) => {
     const data = ctx.callbackQuery.data;
     if (data.startsWith("where:")) {
-      await handleWhereCallbackQuery(ctx);
+      await ctx.answerCallbackQuery({
+        text: "The /where feature is disabled.",
+      });
     } else {
       await handleTaskCallbackQuery(ctx);
     }
