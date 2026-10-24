@@ -6,9 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "tunnel": "ngrok http 3000",
+    "tunnel:localtunnel": "npx localtunnel --port 3000"
   },
   "dependencies": {
+    "grammy": "^1.46.0",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0"
