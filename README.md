@@ -105,6 +105,41 @@ curl http://localhost:3000/api/telegram/setup-webhook
 
 ---
 
+## 🚀 Production Deployment & Serverless Webhook Setup (Vercel)
+
+When deploying to serverless platforms such as **Vercel**, serverless functions run on-demand and remain cold until an incoming HTTP request is received. Although `instrumentation.ts` handles auto-registration for long-running servers, serverless cold starts will not trigger webhook registration automatically on deployment.
+
+### 1. Configure Environment Variables
+In your Vercel Project Settings (**Settings** > **Environment Variables**), configure:
+- `TELEGRAM_BOT_TOKEN` — Your bot token from @BotFather.
+- `APP_URL` — Your production domain (e.g., `https://your-app.vercel.app`, no trailing slash).
+- `TELEGRAM_WEBHOOK_SECRET` — (Optional) Secret token for update validation.
+
+### 2. Required Post-Deployment `curl` Setup
+After deploying to Vercel (or when updating your domain/bot token), **you must trigger the setup endpoint once via `curl`** (or open it in a browser) to register your URL with Telegram's Bot API:
+
+```bash
+# Register webhook using the configured APP_URL
+curl -X POST https://<your-app>.vercel.app/api/telegram/setup-webhook
+```
+
+Alternatively, you can provide an explicit webhook URL in the JSON body:
+```bash
+curl -X POST https://<your-app>.vercel.app/api/telegram/setup-webhook \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://<your-app>.vercel.app/api/telegram/webhook"}'
+```
+
+### 3. Verify Registration Status
+Check that Telegram successfully registered the endpoint:
+```bash
+curl https://<your-app>.vercel.app/api/telegram/setup-webhook
+```
+
+> **Note on Persistence:** Telegram permanently stores the webhook URL on their servers. You only need to execute this `curl` command after the initial deployment or if you change your domain name or bot token; routine code redeployments do not require re-registering.
+
+---
+
 ## 🤖 Bot Usage & Commands
 
 Once connected, open your bot in Telegram and use:
