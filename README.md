@@ -109,10 +109,10 @@ curl http://localhost:3000/api/telegram/setup-webhook
 
 Once connected, open your bot in Telegram and use:
 
-- `/where` — Check Draculino training units & timetables for today across all branches (supports `/where [město]`, `/where zitra`, `/where sitemap`).
 - `/start` — Welcome message and quick overview.
 - `/ping` — Check server latency and health.
 - `/help` — Help and usage instructions.
+- `/where` — (Disabled) Draculino timetables feature is currently disabled.
 
 ---
 
