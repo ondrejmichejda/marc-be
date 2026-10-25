@@ -16,7 +16,7 @@ export function registerMessageHandlers(bot: Bot<BotContext>): void {
     }
 
     try {
-      const insult = await generateFunnyInsult();
+      const insult = await generateFunnyInsult(text || "");
       await ctx.reply(insult);
     } catch (error) {
       console.error("[TelegramBot] Error generating insult from OpenAI:", error);
