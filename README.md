@@ -149,7 +149,7 @@ Once connected, open your bot in Telegram and use:
 - `/help` — Help and usage instructions.
 - `/broadcast <message>` — (Admin only) Broadcast an announcement message to all active subscribers.
 - `/subscribers` — (Admin only) View count of active and total registered bot subscribers.
-- `/where` — (Disabled) Draculino timetables feature is currently disabled.
+- `/where` — Check Draculino training units & timetables for today across all branches (supports `/where [město]`, `/where zitra`, `/where sitemap`).
 
 ---
 
