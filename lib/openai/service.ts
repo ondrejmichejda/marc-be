@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
-export const FUNNY_INSULT_PROMPT =
-  "Vrať mi vtipnou nadávku, která nebude sprostá, ale pobaví. Vracej pouze výstup, žádné komentáře okolo.";
+export const FUNNY_INSULT_PROMPT = (userMessage: string) =>
+  `Zareaguj na zprávu "${userMessage}" vtipnou nadávkou, která nebude sprostá, ale pobaví. Vracej pouze výstup, žádné komentáře okolo.`;
 
 let openaiClient: OpenAI | null = null;
 
@@ -24,7 +24,9 @@ export function getOpenAIClient(): OpenAI {
 /**
  * Prompts the OpenAI API for a funny, non-vulgar insult and returns the output.
  */
-export async function generateFunnyInsult(): Promise<string> {
+export async function generateFunnyInsult(
+  userMessage: string = ""
+): Promise<string> {
   const openai = getOpenAIClient();
   const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
@@ -33,7 +35,7 @@ export async function generateFunnyInsult(): Promise<string> {
     messages: [
       {
         role: "user",
-        content: FUNNY_INSULT_PROMPT,
+        content: FUNNY_INSULT_PROMPT(userMessage),
       },
     ],
   });
