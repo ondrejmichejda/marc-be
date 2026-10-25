@@ -4,6 +4,7 @@ import { getTelegramConfig } from "./config";
 import { registerCommandHandlers } from "./handlers/commandHandler";
 import { registerMessageHandlers } from "./handlers/messageHandler";
 import { handleTaskCallbackQuery } from "./handlers/taskHandler";
+import { SubscriberService } from "./subscribers";
 import { BotContext } from "./types";
 
 declare global {
@@ -22,6 +23,24 @@ export function createTelegramBot(botInfo?: UserFromGetMe): Bot<BotContext> {
   // Global error handler
   bot.catch((err) => {
     console.error("[TelegramBot] Error while handling update:", err.error);
+  });
+
+  // Subscriber auto-registration middleware
+  bot.use(async (ctx, next) => {
+    if (ctx.chat?.id) {
+      SubscriberService.registerChat({
+        chatId: ctx.chat.id,
+        userId: ctx.from?.id,
+        username: ctx.from?.username,
+        firstName: ctx.from?.first_name,
+        lastName: ctx.from?.last_name,
+        chatType: ctx.chat.type,
+      }).catch((err) => {
+        console.error("[TelegramBot] Error auto-registering subscriber:", err);
+      });
+    }
+
+    await next();
   });
 
   // Logging middleware: prints incoming updates, messages, commands, and callbacks

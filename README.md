@@ -144,10 +144,35 @@ curl https://<your-app>.vercel.app/api/telegram/setup-webhook
 
 Once connected, open your bot in Telegram and use:
 
-- `/start` — Welcome message and quick overview.
+- `/start` — Welcome message and quick overview (automatically registers chat ID for notifications).
 - `/ping` — Check server latency and health.
 - `/help` — Help and usage instructions.
+- `/broadcast <message>` — (Admin only) Broadcast an announcement message to all active subscribers.
+- `/subscribers` — (Admin only) View count of active and total registered bot subscribers.
 - `/where` — (Disabled) Draculino timetables feature is currently disabled.
+
+---
+
+## 📢 Deployment Notifications to All Users
+
+The bot tracks all users and groups that start or send messages to the bot. When a new deployment occurs, you can broadcast notification messages to all active users.
+
+### Trigger Deployment Notification via API (CI/CD / Post-deploy Webhook)
+Make a POST request to `/api/telegram/notify-deployment`:
+
+```bash
+curl -X POST https://<your-app>.vercel.app/api/telegram/notify-deployment \
+  -H "Authorization: Bearer <your-ADMIN_API_KEY-or-TELEGRAM_WEBHOOK_SECRET>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "version": "1.2.0",
+    "releaseNotes": "• Added deployment notifications\n• Performance improvements",
+    "message": "We have just released an update!"
+  }'
+```
+
+### Auto-Notify on Server Startup
+Set `AUTO_NOTIFY_DEPLOYMENT=true` in your `.env.local` / Vercel environment variables. The server will automatically broadcast a notification when it boots for a new deployment or commit SHA (without re-notifying on cold restarts of the same deployment).
 
 ---
 
@@ -162,6 +187,8 @@ Once connected, open your bot in Telegram and use:
 | `GET` | `/api/telegram/setup-webhook` | Check current Telegram bot and webhook info |
 | `POST` | `/api/telegram/setup-webhook` | Register or update webhook URL with Telegram API |
 | `DELETE` | `/api/telegram/setup-webhook` | Remove webhook from Telegram API |
+| `POST` | `/api/telegram/notify-deployment` | Broadcast deployment notification to all active subscribers |
+| `GET` | `/api/telegram/notify-deployment` | Check current subscriber statistics |
 | `GET` | `/api/tasks` | List all tasks (supports `?status=pending`, `?userId=...`, `?chatId=...`) |
 | `POST` | `/api/tasks` | Create a task via REST API |
 

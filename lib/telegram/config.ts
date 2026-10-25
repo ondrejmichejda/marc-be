@@ -7,6 +7,9 @@ export interface TelegramConfig {
   botToken: string;
   webhookSecret?: string;
   appUrl?: string;
+  adminApiKey?: string;
+  adminIds?: number[];
+  autoNotifyDeployment?: boolean;
 }
 
 /**
@@ -21,10 +24,23 @@ export function getTelegramConfig(): TelegramConfig {
     );
   }
 
+  const adminIdsStr = process.env.TELEGRAM_ADMIN_IDS || process.env.TELEGRAM_ADMIN_ID;
+  const adminIds = adminIdsStr
+    ? adminIdsStr
+        .split(",")
+        .map((id) => parseInt(id.trim(), 10))
+        .filter((id) => !Number.isNaN(id))
+    : [];
+
   return {
     botToken,
     webhookSecret: process.env.TELEGRAM_WEBHOOK_SECRET,
     appUrl: process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL,
+    adminApiKey: process.env.ADMIN_API_KEY || process.env.TELEGRAM_WEBHOOK_SECRET,
+    adminIds,
+    autoNotifyDeployment:
+      process.env.AUTO_NOTIFY_DEPLOYMENT === "true" ||
+      process.env.NOTIFY_ON_DEPLOY === "true",
   };
 }
 
