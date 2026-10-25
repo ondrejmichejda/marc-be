@@ -1330,13 +1330,21 @@ export const DRACULINO_BRANCHES: GymBranch[] = [
       saturday: [],
       sunday: [
         {
-          time: "17:00 - 18:30",
+          time: "17:00 - 18:00",
           title: "MMA Sparring",
           category: "Box / Striking",
           level: "Pokročilí",
           branchId: "trinec",
           branchName: "Třinec",
         },
+        {
+          time: "18:00 - 19:00",
+          title: "Open mat",
+          category: "Open Mat / Sparing",
+          level: "Všichni",
+          branchId: "trinec",
+          branchName: "Třinec",
+        }
       ],
     },
   },
