@@ -1559,7 +1559,16 @@ export const DRACULINO_BRANCHES: GymBranch[] = [
         },
       ],
       saturday: [],
-      sunday: [],
+      sunday: [
+        {
+          time: "10:00 - 11:00",
+          title: "Open Mat",
+          category: "Open Mat / Sparing",
+          level: "Všichni",
+          branchId: "cieszyn",
+          branchName: "Cieszyn",
+        }
+      ],
     },
   },
   {
