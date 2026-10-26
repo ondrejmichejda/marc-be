@@ -1,5 +1,17 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { initDatabase, isDbConfigured } = await import("@/lib/db");
+    if (isDbConfigured()) {
+      try {
+        await initDatabase();
+      } catch (dbError) {
+        console.error(
+          "❌ [Database Setup] Failed to initialize database on startup:",
+          (dbError as Error).message
+        );
+      }
+    }
+
     const { getTelegramConfig, isTelegramConfigured } = await import(
       "@/lib/telegram/config"
     );

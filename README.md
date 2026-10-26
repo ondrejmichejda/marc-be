@@ -63,6 +63,7 @@ cp .env.example .env.local
 
 Edit `.env.local`:
 ```env
+DATABASE_URL="postgresql://user:password@ep-xyz-pooler.c-8.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 TELEGRAM_BOT_TOKEN="your-bot-token-from-botfather"
 TELEGRAM_WEBHOOK_SECRET="your-random-secret-token" # (Optional but recommended)
 APP_URL="https://your-public-url.ngrok-free.app"    # (Optional for automatic webhook registration)
@@ -180,6 +181,8 @@ Set `AUTO_NOTIFY_DEPLOYMENT=true` in your `.env.local` / Vercel environment vari
 
 | Method | Endpoint | Description |
 |---|---|---|
+| `GET` | `/` | Web Status & Health Check Dashboard (real-time metrics, logs, tasks) |
+| `GET` | `/api/health` | System health check, database ping & latency, service statuses (JSON) |
 | `GET` | `/api/draculino/where` | Query training units for today or a specific day/branch (`?day=...&branch=...`) |
 | `GET` | `/api/draculino/sitemap` | Verified sitemap of Draculino gym branches and timetable links |
 | `POST` | `/api/telegram/webhook` | Telegram webhook receiver (validates secret header and executes handlers) |
@@ -187,6 +190,7 @@ Set `AUTO_NOTIFY_DEPLOYMENT=true` in your `.env.local` / Vercel environment vari
 | `GET` | `/api/telegram/setup-webhook` | Check current Telegram bot and webhook info |
 | `POST` | `/api/telegram/setup-webhook` | Register or update webhook URL with Telegram API |
 | `DELETE` | `/api/telegram/setup-webhook` | Remove webhook from Telegram API |
+| `GET` | `/api/telegram/messages` | Query and filter persisted Telegram interaction audit logs |
 | `POST` | `/api/telegram/notify-deployment` | Broadcast deployment notification to all active subscribers |
 | `GET` | `/api/telegram/notify-deployment` | Check current subscriber statistics |
 | `GET` | `/api/tasks` | List all tasks (supports `?status=pending`, `?userId=...`, `?chatId=...`) |

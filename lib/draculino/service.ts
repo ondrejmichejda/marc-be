@@ -429,46 +429,54 @@ export class DraculinoService {
 
       if (remaining > 0) {
         if (inProg > 0 && upcoming > 0) {
-          out += `🎯 *Dnes se koná celkem ${this.formatTrainingUnitsCzech(result.totalUnits)}* (⏳ ${this.formatInProgressCzech(inProg)}, 🟢 ${this.formatRemainingCzech(upcoming)}):\n\n`;
+          out += `🎯 *Dnes ještě zbývá / probíhá celkem ${this.formatTrainingUnitsCzech(remaining)}* (⏳ ${this.formatInProgressCzech(inProg)}, 🟢 ${this.formatRemainingCzech(upcoming)}):\n\n`;
         } else if (inProg > 0) {
-          out += `🎯 *Dnes se koná celkem ${this.formatTrainingUnitsCzech(result.totalUnits)}* (⏳ ${this.formatInProgressCzech(inProg)}):\n\n`;
+          out += `🎯 *Dnes právě probíhá ${this.formatInProgressCzech(inProg)}* (další tréninky dnes již nejsou):\n\n`;
         } else {
           const remainingPrefix = upcoming === 1 ? "zbývá ještě" : upcoming >= 2 && upcoming <= 4 ? "zbývají ještě" : "zbývá ještě";
-          out += `🎯 *Dnes ${remainingPrefix} ${this.formatTrainingUnitsCzech(upcoming)}* (z celkem ${result.totalUnits} dnes):\n\n`;
+          out += `🎯 *Dnes ${remainingPrefix} ${this.formatTrainingUnitsCzech(upcoming)}* (z celkem ${result.totalUnits} dnes vypsaných):\n\n`;
         }
       } else {
-        out += `ℹ️ *Všechny dnešní tréninky (${result.totalUnits}) již proběhly.*\n`;
+        const branchContext = options?.filterBranchName
+          ? ` pro pobočku *${options.filterBranchName}*`
+          : "";
+        out += `ℹ️ *Všechny dnešní tréninky${branchContext} (${result.totalUnits}) již proběhly.* (aktuální čas v Praze: \`${result.currentTimeStr}\`)\n\n`;
         out += `👉 *Podívej se na rozvrh na zítra* pomocí tlačítka níže nebo příkazu \`/where zitra\`.\n\n`;
-        out += `📋 *Přehled dnešních tréninků (${result.dayNameCz}):*\n\n`;
+        out += `💡 _Tip: Zadej \`/where [město]\` (např. \`/where ostrava\`) nebo \`/where zitra\` pro konkrétní rozpis._`;
+        return out;
       }
     } else {
       out += `🎯 *V tento den se koná celkem ${this.formatTrainingUnitsCzech(result.totalUnits)}:*\n\n`;
     }
 
-    // Sort active branches: branches with remaining sessions first when isToday
-    let activeBranches = result.branches.filter((b) => b.units.length > 0);
-    if (isToday) {
-      activeBranches = [...activeBranches].sort((a, b) => {
-        const aRemaining = (a.upcomingUnits?.length || 0) + (a.inProgressUnits?.length || 0);
-        const bRemaining = (b.upcomingUnits?.length || 0) + (b.inProgressUnits?.length || 0);
-        if (aRemaining > 0 && bRemaining === 0) return -1;
-        if (aRemaining === 0 && bRemaining > 0) return 1;
-        return 0;
-      });
-    }
+    // Filter branches to only those with active/upcoming sessions when isToday, or branches with units on other days
+    const activeBranches = isToday
+      ? result.branches.filter(
+          (b) =>
+            (b.upcomingUnits?.length || 0) + (b.inProgressUnits?.length || 0) > 0
+        )
+      : result.branches.filter((b) => b.units.length > 0);
 
     for (const item of activeBranches) {
       const branch = item.branch;
-      const branchRemaining = (item.upcomingUnits?.length || 0) + (item.inProgressUnits?.length || 0);
+      const branchUnits = isToday
+        ? item.units.filter((u) => u.status !== "past")
+        : item.units;
+
+      if (branchUnits.length === 0) continue;
+
+      const branchRemaining =
+        (item.upcomingUnits?.length || 0) + (item.inProgressUnits?.length || 0);
 
       out += `📍 *[${branch.name}](${branch.url})*`;
-      if (isToday && (item.units.length > 0)) {
-        if (branchRemaining > 0) {
-          const remText = branchRemaining === 1 ? "1 zbývá/probíhá" : branchRemaining >= 2 && branchRemaining <= 4 ? `${branchRemaining} zbývají/probíhají` : `${branchRemaining} zbývá/probíhá`;
-          out += ` _(${remText})_`;
-        } else {
-          out += ` _(vše proběhlo)_`;
-        }
+      if (isToday) {
+        const remText =
+          branchRemaining === 1
+            ? "1 zbývá/probíhá"
+            : branchRemaining >= 2 && branchRemaining <= 4
+            ? `${branchRemaining} zbývají/probíhají`
+            : `${branchRemaining} zbývá/probíhá`;
+        out += ` _(${remText})_`;
       }
       out += `\n`;
 
@@ -476,7 +484,7 @@ export class DraculinoService {
         out += `🏢 _${branch.address}_\n`;
       }
 
-      for (const unit of item.units) {
+      for (const unit of branchUnits) {
         const categoryEmoji = CATEGORY_EMOJI[unit.category] || "🥋";
         const coachInfo = unit.coach ? ` (Trenér: ${unit.coach})` : "";
         const levelInfo = unit.level ? ` • _${unit.level}_` : "";
@@ -486,10 +494,6 @@ export class DraculinoService {
             out += `  ⏳ \`${unit.time}\` *${unit.title}*${levelInfo}${coachInfo} *(Právě probíhá)*\n`;
           } else if (unit.status === "upcoming") {
             out += `  🟢 \`${unit.time}\` *${unit.title}*${levelInfo}${coachInfo}\n`;
-          } else if (unit.status === "past") {
-            out += `  ✓ \`${unit.time}\` ${unit.title}${levelInfo}${coachInfo} _(Proběhlo)_\n`;
-          } else {
-            out += `  ${categoryEmoji} \`${unit.time}\` *${unit.title}*${levelInfo}${coachInfo}\n`;
           }
         } else {
           out += `  ${categoryEmoji} \`${unit.time}\` *${unit.title}*${levelInfo}${coachInfo}\n`;
@@ -498,13 +502,26 @@ export class DraculinoService {
       out += `\n`;
     }
 
+    if (isToday && !options?.filterBranchName) {
+      const endedBranches = result.branches
+        .filter(
+          (b) =>
+            b.units.length > 0 &&
+            (b.upcomingUnits?.length || 0) + (b.inProgressUnits?.length || 0) === 0
+        )
+        .map((b) => b.branch.name);
+      if (endedBranches.length > 0) {
+        out += `🏁 _Pobočky s již ukončenými tréninky pro dnešek: ${endedBranches.join(", ")}_\n\n`;
+      }
+    }
+
     const inactiveCount = result.branches.filter((b) => b.units.length === 0).length;
     if (inactiveCount > 0 && !options?.filterBranchName) {
       const inactiveNames = result.branches
         .filter((b) => b.units.length === 0)
         .map((b) => b.branch.name)
         .join(", ");
-      out += `💤 _Pobočky bez tréninků v tento den: ${inactiveNames}_\n\n`;
+      out += `💤 _Pobočky bez vypsaných tréninků v tento den: ${inactiveNames}_\n\n`;
     }
 
     out += `💡 _Tip: Zadej \`/where [město]\` (např. \`/where ostrava\`) nebo \`/where zitra\` pro konkrétní rozpis._`;

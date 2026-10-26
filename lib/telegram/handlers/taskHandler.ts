@@ -1,9 +1,9 @@
 import { InlineKeyboard } from "grammy";
+import { ensureDb, isDbConfigured } from "../../db";
 import { BotContext, TaskItem, TaskPriority, TaskStatus } from "../types";
 
 /**
- * In-memory task repository.
- * NOTE: For production, replace this with your database (e.g. Prisma, PostgreSQL, MongoDB, Redis).
+ * In-memory fallback task repository.
  */
 const taskStore = new Map<string, TaskItem>();
 
@@ -14,6 +14,41 @@ function generateTaskId(): string {
   const timestamp = Date.now().toString(36).toUpperCase();
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `TASK-${timestamp}-${random}`;
+}
+
+function mapTaskRow(row: Record<string, unknown>): TaskItem {
+  let metadata: Record<string, unknown> | undefined;
+  if (row.metadata) {
+    if (typeof row.metadata === "string") {
+      try {
+        metadata = JSON.parse(row.metadata);
+      } catch {
+        metadata = undefined;
+      }
+    } else if (typeof row.metadata === "object") {
+      metadata = row.metadata as Record<string, unknown>;
+    }
+  }
+
+  return {
+    id: String(row.id),
+    title: String(row.title),
+    description: (row.description as string) || undefined,
+    status: (row.status as TaskStatus) || "pending",
+    priority: (row.priority as TaskPriority) || "medium",
+    telegramChatId: Number(row.telegram_chat_id || 0),
+    telegramUserId: Number(row.telegram_user_id || 0),
+    telegramUsername: (row.telegram_username as string) || undefined,
+    metadata,
+    createdAt:
+      row.created_at instanceof Date
+        ? row.created_at.toISOString()
+        : new Date(row.created_at as string | number).toISOString(),
+    updatedAt:
+      row.updated_at instanceof Date
+        ? row.updated_at.toISOString()
+        : new Date(row.updated_at as string | number).toISOString(),
+  };
 }
 
 /**
@@ -58,7 +93,8 @@ export function createTaskKeyboard(taskId: string): InlineKeyboard {
 }
 
 /**
- * Service for managing tasks created from Telegram
+ * Service for managing tasks created from Telegram or API.
+ * Uses persistent PostgreSQL (Neon DB) storage with in-memory fallback.
  */
 export class TaskService {
   /**
@@ -67,6 +103,7 @@ export class TaskService {
   static async createTask(params: {
     title: string;
     description?: string;
+    status?: TaskStatus;
     priority?: TaskPriority;
     telegramChatId: number;
     telegramUserId: number;
@@ -75,12 +112,49 @@ export class TaskService {
   }): Promise<TaskItem> {
     const id = generateTaskId();
     const now = new Date().toISOString();
+    const initialStatus: TaskStatus = params.status || "pending";
+
+    if (isDbConfigured()) {
+      try {
+        const sql = await ensureDb();
+        const rows = await sql`
+          INSERT INTO tasks (
+            id, title, description, status, priority, telegram_chat_id, telegram_user_id, telegram_username, metadata, created_at, updated_at
+          )
+          VALUES (
+            ${id},
+            ${params.title.trim()},
+            ${params.description?.trim() ?? null},
+            ${initialStatus},
+            ${params.priority || "medium"},
+            ${params.telegramChatId},
+            ${params.telegramUserId},
+            ${params.telegramUsername ?? null},
+            ${params.metadata ? JSON.stringify(params.metadata) : null},
+            NOW(),
+            NOW()
+          )
+          RETURNING *;
+        `;
+
+        if (rows.length > 0) {
+          const task = mapTaskRow(rows[0] as Record<string, unknown>);
+          console.log(`[TaskService] Created task in DB ${id}: "${task.title}"`);
+          return task;
+        }
+      } catch (err) {
+        console.error(
+          "[TaskService] DB error in createTask, falling back to in-memory store:",
+          err
+        );
+      }
+    }
 
     const task: TaskItem = {
       id,
       title: params.title.trim(),
       description: params.description?.trim(),
-      status: "pending",
+      status: initialStatus,
       priority: params.priority || "medium",
       telegramChatId: params.telegramChatId,
       telegramUserId: params.telegramUserId,
@@ -91,8 +165,6 @@ export class TaskService {
     };
 
     taskStore.set(id, task);
-
-    // You can trigger backend processing, push to a queue, or notify external services here
     console.log(`[TaskService] Created task ${id}: "${task.title}"`);
 
     return task;
@@ -102,6 +174,27 @@ export class TaskService {
    * Get a task by ID
    */
   static async getTask(id: string): Promise<TaskItem | undefined> {
+    if (isDbConfigured()) {
+      try {
+        const sql = await ensureDb();
+        const rows = await sql`
+          SELECT * FROM tasks
+          WHERE id = ${id}
+          LIMIT 1;
+        `;
+
+        if (rows.length > 0) {
+          return mapTaskRow(rows[0] as Record<string, unknown>);
+        }
+        return undefined;
+      } catch (err) {
+        console.error(
+          "[TaskService] DB error in getTask, falling back to in-memory store:",
+          err
+        );
+      }
+    }
+
     return taskStore.get(id);
   }
 
@@ -113,6 +206,57 @@ export class TaskService {
     telegramChatId?: number;
     status?: TaskStatus;
   }): Promise<TaskItem[]> {
+    if (isDbConfigured()) {
+      try {
+        const sql = await ensureDb();
+        let rows: Array<Record<string, unknown>>;
+
+        if (filters?.telegramUserId && filters?.status) {
+          rows = (await sql`
+            SELECT * FROM tasks
+            WHERE telegram_user_id = ${filters.telegramUserId} AND status = ${filters.status}
+            ORDER BY created_at DESC;
+          `) as Array<Record<string, unknown>>;
+        } else if (filters?.telegramChatId && filters?.status) {
+          rows = (await sql`
+            SELECT * FROM tasks
+            WHERE telegram_chat_id = ${filters.telegramChatId} AND status = ${filters.status}
+            ORDER BY created_at DESC;
+          `) as Array<Record<string, unknown>>;
+        } else if (filters?.telegramUserId) {
+          rows = (await sql`
+            SELECT * FROM tasks
+            WHERE telegram_user_id = ${filters.telegramUserId}
+            ORDER BY created_at DESC;
+          `) as Array<Record<string, unknown>>;
+        } else if (filters?.telegramChatId) {
+          rows = (await sql`
+            SELECT * FROM tasks
+            WHERE telegram_chat_id = ${filters.telegramChatId}
+            ORDER BY created_at DESC;
+          `) as Array<Record<string, unknown>>;
+        } else if (filters?.status) {
+          rows = (await sql`
+            SELECT * FROM tasks
+            WHERE status = ${filters.status}
+            ORDER BY created_at DESC;
+          `) as Array<Record<string, unknown>>;
+        } else {
+          rows = (await sql`
+            SELECT * FROM tasks
+            ORDER BY created_at DESC;
+          `) as Array<Record<string, unknown>>;
+        }
+
+        return rows.map(mapTaskRow);
+      } catch (err) {
+        console.error(
+          "[TaskService] DB error in listTasks, falling back to in-memory store:",
+          err
+        );
+      }
+    }
+
     let tasks = Array.from(taskStore.values());
 
     if (filters?.telegramUserId) {
@@ -134,7 +278,34 @@ export class TaskService {
   /**
    * Update task status
    */
-  static async updateStatus(id: string, status: TaskStatus): Promise<TaskItem | null> {
+  static async updateStatus(
+    id: string,
+    status: TaskStatus
+  ): Promise<TaskItem | null> {
+    if (isDbConfigured()) {
+      try {
+        const sql = await ensureDb();
+        const rows = await sql`
+          UPDATE tasks
+          SET status = ${status}, updated_at = NOW()
+          WHERE id = ${id}
+          RETURNING *;
+        `;
+
+        if (rows.length > 0) {
+          const task = mapTaskRow(rows[0] as Record<string, unknown>);
+          console.log(`[TaskService] Updated task in DB ${id} status to ${status}`);
+          return task;
+        }
+        return null;
+      } catch (err) {
+        console.error(
+          "[TaskService] DB error in updateStatus, falling back to in-memory store:",
+          err
+        );
+      }
+    }
+
     const task = taskStore.get(id);
     if (!task) return null;
 

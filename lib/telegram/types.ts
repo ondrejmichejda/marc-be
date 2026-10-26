@@ -65,6 +65,31 @@ export interface BroadcastResult {
 }
 
 /**
+ * Message direction (incoming from user vs outgoing from bot)
+ */
+export type MessageDirection = "incoming" | "outgoing";
+
+/**
+ * Stored message log entry
+ */
+export interface MessageLog {
+  id: number | string;
+  updateId?: number;
+  messageId?: number;
+  chatId: number;
+  userId?: number;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  chatType: string;
+  text?: string;
+  direction: MessageDirection;
+  messageType: string;
+  rawPayload?: Record<string, unknown>;
+  createdAt: string;
+}
+
+/**
  * Custom context for GrammY if needed for custom session/state
  */
 export type BotContext = Context;

@@ -4,7 +4,9 @@ import { getTelegramConfig } from "./config";
 import { registerCommandHandlers } from "./handlers/commandHandler";
 import { registerMessageHandlers } from "./handlers/messageHandler";
 import { handleTaskCallbackQuery } from "./handlers/taskHandler";
+import { handleMenuCallbackQuery } from "./handlers/menuHandler";
 import { handleWhereCallbackQuery } from "../draculino/callbackHandler";
+import { MessageService } from "./messages";
 import { SubscriberService } from "./subscribers";
 import { BotContext } from "./types";
 
@@ -38,6 +40,52 @@ export function createTelegramBot(botInfo?: UserFromGetMe): Bot<BotContext> {
         chatType: ctx.chat.type,
       }).catch((err) => {
         console.error("[TelegramBot] Error auto-registering subscriber:", err);
+      });
+
+      // Persist incoming message / event to database
+      let text: string | undefined;
+      let messageType = "text";
+
+      if (ctx.message?.text) {
+        text = ctx.message.text;
+        messageType = ctx.message.text.startsWith("/") ? "command" : "text";
+      } else if (ctx.message?.caption) {
+        text = ctx.message.caption;
+        messageType = ctx.message.photo
+          ? "photo"
+          : ctx.message.video
+          ? "video"
+          : ctx.message.document
+          ? "document"
+          : "caption";
+      } else if (ctx.message?.document) {
+        messageType = "document";
+      } else if (ctx.message?.photo) {
+        messageType = "photo";
+      } else if (ctx.message?.voice) {
+        messageType = "voice";
+      } else if (ctx.message?.video) {
+        messageType = "video";
+      } else if (ctx.callbackQuery) {
+        text = ctx.callbackQuery.data;
+        messageType = "callback_query";
+      }
+
+      MessageService.logMessage({
+        updateId: ctx.update?.update_id,
+        messageId: ctx.message?.message_id,
+        chatId: ctx.chat.id,
+        userId: ctx.from?.id,
+        username: ctx.from?.username,
+        firstName: ctx.from?.first_name,
+        lastName: ctx.from?.last_name,
+        chatType: ctx.chat.type,
+        text,
+        direction: "incoming",
+        messageType,
+        rawPayload: ctx.message || ctx.callbackQuery || ctx.update,
+      }).catch((err) => {
+        console.error("[TelegramBot] Error logging incoming message to DB:", err);
       });
     }
 
@@ -99,6 +147,8 @@ export function createTelegramBot(botInfo?: UserFromGetMe): Bot<BotContext> {
     const data = ctx.callbackQuery.data;
     if (data.startsWith("where:")) {
       await handleWhereCallbackQuery(ctx);
+    } else if (data.startsWith("menu:")) {
+      await handleMenuCallbackQuery(ctx);
     } else {
       await handleTaskCallbackQuery(ctx);
     }
