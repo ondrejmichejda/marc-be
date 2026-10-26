@@ -4,6 +4,7 @@ import { getTelegramConfig } from "./config";
 import { registerCommandHandlers } from "./handlers/commandHandler";
 import { registerMessageHandlers } from "./handlers/messageHandler";
 import { handleTaskCallbackQuery } from "./handlers/taskHandler";
+import { handleMenuCallbackQuery } from "./handlers/menuHandler";
 import { handleWhereCallbackQuery } from "../draculino/callbackHandler";
 import { MessageService } from "./messages";
 import { SubscriberService } from "./subscribers";
@@ -146,6 +147,8 @@ export function createTelegramBot(botInfo?: UserFromGetMe): Bot<BotContext> {
     const data = ctx.callbackQuery.data;
     if (data.startsWith("where:")) {
       await handleWhereCallbackQuery(ctx);
+    } else if (data.startsWith("menu:")) {
+      await handleMenuCallbackQuery(ctx);
     } else {
       await handleTaskCallbackQuery(ctx);
     }

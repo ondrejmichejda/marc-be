@@ -100,7 +100,7 @@ export async function GET() {
           mode: botWebhookUrl ? "webhook" : "polling / fallback",
           webhookUrl: botWebhookUrl,
           hasAdminConfigured: hasAdmin,
-          echoMode: true,
+          interactiveMenuMode: true,
           openAiEnabled: false,
         },
         draculinoService: {

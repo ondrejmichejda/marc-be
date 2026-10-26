@@ -103,6 +103,7 @@ export class TaskService {
   static async createTask(params: {
     title: string;
     description?: string;
+    status?: TaskStatus;
     priority?: TaskPriority;
     telegramChatId: number;
     telegramUserId: number;
@@ -111,6 +112,7 @@ export class TaskService {
   }): Promise<TaskItem> {
     const id = generateTaskId();
     const now = new Date().toISOString();
+    const initialStatus: TaskStatus = params.status || "pending";
 
     if (isDbConfigured()) {
       try {
@@ -123,7 +125,7 @@ export class TaskService {
             ${id},
             ${params.title.trim()},
             ${params.description?.trim() ?? null},
-            'pending',
+            ${initialStatus},
             ${params.priority || "medium"},
             ${params.telegramChatId},
             ${params.telegramUserId},
@@ -152,7 +154,7 @@ export class TaskService {
       id,
       title: params.title.trim(),
       description: params.description?.trim(),
-      status: "pending",
+      status: initialStatus,
       priority: params.priority || "medium",
       telegramChatId: params.telegramChatId,
       telegramUserId: params.telegramUserId,

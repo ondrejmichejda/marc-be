@@ -255,7 +255,7 @@ async function LiveHealthSection() {
               {health.telegramConfigured ? "Active" : "Unconfigured"}
             </div>
             <p className="text-xs text-zinc-400 mt-1 truncate">
-              Mode: {health.botMode} • Echo active
+              Mode: {health.botMode} • Interactive Menu
             </p>
           </div>
         </div>
@@ -312,7 +312,7 @@ async function LiveHealthSection() {
             <div className="flex items-center justify-between py-2 border-b border-zinc-800/80">
               <span className="text-zinc-400">Telegram Bot Handler</span>
               <span className="font-mono text-xs text-zinc-200 bg-zinc-800 px-2 py-0.5 rounded">
-                GrammY Engine (Echo Mode)
+                GrammY Engine (Interactive Menu)
               </span>
             </div>
             <div className="flex items-center justify-between py-2 border-b border-zinc-800/80">
@@ -324,7 +324,7 @@ async function LiveHealthSection() {
             <div className="flex items-center justify-between py-2 border-b border-zinc-800/80">
               <span className="text-zinc-400">OpenAI Integration</span>
               <span className="font-mono text-xs text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded">
-                Disabled (Direct echo mode)
+                Disabled (Interactive task solver & Draculino)
               </span>
             </div>
             <div className="flex items-center justify-between py-2">
