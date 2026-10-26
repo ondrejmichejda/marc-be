@@ -94,12 +94,36 @@ export async function initDatabase(): Promise<void> {
         );
       `;
 
+      // Create messages log table
+      await sql`
+        CREATE TABLE IF NOT EXISTS messages (
+          id BIGSERIAL PRIMARY KEY,
+          update_id BIGINT,
+          message_id BIGINT,
+          chat_id BIGINT NOT NULL,
+          user_id BIGINT,
+          username TEXT,
+          first_name TEXT,
+          last_name TEXT,
+          chat_type TEXT NOT NULL DEFAULT 'private',
+          text TEXT,
+          direction TEXT NOT NULL DEFAULT 'incoming',
+          message_type TEXT NOT NULL DEFAULT 'text',
+          raw_payload JSONB,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
       // Create indexes for efficient querying
       await sql`CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_tasks_user ON tasks(telegram_user_id);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_tasks_chat ON tasks(telegram_chat_id);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at DESC);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_subscribers_active ON subscribers(is_active);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON messages(chat_id);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_messages_direction ON messages(direction);`;
 
       console.log("✅ [Database] Schema initialized successfully in Neon PostgreSQL.");
     } catch (error) {

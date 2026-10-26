@@ -1,5 +1,6 @@
 import { getTelegramBot } from "./bot";
 import { formatTaskSummary, createTaskKeyboard } from "./handlers/taskHandler";
+import { MessageService } from "./messages";
 import { SubscriberService } from "./subscribers";
 import {
   BroadcastResult,
@@ -20,9 +21,23 @@ export class TelegramService {
     options?: { parseMode?: "Markdown" | "HTML" }
   ): Promise<void> {
     const bot = getTelegramBot();
-    await bot.api.sendMessage(chatId, text, {
+    const sent = await bot.api.sendMessage(chatId, text, {
       parse_mode: options?.parseMode || "Markdown",
     });
+
+    const numericChatId = typeof chatId === "number" ? chatId : parseInt(chatId, 10);
+    if (!Number.isNaN(numericChatId)) {
+      MessageService.logMessage({
+        messageId: sent?.message_id,
+        chatId: numericChatId,
+        text,
+        direction: "outgoing",
+        messageType: "message",
+        rawPayload: sent,
+      }).catch((err) => {
+        console.error("[TelegramService] Error logging outgoing message:", err);
+      });
+    }
   }
 
   /**
@@ -51,10 +66,26 @@ export class TelegramService {
 
     for (const sub of activeSubscribers) {
       try {
-        await bot.api.sendMessage(sub.chatId, text, {
+        const sent = await bot.api.sendMessage(sub.chatId, text, {
           parse_mode: options?.parseMode || "Markdown",
         });
         result.sent++;
+
+        MessageService.logMessage({
+          messageId: sent?.message_id,
+          chatId: sub.chatId,
+          userId: sub.userId,
+          username: sub.username,
+          firstName: sub.firstName,
+          lastName: sub.lastName,
+          chatType: sub.chatType,
+          text,
+          direction: "outgoing",
+          messageType: "broadcast",
+          rawPayload: sent,
+        }).catch((err) => {
+          console.error("[TelegramService] Error logging broadcast message:", err);
+        });
 
         // Rate limit: sleep ~35ms to respect Telegram's ~30 msg/sec limit
         await new Promise((resolve) => setTimeout(resolve, 35));
