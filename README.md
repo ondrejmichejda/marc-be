@@ -63,6 +63,7 @@ cp .env.example .env.local
 
 Edit `.env.local`:
 ```env
+DATABASE_URL="postgresql://user:password@ep-xyz-pooler.c-8.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 TELEGRAM_BOT_TOKEN="your-bot-token-from-botfather"
 TELEGRAM_WEBHOOK_SECRET="your-random-secret-token" # (Optional but recommended)
 APP_URL="https://your-public-url.ngrok-free.app"    # (Optional for automatic webhook registration)

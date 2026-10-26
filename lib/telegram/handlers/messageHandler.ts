@@ -1,5 +1,4 @@
 import { Bot } from "grammy";
-import { generateFunnyInsult } from "@/lib/openai/service";
 import { BotContext } from "../types";
 
 /**
@@ -15,12 +14,12 @@ export function registerMessageHandlers(bot: Bot<BotContext>): void {
       return;
     }
 
-    try {
-      const insult = await generateFunnyInsult(text || "");
-      await ctx.reply(insult);
-    } catch (error) {
-      console.error("[TelegramBot] Error generating insult from OpenAI:", error);
-      await ctx.reply("Omlouvám se, nepodařilo se mi vygenerovat odpověď.");
+    if (text) {
+      try {
+        await ctx.reply(text);
+      } catch (error) {
+        console.error("[TelegramBot] Error sending echo reply:", error);
+      }
     }
   });
 }
