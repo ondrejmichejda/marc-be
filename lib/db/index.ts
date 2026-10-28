@@ -114,6 +114,111 @@ export async function initDatabase(): Promise<void> {
         );
       `;
 
+      // Create openai_logs table
+      await sql`
+        CREATE TABLE IF NOT EXISTS openai_logs (
+          id BIGSERIAL PRIMARY KEY,
+          model TEXT NOT NULL DEFAULT 'gpt-4o-mini',
+          prompt TEXT NOT NULL,
+          completion TEXT,
+          prompt_tokens INT NOT NULL DEFAULT 0,
+          completion_tokens INT NOT NULL DEFAULT 0,
+          total_tokens INT NOT NULL DEFAULT 0,
+          duration_ms INT NOT NULL DEFAULT 0,
+          status TEXT NOT NULL DEFAULT 'success',
+          error_message TEXT,
+          user_identifier TEXT,
+          source TEXT NOT NULL DEFAULT 'system',
+          raw_payload JSONB,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      // Create users table for Gmail / Google Authentication
+      await sql`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          email TEXT UNIQUE NOT NULL,
+          name TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'user',
+          picture TEXT,
+          google_id TEXT UNIQUE,
+          email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          last_login_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      // Safe schema migration for existing deployments: ensure role column exists
+      await sql`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user';
+      `;
+
+      // Create user sessions table
+      await sql`
+        CREATE TABLE IF NOT EXISTS user_sessions (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          token TEXT NOT NULL,
+          expires_at TIMESTAMPTZ NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          user_agent TEXT,
+          ip_address TEXT
+        );
+      `;
+
+      // Create roles table for dynamic role management
+      await sql`
+        CREATE TABLE IF NOT EXISTS roles (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT,
+          badge_color JSONB,
+          is_system BOOLEAN NOT NULL DEFAULT FALSE,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      // Create role_menu_mappings table
+      await sql`
+        CREATE TABLE IF NOT EXISTS role_menu_mappings (
+          menu_item_id TEXT NOT NULL,
+          role_id TEXT NOT NULL,
+          PRIMARY KEY (menu_item_id, role_id)
+        );
+      `;
+
+      // Seed default built-in roles if roles table is empty
+      const existingRoles = (await sql`
+        SELECT COUNT(*)::int as count FROM roles;
+      `) as { count: number }[];
+
+      if (Number(existingRoles[0]?.count || 0) === 0) {
+        await sql`
+          INSERT INTO roles (id, name, description, badge_color, is_system)
+          VALUES
+            ('admin', 'Administrator', 'Full system administration, role configuration, user assignments, and menu mapping.', '{"bg":"bg-purple-500/10","text":"text-purple-300","border":"border-purple-500/30","dot":"bg-purple-400"}'::jsonb, TRUE),
+            ('operator', 'Operator', 'Access to operational tools, background workflows, and designated business modules.', '{"bg":"bg-sky-500/10","text":"text-sky-300","border":"border-sky-500/30","dot":"bg-sky-400"}'::jsonb, FALSE),
+            ('user', 'Standard User', 'Standard access to designated general application modules.', '{"bg":"bg-emerald-500/10","text":"text-emerald-300","border":"border-emerald-500/30","dot":"bg-emerald-400"}'::jsonb, FALSE)
+          ON CONFLICT (id) DO NOTHING;
+        `;
+
+        await sql`
+          INSERT INTO role_menu_mappings (menu_item_id, role_id)
+          VALUES
+            ('mock_a', 'admin'),
+            ('mock_a', 'operator'),
+            ('mock_a', 'user'),
+            ('mock_b', 'admin'),
+            ('mock_b', 'operator'),
+            ('mock_c', 'admin'),
+            ('system', 'admin')
+          ON CONFLICT DO NOTHING;
+        `;
+      }
+
       // Create indexes for efficient querying
       await sql`CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_tasks_user ON tasks(telegram_user_id);`;
@@ -124,6 +229,15 @@ export async function initDatabase(): Promise<void> {
       await sql`CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_messages_direction ON messages(direction);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_openai_logs_created_at ON openai_logs(created_at DESC);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_openai_logs_model ON openai_logs(model);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_openai_logs_status ON openai_logs(status);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at DESC);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);`;
 
       console.log("✅ [Database] Schema initialized successfully in Neon PostgreSQL.");
     } catch (error) {
