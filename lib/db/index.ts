@@ -134,6 +134,24 @@ export async function initDatabase(): Promise<void> {
         );
       `;
 
+      // Create scheduled_ai_prompts table for user AI prompts with 3 time options (9am, 1pm, 5pm)
+      await sql`
+        CREATE TABLE IF NOT EXISTS scheduled_ai_prompts (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          user_email TEXT,
+          prompt TEXT NOT NULL,
+          scheduled_time TEXT NOT NULL,
+          title TEXT,
+          model TEXT NOT NULL DEFAULT 'gpt-4o-mini',
+          is_active BOOLEAN NOT NULL DEFAULT TRUE,
+          last_run_at TIMESTAMPTZ,
+          last_run_result TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
       // Create users table for Gmail / Google Authentication
       await sql`
         CREATE TABLE IF NOT EXISTS users (
@@ -214,6 +232,9 @@ export async function initDatabase(): Promise<void> {
             ('mock_b', 'admin'),
             ('mock_b', 'operator'),
             ('mock_c', 'admin'),
+            ('ai_prompts', 'admin'),
+            ('ai_prompts', 'operator'),
+            ('ai_prompts', 'user'),
             ('system', 'admin')
           ON CONFLICT DO NOTHING;
         `;
@@ -232,6 +253,9 @@ export async function initDatabase(): Promise<void> {
       await sql`CREATE INDEX IF NOT EXISTS idx_openai_logs_created_at ON openai_logs(created_at DESC);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_openai_logs_model ON openai_logs(model);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_openai_logs_status ON openai_logs(status);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_scheduled_prompts_user_id ON scheduled_ai_prompts(user_id);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_scheduled_prompts_time ON scheduled_ai_prompts(scheduled_time);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_scheduled_prompts_created_at ON scheduled_ai_prompts(created_at DESC);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);`;

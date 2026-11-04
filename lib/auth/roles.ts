@@ -109,6 +109,15 @@ export const BASE_MENU_ITEMS: MenuItem[] = [
     allowedRoles: ["admin"],
   },
   {
+    id: "ai_prompts",
+    label: "AI Prompts",
+    icon: "✨",
+    badge: "Scheduled",
+    description: "Create and manage scheduled AI prompts (9am, 1pm, 5pm)",
+    category: "General",
+    allowedRoles: ["admin", "operator", "user"],
+  },
+  {
     id: "system",
     label: "System",
     icon: "⚙️",
@@ -125,6 +134,7 @@ export const DEFAULT_MENU_MAPPINGS: Record<string, string[]> = {
   mock_a: ["admin", "operator", "user"],
   mock_b: ["admin", "operator"],
   mock_c: ["admin"],
+  ai_prompts: ["admin", "operator", "user"],
   system: ["admin"],
 };
 

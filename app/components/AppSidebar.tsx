@@ -16,6 +16,7 @@ import {
 } from "@/lib/auth/roles";
 import { TelegramBotSystemView } from "./TelegramBotSystemView";
 import { OpenAiSystemView } from "./OpenAiSystemView";
+import { AiPromptsView } from "./AiPromptsView";
 
 interface AppSidebarProps {
   initialUser?: User | null;
@@ -908,6 +909,11 @@ export function AppSidebar({
                     </button>
                   </div>
                 </div>
+              )}
+
+              {/* Tab: AI Prompts (Scheduled AI Prompts with 9am, 1pm, 5pm options) */}
+              {effectiveTab === "ai_prompts" && (
+                <AiPromptsView userId={user?.id} />
               )}
 
               {/* Tab: System Menu (Administrator Only) */}

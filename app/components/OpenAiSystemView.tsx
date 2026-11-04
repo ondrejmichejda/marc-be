@@ -6,9 +6,10 @@ import {
   OpenAiMessageLog,
   OpenAiUsageSummary,
 } from "@/lib/openai/types";
+import { AiPromptsView } from "./AiPromptsView";
 
 export function OpenAiSystemView() {
-  const [subTab, setSubTab] = useState<"usage" | "messages">("usage");
+  const [subTab, setSubTab] = useState<"usage" | "messages" | "prompts">("usage");
 
   // Usage & Config State
   const [config, setConfig] = useState<OpenAiConfigStatus | null>(null);
@@ -226,12 +227,12 @@ export function OpenAiSystemView() {
           </div>
         </div>
 
-        {/* Sub-tab Switcher: usage | messages */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-zinc-950 border border-zinc-800">
+        {/* Sub-tab Switcher: usage | messages | prompts */}
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-zinc-950 border border-zinc-800 overflow-x-auto">
           <button
             type="button"
             onClick={() => setSubTab("usage")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
               subTab === "usage"
                 ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20 font-bold"
                 : "text-zinc-400 hover:text-zinc-200"
@@ -242,13 +243,24 @@ export function OpenAiSystemView() {
           <button
             type="button"
             onClick={() => setSubTab("messages")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
               subTab === "messages"
                 ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20 font-bold"
                 : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
             💬 Messages Log
+          </button>
+          <button
+            type="button"
+            onClick={() => setSubTab("prompts")}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+              subTab === "prompts"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20 font-bold"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            ✨ Scheduled Prompts (9am/1pm/5pm)
           </button>
         </div>
       </div>
@@ -784,6 +796,11 @@ export function OpenAiSystemView() {
             )}
           </div>
         </div>
+      )}
+
+      {/* SUBVIEW 3: SCHEDULED AI PROMPTS */}
+      {subTab === "prompts" && (
+        <AiPromptsView />
       )}
 
       {/* Raw Payload & Detail Modal Drawer */}
