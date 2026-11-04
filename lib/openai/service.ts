@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { OpenAiConfigStatus, OpenAiMessageLog } from "./types";
 import { OpenAiLogService } from "./logs";
+import { TelegramService } from "../telegram/service";
 
 export const FUNNY_INSULT_PROMPT = (userMessage: string) =>
   `Zareaguj na zprávu "${userMessage}" vtipnou nadávkou, která nebude sprostá, ale pobaví. Vracej pouze výstup, žádné komentáře okolo.`;
@@ -181,4 +182,80 @@ export async function generateFunnyInsult(
   }
 
   return result.completion;
+}
+
+/**
+ * Generates an AI completion and responds in Telegram using Johan bot integration
+ * to the user matched by name and surname.
+ */
+export async function respondToTelegramUserByName(params: {
+  name?: string;
+  surname?: string;
+  fullName?: string;
+  userEmail?: string;
+  userId?: string;
+  prompt: string;
+  promptTitle?: string;
+  scheduledTime?: string;
+  systemPrompt?: string;
+  model?: string;
+  temperature?: number;
+}): Promise<{
+  completion: string;
+  log: OpenAiMessageLog;
+  telegramDelivery: {
+    sent: boolean;
+    subscriber?: {
+      chatId: number;
+      firstName?: string;
+      lastName?: string;
+      username?: string;
+    };
+    error?: string;
+    formattedMessage?: string;
+  };
+}> {
+  const targetName = params.name || params.fullName;
+  const userIdentifier = params.userEmail || params.userId || targetName || "telegram_user";
+
+  // 1. Generate AI completion
+  const aiResult = await executeChatCompletion({
+    prompt: params.prompt,
+    systemPrompt: params.systemPrompt,
+    model: params.model,
+    userIdentifier,
+    source: "johan_bot_response",
+    temperature: params.temperature,
+  });
+
+  // 2. Deliver via Johan Bot integration to user matched by name and surname
+  const telegramResult = await TelegramService.sendAiPromptResponse({
+    userIdentifier,
+    userName: targetName,
+    userSurname: params.surname,
+    userEmail: params.userEmail,
+    promptTitle: params.promptTitle,
+    promptText: params.prompt,
+    completion: aiResult.completion,
+    scheduledTime: params.scheduledTime,
+    model: params.model,
+  });
+
+  return {
+    completion: aiResult.completion,
+    log: aiResult.log,
+    telegramDelivery: {
+      sent: telegramResult.success,
+      subscriber: telegramResult.subscriber
+        ? {
+            chatId: telegramResult.subscriber.chatId,
+            firstName: telegramResult.subscriber.firstName,
+            lastName: telegramResult.subscriber.lastName,
+            username: telegramResult.subscriber.username,
+          }
+        : undefined,
+      error: telegramResult.error,
+      formattedMessage: telegramResult.formattedMessage,
+    },
+  };
 }

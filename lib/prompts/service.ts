@@ -2,6 +2,8 @@ import fs from "fs";
 import path from "path";
 import { ensureDb, isDbConfigured } from "../db";
 import { executeChatCompletion } from "../openai";
+import { UserService } from "../auth/userService";
+import { TelegramService } from "../telegram/service";
 import {
   ScheduledAiPrompt,
   CreateScheduledPromptInput,
@@ -401,12 +403,28 @@ export class ScheduledPromptService {
   }
 
   /**
-   * Immediately executes a scheduled prompt using OpenAI and saves last run information.
+   * Immediately executes a scheduled prompt using OpenAI, saves last run information,
+   * and delivers the response to Telegram using Johan bot integration to the user matched by name and surname.
    */
   static async executePromptNow(
     id: string,
     userId: string
-  ): Promise<{ prompt: ScheduledAiPrompt; completion: string; durationMs: number }> {
+  ): Promise<{
+    prompt: ScheduledAiPrompt;
+    completion: string;
+    durationMs: number;
+    telegramDelivery?: {
+      sent: boolean;
+      subscriber?: {
+        chatId: number;
+        firstName?: string;
+        lastName?: string;
+        username?: string;
+      };
+      error?: string;
+      formattedMessage?: string;
+    };
+  }> {
     const promptRecord = await this.getPromptById(id, userId);
     if (!promptRecord) {
       throw new Error(`Scheduled prompt '${id}' not found.`);
@@ -422,6 +440,38 @@ export class ScheduledPromptService {
 
     const durationMs = Date.now() - startTime;
     const nowIso = new Date().toISOString();
+
+    // Lookup user in UserService to match by name and surname
+    let user = await UserService.getUserById(userId);
+    if (!user && promptRecord.userEmail) {
+      user = await UserService.getUserByEmail(promptRecord.userEmail);
+    }
+
+    // Deliver AI response to Telegram using Johan Bot integration to user matched by name and surname
+    const telegramResult = await TelegramService.sendAiPromptResponse({
+      userIdentifier: promptRecord.userEmail || promptRecord.userId,
+      userName: user?.name,
+      userEmail: user?.email || promptRecord.userEmail,
+      promptTitle: promptRecord.title,
+      promptText: promptRecord.prompt,
+      completion: result.completion,
+      scheduledTime: promptRecord.scheduledTime,
+      model: promptRecord.model,
+    });
+
+    const telegramDelivery = {
+      sent: telegramResult.success,
+      subscriber: telegramResult.subscriber
+        ? {
+            chatId: telegramResult.subscriber.chatId,
+            firstName: telegramResult.subscriber.firstName,
+            lastName: telegramResult.subscriber.lastName,
+            username: telegramResult.subscriber.username,
+          }
+        : undefined,
+      error: telegramResult.error,
+      formattedMessage: telegramResult.formattedMessage,
+    };
 
     if (isDbConfigured()) {
       try {
@@ -441,6 +491,7 @@ export class ScheduledPromptService {
             prompt: mapPromptRow(rows[0]),
             completion: result.completion,
             durationMs,
+            telegramDelivery,
           };
         }
       } catch (err) {
@@ -462,6 +513,7 @@ export class ScheduledPromptService {
       prompt: updated,
       completion: result.completion,
       durationMs,
+      telegramDelivery,
     };
   }
 

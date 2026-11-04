@@ -4,6 +4,7 @@ import { TelegramService } from "../service";
 import { SubscriberService } from "../subscribers";
 import { TaskService } from "./taskHandler";
 import { DraculinoService } from "../../draculino/service";
+import { respondToTelegramUserByName } from "../../openai/service";
 import { BotContext } from "../types";
 
 /**
@@ -201,4 +202,53 @@ export function registerCommandHandlers(bot: Bot<BotContext>): void {
     const args = rawText.replace(/^\/where(@\w+)?\s*/i, "").trim();
     await executeWhereCommand(ctx, args);
   });
+
+  // /ai or /ask or /johan command: query Johan bot AI integration and respond to user matched by name & surname
+  const handleAiCommand = async (ctx: BotContext) => {
+    const rawText = ctx.message?.text || "";
+    const prompt = rawText.replace(/^\/(ai|ask|johan)(@\w+)?\s*/i, "").trim();
+
+    if (!prompt) {
+      await ctx.reply(
+        "🤖 *Johan Bot AI*\n\n" +
+          "ℹ️ *Použití:* `/ai <otázka>` nebo `/ask <otázka>`\n\n" +
+          "_Příklad:_ `/ai Jaké jsou klíčové principy pro regeneraci po tréninku?`",
+        { parse_mode: "Markdown" }
+      );
+      return;
+    }
+
+    const fromUser = ctx.from;
+    const name = fromUser?.first_name || "Příteli";
+    const surname = fromUser?.last_name;
+    const fullName = [name, surname].filter(Boolean).join(" ");
+
+    await ctx.reply("🤖 *Johan Bot přemýšlí...*", { parse_mode: "Markdown" });
+
+    try {
+      const response = await respondToTelegramUserByName({
+        name,
+        surname,
+        fullName,
+        prompt,
+        userEmail: fromUser?.username ? `${fromUser.username}@telegram` : undefined,
+      });
+
+      if (!response.telegramDelivery.sent) {
+        await ctx.reply(
+          `🤖 *Johan Bot Odpověď pro ${fullName}:*\n\n${response.completion}`,
+          { parse_mode: "Markdown" }
+        );
+      }
+    } catch (err) {
+      console.error("[CommandHandler] Error executing /ai:", err);
+      await ctx.reply("❌ *Omlouvám se, nastala chyba při generování AI odpovědi.*", {
+        parse_mode: "Markdown",
+      });
+    }
+  };
+
+  bot.command("ai", handleAiCommand);
+  bot.command("ask", handleAiCommand);
+  bot.command("johan", handleAiCommand);
 }

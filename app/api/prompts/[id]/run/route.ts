@@ -34,6 +34,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
       prompt: result.prompt,
       completion: result.completion,
       durationMs: result.durationMs,
+      telegramDelivery: result.telegramDelivery,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

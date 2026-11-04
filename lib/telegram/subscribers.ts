@@ -8,6 +8,95 @@ interface StorageSchema {
   notifiedDeployments: string[];
 }
 
+/**
+ * Normalizes a name string for robust, accent-insensitive and case-insensitive comparison.
+ */
+export function normalizeNameForMatch(name?: string | null): string {
+  if (!name || typeof name !== "string") return "";
+  return name
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+/**
+ * Splits a full name string into firstName and lastName components.
+ */
+export function parseFullName(fullName?: string | null): { firstName: string; lastName: string } {
+  if (!fullName || typeof fullName !== "string") {
+    return { firstName: "", lastName: "" };
+  }
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { firstName: "", lastName: "" };
+  if (parts.length === 1) return { firstName: parts[0], lastName: "" };
+  const firstName = parts[0];
+  const lastName = parts.slice(1).join(" ");
+  return { firstName, lastName };
+}
+
+/**
+ * Determines whether a Subscriber record matches the provided name and surname / full name.
+ */
+export function isSubscriberNameMatch(
+  subscriber: Subscriber,
+  nameOrFirstName?: string | null,
+  surnameOrLastName?: string | null
+): boolean {
+  if (!subscriber) return false;
+
+  const subFirst = normalizeNameForMatch(subscriber.firstName);
+  const subLast = normalizeNameForMatch(subscriber.lastName);
+  const subFull = normalizeNameForMatch(`${subscriber.firstName || ""} ${subscriber.lastName || ""}`);
+  const subUsername = normalizeNameForMatch(subscriber.username);
+
+  // If both firstName and lastName are explicitly provided
+  if (nameOrFirstName && surnameOrLastName) {
+    const qFirst = normalizeNameForMatch(nameOrFirstName);
+    const qLast = normalizeNameForMatch(surnameOrLastName);
+    const qFull = normalizeNameForMatch(`${nameOrFirstName} ${surnameOrLastName}`);
+
+    if (!qFirst && !qLast) return false;
+
+    // 1. Direct match: sub.first == qFirst && sub.last == qLast
+    if (subFirst === qFirst && subLast === qLast) return true;
+
+    // 2. Reversed match: sub.first == qLast && sub.last == qFirst
+    if (subFirst === qLast && subLast === qFirst) return true;
+
+    // 3. Combined full string match
+    if (subFull === qFull) return true;
+
+    // 4. One component empty in subscriber, but full matches
+    if ((!subLast && subFirst === qFull) || (!subFirst && subLast === qFull)) return true;
+
+    return false;
+  }
+
+  // If a single name / full name string is provided
+  const input = nameOrFirstName || surnameOrLastName || "";
+  const normInput = normalizeNameForMatch(input);
+  if (!normInput) return false;
+
+  // Direct full name match
+  if (subFull === normInput) return true;
+  if (subFirst === normInput && !subLast) return true;
+  if (subUsername && subUsername === normInput) return true;
+
+  // Try parsing the input into parts
+  const parsed = parseFullName(input);
+  if (parsed.firstName && parsed.lastName) {
+    const pFirst = normalizeNameForMatch(parsed.firstName);
+    const pLast = normalizeNameForMatch(parsed.lastName);
+    if (subFirst === pFirst && subLast === pLast) return true;
+    if (subFirst === pLast && subLast === pFirst) return true;
+    if (subFull === normalizeNameForMatch(`${parsed.firstName} ${parsed.lastName}`)) return true;
+  }
+
+  return false;
+}
+
 function mapSubscriberRow(row: Record<string, unknown>): Subscriber {
   return {
     chatId: Number(row.chat_id),
@@ -280,6 +369,108 @@ export class SubscriberService {
 
     this.loadStorage();
     return this.notifiedDeployments.has(deployId);
+  }
+
+  /**
+   * Finds the first active Telegram subscriber matching given name and surname.
+   */
+  static async findSubscriberByNameAndSurname(
+    nameOrFirstName: string,
+    surnameOrLastName?: string
+  ): Promise<Subscriber | null> {
+    const matches = await this.findSubscribersByNameAndSurname(nameOrFirstName, surnameOrLastName);
+    return matches.length > 0 ? matches[0] : null;
+  }
+
+  /**
+   * Finds all active Telegram subscribers matching given name and surname.
+   */
+  static async findSubscribersByNameAndSurname(
+    nameOrFirstName: string,
+    surnameOrLastName?: string
+  ): Promise<Subscriber[]> {
+    if (!nameOrFirstName && !surnameOrLastName) {
+      return [];
+    }
+
+    const subscribers = await this.getActiveSubscribers();
+    return subscribers.filter((sub) =>
+      isSubscriberNameMatch(sub, nameOrFirstName, surnameOrLastName)
+    );
+  }
+
+  /**
+   * Finds an active subscriber by full name string.
+   */
+  static async findSubscriberByFullName(fullName: string): Promise<Subscriber | null> {
+    if (!fullName || !fullName.trim()) return null;
+    const subscribers = await this.getActiveSubscribers();
+    const match = subscribers.find((sub) => isSubscriberNameMatch(sub, fullName));
+    return match || null;
+  }
+
+  /**
+   * Matches an active Telegram subscriber for a system user entity or identifier.
+   * Matches by name/surname, full name, or user email/id where possible.
+   */
+  static async matchSubscriberForUser(
+    userOrIdentifier: { id?: string; name?: string; email?: string } | string
+  ): Promise<Subscriber | null> {
+    if (!userOrIdentifier) return null;
+
+    let targetName: string | undefined;
+    let targetEmail: string | undefined;
+
+    if (typeof userOrIdentifier === "string") {
+      targetName = userOrIdentifier;
+    } else {
+      targetName = userOrIdentifier.name;
+      targetEmail = userOrIdentifier.email;
+    }
+
+    // 1. Try matching by full name / name & surname if available
+    if (targetName && targetName.trim()) {
+      const parsed = parseFullName(targetName);
+      if (parsed.firstName && parsed.lastName) {
+        const match = await this.findSubscriberByNameAndSurname(parsed.firstName, parsed.lastName);
+        if (match) return match;
+      }
+      const match = await this.findSubscriberByFullName(targetName);
+      if (match) return match;
+    }
+
+    // 2. If email provided, check if email prefix matches subscriber username or name
+    if (targetEmail && targetEmail.includes("@")) {
+      const prefix = targetEmail.split("@")[0].replace(/[._-]/g, " ");
+      const parsedPrefix = parseFullName(prefix);
+      if (parsedPrefix.firstName && parsedPrefix.lastName) {
+        const match = await this.findSubscriberByNameAndSurname(
+          parsedPrefix.firstName,
+          parsedPrefix.lastName
+        );
+        if (match) return match;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Resets local subscriber storage (primarily for automated tests).
+   */
+  static async clearAll(): Promise<void> {
+    this.subscribers.clear();
+    this.notifiedDeployments.clear();
+    this.initialized = true;
+
+    try {
+      const filePath = this.getStoragePath();
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch {
+      // Ignore file deletion errors during testing
+    }
   }
 
   /**

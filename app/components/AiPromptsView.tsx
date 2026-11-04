@@ -70,6 +70,16 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
     time: string;
     completion: string;
     durationMs: number;
+    telegramDelivery?: {
+      sent: boolean;
+      subscriber?: {
+        chatId: number;
+        firstName?: string;
+        lastName?: string;
+        username?: string;
+      };
+      error?: string;
+    };
   } | null>(null);
 
   // Fetch prompts
@@ -300,6 +310,7 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
         time: SCHEDULED_TIME_DETAILS[prompt.scheduledTime].timeLabel,
         completion: data.completion,
         durationMs: data.durationMs,
+        telegramDelivery: data.telegramDelivery,
       });
 
       fetchPrompts();
@@ -438,6 +449,48 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
             </span>
             {executionResult.completion}
           </div>
+
+          {/* Johan Bot Telegram Delivery Status Badge */}
+          {executionResult.telegramDelivery && (
+            <div
+              className={`p-3.5 rounded-xl border text-xs flex items-center justify-between gap-3 ${
+                executionResult.telegramDelivery.sent
+                  ? "bg-emerald-950/30 border-emerald-700/50 text-emerald-200"
+                  : "bg-amber-950/30 border-amber-700/50 text-amber-200"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="text-lg">🤖</span>
+                <div>
+                  <span className="font-semibold block text-xs">
+                    Johan Bot Telegram Delivery:{" "}
+                    {executionResult.telegramDelivery.sent ? "Odesláno" : "Nepodařilo se doručit"}
+                  </span>
+                  {executionResult.telegramDelivery.subscriber ? (
+                    <span className="text-[11px] opacity-80 font-mono block">
+                      Příjemce: {executionResult.telegramDelivery.subscriber.firstName || ""}{" "}
+                      {executionResult.telegramDelivery.subscriber.lastName || ""} (Chat ID:{" "}
+                      {executionResult.telegramDelivery.subscriber.chatId})
+                    </span>
+                  ) : (
+                    <span className="text-[11px] opacity-80 block">
+                      {executionResult.telegramDelivery.error ||
+                        "Nebyl nalezen shodný Telegram odběratel dle jména a příjmení."}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold shrink-0 ${
+                  executionResult.telegramDelivery.sent
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                    : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                }`}
+              >
+                {executionResult.telegramDelivery.sent ? "DELIVERED" : "UNMATCHED"}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
