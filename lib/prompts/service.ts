@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { ensureDb, isDbConfigured } from "../db";
-import { executeChatCompletion } from "../openai";
+import { executeChatCompletion, getEffectiveOpenAiModel } from "../openai";
 import { UserService } from "../auth/userService";
 import { TelegramService } from "../telegram/service";
 import {
@@ -31,7 +31,7 @@ function mapPromptRow(row: Record<string, unknown>): ScheduledAiPrompt {
     prompt: String(row.prompt || ""),
     scheduledTime,
     title: String(row.title || ""),
-    model: String(row.model || "gpt-4o-mini"),
+    model: String(row.model || getEffectiveOpenAiModel()),
     isActive: Boolean(row.is_active),
     lastRunAt: row.last_run_at
       ? row.last_run_at instanceof Date
@@ -113,7 +113,7 @@ export class ScheduledPromptService {
     const scheduledTime = normalizeScheduledTime(input.scheduledTime);
     const id = `prm_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const nowIso = new Date().toISOString();
-    const model = input.model || "gpt-4o-mini";
+    const model = getEffectiveOpenAiModel();
     const title = input.title?.trim() || `AI Prompt (${scheduledTime.toUpperCase()})`;
     const isActive = input.isActive !== undefined ? Boolean(input.isActive) : true;
 
@@ -325,7 +325,7 @@ export class ScheduledPromptService {
 
     const updatedTitle =
       updates.title !== undefined ? updates.title.trim() : existing.title;
-    const updatedModel = updates.model || existing.model;
+    const updatedModel = getEffectiveOpenAiModel();
     const updatedIsActive =
       updates.isActive !== undefined ? Boolean(updates.isActive) : existing.isActive;
     const nowIso = new Date().toISOString();
@@ -433,7 +433,6 @@ export class ScheduledPromptService {
     const startTime = Date.now();
     const result = await executeChatCompletion({
       prompt: promptRecord.prompt,
-      model: promptRecord.model,
       userIdentifier: promptRecord.userEmail || promptRecord.userId,
       source: `scheduled_prompt_${promptRecord.scheduledTime}`,
     });
@@ -456,7 +455,6 @@ export class ScheduledPromptService {
       promptText: promptRecord.prompt,
       completion: result.completion,
       scheduledTime: promptRecord.scheduledTime,
-      model: promptRecord.model,
     });
 
     const telegramDelivery = {

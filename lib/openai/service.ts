@@ -8,12 +8,30 @@ export const FUNNY_INSULT_PROMPT = (userMessage: string) =>
 
 let openaiClient: OpenAI | null = null;
 
+export const DEFAULT_OPENAI_MODEL = "gpt-4o";
+
+/**
+ * Returns the effective OpenAI model name based on OPENAI_MODEL env variable,
+ * falling back to DEFAULT_OPENAI_MODEL if not set.
+ */
+export function getEffectiveOpenAiModel(): string {
+  return process.env.OPENAI_MODEL?.trim() || DEFAULT_OPENAI_MODEL;
+}
+
 export const AVAILABLE_OPENAI_MODELS = [
-  "gpt-4o-mini",
   "gpt-4o",
-  "gpt-4-turbo",
-  "gpt-3.5-turbo",
 ];
+
+/**
+ * Checks whether Web Search is enabled for OpenAI queries.
+ * Defaults to true unless explicitly disabled via OPENAI_WEB_SEARCH="false" or OPENAI_ENABLE_WEB_SEARCH="false".
+ */
+export function isOpenAiWebSearchEnabled(): boolean {
+  if (process.env.OPENAI_WEB_SEARCH === "false" || process.env.OPENAI_ENABLE_WEB_SEARCH === "false") {
+    return false;
+  }
+  return true;
+}
 
 /**
  * Checks whether OPENAI_API_KEY is configured in the environment.
@@ -36,13 +54,17 @@ export function getOpenAiConfig(): OpenAiConfigStatus {
     maskedKey = "***";
   }
 
+  const effectiveModel = getEffectiveOpenAiModel();
+  const webSearchEnabled = isOpenAiWebSearchEnabled();
+
   return {
     isConfigured,
     apiKeyConfigured: isConfigured,
-    defaultModel: process.env.OPENAI_MODEL || "gpt-4o-mini",
+    defaultModel: effectiveModel,
+    webSearchEnabled,
     maskedKey,
     organization: process.env.OPENAI_ORG_ID || undefined,
-    availableModels: AVAILABLE_OPENAI_MODELS,
+    availableModels: [effectiveModel],
   };
 }
 
@@ -64,6 +86,8 @@ export function getOpenAIClient(): OpenAI {
 
 /**
  * Executes a chat completion and automatically records token usage and metrics into the log service.
+ * Always utilizes the active OpenAI model from OPENAI_MODEL environment variable or default fallback.
+ * Automatically enables web search options by default or when configured.
  */
 export async function executeChatCompletion(params: {
   prompt: string;
@@ -72,13 +96,16 @@ export async function executeChatCompletion(params: {
   userIdentifier?: string;
   source?: string;
   temperature?: number;
+  webSearch?: boolean;
+  webSearchContextSize?: "low" | "medium" | "high";
 }): Promise<{
   completion: string;
   log: OpenAiMessageLog;
 }> {
   const startTime = Date.now();
-  const model = params.model || process.env.OPENAI_MODEL || "gpt-4o-mini";
+  const model = getEffectiveOpenAiModel();
   const source = params.source || "system";
+  const isWebSearch = params.webSearch !== undefined ? params.webSearch : isOpenAiWebSearchEnabled();
 
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
   if (params.systemPrompt) {
@@ -106,18 +133,64 @@ export async function executeChatCompletion(params: {
         status: "success",
         userIdentifier: params.userIdentifier,
         source,
-        rawPayload: { simulated: true, model, messages },
+        rawPayload: { simulated: true, model, messages, webSearch: isWebSearch },
       });
 
       return { completion: mockCompletion, log };
     }
 
     const openai = getOpenAIClient();
-    const response = await openai.chat.completions.create({
+    const requestPayload: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
       model,
       messages,
-      temperature: params.temperature ?? 0.7,
-    });
+    };
+    if (typeof params.temperature === "number") {
+      requestPayload.temperature = params.temperature;
+    }
+    if (isWebSearch) {
+      requestPayload.web_search_options = {
+        search_context_size: params.webSearchContextSize || "medium",
+      };
+    }
+
+    let response: OpenAI.Chat.Completions.ChatCompletion;
+    try {
+      response = await openai.chat.completions.create(requestPayload);
+    } catch (err: unknown) {
+      const errMessage = (err instanceof Error ? err.message : String(err)).toLowerCase();
+      const status = (err as { status?: number }).status;
+
+      const isTempError =
+        requestPayload.temperature !== undefined &&
+        (errMessage.includes("temperature") || status === 400);
+
+      const isWebSearchError =
+        requestPayload.web_search_options !== undefined &&
+        (errMessage.includes("web_search") || errMessage.includes("search_options") || status === 400);
+
+      if (isTempError || isWebSearchError) {
+        if (isTempError) {
+          delete requestPayload.temperature;
+        }
+        if (isWebSearchError) {
+          delete requestPayload.web_search_options;
+        }
+
+        try {
+          response = await openai.chat.completions.create(requestPayload);
+        } catch (retryErr: unknown) {
+          if (requestPayload.web_search_options !== undefined || requestPayload.temperature !== undefined) {
+            delete requestPayload.temperature;
+            delete requestPayload.web_search_options;
+            response = await openai.chat.completions.create(requestPayload);
+          } else {
+            throw retryErr;
+          }
+        }
+      } else {
+        throw err;
+      }
+    }
 
     const durationMs = Date.now() - startTime;
     const content = response.choices[0]?.message?.content?.trim() || "";
@@ -198,8 +271,8 @@ export async function respondToTelegramUserByName(params: {
   promptTitle?: string;
   scheduledTime?: string;
   systemPrompt?: string;
-  model?: string;
   temperature?: number;
+  webSearch?: boolean;
 }): Promise<{
   completion: string;
   log: OpenAiMessageLog;
@@ -222,10 +295,10 @@ export async function respondToTelegramUserByName(params: {
   const aiResult = await executeChatCompletion({
     prompt: params.prompt,
     systemPrompt: params.systemPrompt,
-    model: params.model,
     userIdentifier,
     source: "johan_bot_response",
     temperature: params.temperature,
+    webSearch: params.webSearch,
   });
 
   // 2. Deliver via Johan Bot integration to user matched by name and surname
@@ -238,7 +311,6 @@ export async function respondToTelegramUserByName(params: {
     promptText: params.prompt,
     completion: aiResult.completion,
     scheduledTime: params.scheduledTime,
-    model: params.model,
   });
 
   return {

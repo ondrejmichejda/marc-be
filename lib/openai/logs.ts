@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { ensureDb, isDbConfigured } from "../db";
+import { getEffectiveOpenAiModel } from "./service";
 import {
   OpenAiMessageLog,
   OpenAiUsageSummary,
@@ -50,7 +51,7 @@ function mapLogRow(row: Record<string, unknown>): OpenAiMessageLog {
 
   return {
     id: typeof row.id === "bigint" || typeof row.id === "number" ? Number(row.id) : String(row.id),
-    model: (row.model as string) || "gpt-4o-mini",
+    model: (row.model as string) || getEffectiveOpenAiModel(),
     prompt: (row.prompt as string) || "",
     completion: (row.completion as string) || "",
     promptTokens: Number(row.prompt_tokens || 0),

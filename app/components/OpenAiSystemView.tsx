@@ -32,7 +32,6 @@ export function OpenAiSystemView() {
     "Zareaguj na zprávu 'Nestíhám trénink' vtipnou nadávkou, která nebude sprostá, ale pobaví."
   );
   const [testSystemPrompt, setTestSystemPrompt] = useState<string>("");
-  const [testModel, setTestModel] = useState<string>("gpt-4o-mini");
   const [runningTest, setRunningTest] = useState<boolean>(false);
   const [testResult, setTestResult] = useState<{
     completion: string;
@@ -164,7 +163,6 @@ export function OpenAiSystemView() {
         body: JSON.stringify({
           prompt: testPrompt.trim(),
           systemPrompt: testSystemPrompt.trim() || undefined,
-          model: testModel,
         }),
       });
 
@@ -426,9 +424,16 @@ export function OpenAiSystemView() {
                   </span>
                 </div>
                 <div className="py-2.5 flex justify-between items-center">
+                  <span className="text-zinc-400">Web Search</span>
+                  <span className="font-mono text-emerald-400 font-semibold flex items-center gap-1.5 text-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                    {config?.webSearchEnabled !== false ? "Enabled (Live Search Grounding)" : "Disabled"}
+                  </span>
+                </div>
+                <div className="py-2.5 flex justify-between items-center">
                   <span className="text-zinc-400">Default Model</span>
                   <span className="font-mono text-emerald-300 font-semibold">
-                    {config?.defaultModel || "gpt-4o-mini"}
+                    {config?.defaultModel || "gpt-4o"}
                   </span>
                 </div>
                 <div className="py-2.5 flex justify-between items-center">
@@ -438,9 +443,9 @@ export function OpenAiSystemView() {
                   </span>
                 </div>
                 <div className="py-2.5 flex justify-between items-center">
-                  <span className="text-zinc-400">Supported Model Tiers</span>
-                  <span className="text-zinc-300 font-mono text-[11px]">
-                    gpt-4o-mini, gpt-4o, gpt-4-turbo
+                  <span className="text-zinc-400">Active Model Configuration</span>
+                  <span className="text-emerald-300 font-mono text-[11px] font-semibold">
+                    {config?.defaultModel || "gpt-4o"} (Centralized via OPENAI_MODEL)
                   </span>
                 </div>
                 <div className="py-2.5 flex justify-between items-center">
@@ -511,17 +516,13 @@ export function OpenAiSystemView() {
             <div className="space-y-3">
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="w-full sm:w-1/3 space-y-1.5">
-                  <label className="text-[11px] font-mono text-zinc-400">Target Model</label>
-                  <select
-                    value={testModel}
-                    onChange={(e) => setTestModel(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
-                  >
-                    <option value="gpt-4o-mini">gpt-4o-mini (Fast & Cost Efficient)</option>
-                    <option value="gpt-4o">gpt-4o (High Intelligence)</option>
-                    <option value="gpt-4-turbo">gpt-4-turbo (Legacy High Cap)</option>
-                    <option value="gpt-3.5-turbo">gpt-3.5-turbo (Basic)</option>
-                  </select>
+                  <label className="text-[11px] font-mono text-zinc-400">Active AI Model</label>
+                  <div className="w-full px-3.5 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-emerald-400 font-mono flex items-center justify-between">
+                    <span className="font-semibold truncate">{config?.defaultModel || "gpt-4o"}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold shrink-0">
+                      ACTIVE
+                    </span>
+                  </div>
                 </div>
 
                 <div className="w-full sm:w-2/3 space-y-1.5">
@@ -626,10 +627,19 @@ export function OpenAiSystemView() {
                 className="px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
               >
                 <option value="all">All Models</option>
-                <option value="gpt-4o-mini">gpt-4o-mini</option>
-                <option value="gpt-4o">gpt-4o</option>
-                <option value="gpt-4-turbo">gpt-4-turbo</option>
-                <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                {Array.from(
+                  new Set(
+                    [
+                      config?.defaultModel,
+                      ...(usage?.modelsUsed?.map((m) => m.model) || []),
+                      ...messages.map((m) => m.model),
+                    ].filter((m): m is string => Boolean(m))
+                  )
+                ).map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
               </select>
 
               {/* Status Filter */}

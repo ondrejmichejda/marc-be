@@ -359,7 +359,6 @@ export class TelegramService {
     promptText?: string;
     completion: string;
     scheduledTime?: string;
-    model?: string;
   }): Promise<{
     success: boolean;
     subscriber?: Subscriber;

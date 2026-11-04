@@ -10,8 +10,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : "";
     const systemPrompt = typeof body?.systemPrompt === "string" ? body.systemPrompt.trim() : undefined;
-    const model = typeof body?.model === "string" ? body.model.trim() : undefined;
-    const temperature = typeof body?.temperature === "number" ? body.temperature : 0.7;
+    const temperature = typeof body?.temperature === "number" ? body.temperature : undefined;
+    const webSearch = typeof body?.webSearch === "boolean" ? body.webSearch : undefined;
 
     if (!prompt) {
       return NextResponse.json(
@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
     const result = await executeChatCompletion({
       prompt,
       systemPrompt,
-      model,
       temperature,
+      webSearch,
       userIdentifier: body?.userIdentifier || "admin@system.console",
       source: "system_console",
     });

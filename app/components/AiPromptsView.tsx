@@ -48,7 +48,6 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
   const [newTitle, setNewTitle] = useState<string>("");
   const [newPromptText, setNewPromptText] = useState<string>("");
   const [newScheduledTime, setNewScheduledTime] = useState<PromptScheduledTime>("9am");
-  const [newModel, setNewModel] = useState<string>("gpt-4o-mini");
   const [newIsActive, setNewIsActive] = useState<boolean>(true);
   const [creating, setCreating] = useState<boolean>(false);
 
@@ -57,7 +56,6 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
   const [editTitle, setEditTitle] = useState<string>("");
   const [editPromptText, setEditPromptText] = useState<string>("");
   const [editScheduledTime, setEditScheduledTime] = useState<PromptScheduledTime>("9am");
-  const [editModel, setEditModel] = useState<string>("gpt-4o-mini");
   const [editIsActive, setEditIsActive] = useState<boolean>(true);
   const [updating, setUpdating] = useState<boolean>(false);
 
@@ -168,7 +166,6 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
           prompt: newPromptText.trim(),
           scheduledTime: newScheduledTime,
           title: newTitle.trim() || undefined,
-          model: newModel,
           isActive: newIsActive,
           userId,
         }),
@@ -198,7 +195,6 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
     setEditTitle(prompt.title);
     setEditPromptText(prompt.prompt);
     setEditScheduledTime(prompt.scheduledTime);
-    setEditModel(prompt.model);
     setEditIsActive(prompt.isActive);
   };
 
@@ -219,7 +215,6 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
           prompt: editPromptText.trim(),
           scheduledTime: editScheduledTime,
           title: editTitle.trim(),
-          model: editModel,
           isActive: editIsActive,
         }),
       });
@@ -578,23 +573,6 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
               </div>
             </div>
 
-            {/* AI Model */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block">
-                AI Model
-              </label>
-              <select
-                value={newModel}
-                onChange={(e) => setNewModel(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500 font-mono"
-              >
-                <option value="gpt-4o-mini">gpt-4o-mini (Fast & Efficient)</option>
-                <option value="gpt-4o">gpt-4o (High Reasoning)</option>
-                <option value="gpt-4-turbo">gpt-4-turbo</option>
-                <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-              </select>
-            </div>
-
             {/* Prompt Textarea */}
             <div className="space-y-1.5">
               <label className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block">
@@ -904,22 +882,6 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
                     );
                   })}
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block">
-                  AI Model
-                </label>
-                <select
-                  value={editModel}
-                  onChange={(e) => setEditModel(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500 font-mono"
-                >
-                  <option value="gpt-4o-mini">gpt-4o-mini</option>
-                  <option value="gpt-4o">gpt-4o</option>
-                  <option value="gpt-4-turbo">gpt-4-turbo</option>
-                  <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-                </select>
               </div>
 
               <div className="space-y-1.5">

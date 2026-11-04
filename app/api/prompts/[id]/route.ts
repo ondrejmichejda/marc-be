@@ -82,7 +82,6 @@ export async function PUT(req: NextRequest, context: RouteContext) {
       prompt: body.prompt,
       scheduledTime: body.scheduledTime,
       title: body.title,
-      model: body.model,
       isActive: body.isActive,
     });
 

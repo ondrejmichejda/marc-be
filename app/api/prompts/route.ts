@@ -78,7 +78,6 @@ export async function GET(req: NextRequest) {
  *  - prompt: string (required)
  *  - scheduledTime: "9am" | "1pm" | "5pm" (required)
  *  - title?: string
- *  - model?: string (default: "gpt-4o-mini")
  *  - isActive?: boolean (default: true)
  *  - userId?: string (override)
  */
@@ -122,7 +121,6 @@ export async function POST(req: NextRequest) {
     const userId = (typeof body?.userId === "string" && body.userId.trim()) || resolved.userId;
     const userEmail = body?.userEmail || resolved.userEmail;
     const title = typeof body?.title === "string" ? body.title : undefined;
-    const model = typeof body?.model === "string" ? body.model : "gpt-4o-mini";
     const isActive = body?.isActive !== undefined ? Boolean(body.isActive) : true;
 
     const createdPrompt = await ScheduledPromptService.createPrompt({
@@ -131,7 +129,6 @@ export async function POST(req: NextRequest) {
       prompt: promptText,
       scheduledTime,
       title,
-      model,
       isActive,
     });
 

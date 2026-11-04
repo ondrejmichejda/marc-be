@@ -56,6 +56,7 @@ export interface OpenAiConfigStatus {
   isConfigured: boolean;
   apiKeyConfigured: boolean;
   defaultModel: string;
+  webSearchEnabled?: boolean;
   maskedKey?: string;
   organization?: string;
   availableModels: string[];

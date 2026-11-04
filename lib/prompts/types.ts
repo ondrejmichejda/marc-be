@@ -133,7 +133,6 @@ export interface CreateScheduledPromptInput {
   prompt: string;
   scheduledTime: PromptScheduledTime | string;
   title?: string;
-  model?: string;
   isActive?: boolean;
 }
 
@@ -141,7 +140,6 @@ export interface UpdateScheduledPromptInput {
   prompt?: string;
   scheduledTime?: PromptScheduledTime | string;
   title?: string;
-  model?: string;
   isActive?: boolean;
 }
 

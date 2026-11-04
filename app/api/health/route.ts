@@ -5,7 +5,7 @@ import { isTelegramConfigured, getTelegramConfig } from "@/lib/telegram/config";
 import { MessageService } from "@/lib/telegram/messages";
 import { TaskService } from "@/lib/telegram/handlers/taskHandler";
 import { SubscriberService } from "@/lib/telegram/subscribers";
-import { isOpenAiConfigured } from "@/lib/openai";
+import { isOpenAiConfigured, getEffectiveOpenAiModel, isOpenAiWebSearchEnabled } from "@/lib/openai";
 
 export async function GET() {
   await connection();
@@ -106,7 +106,8 @@ export async function GET() {
         },
         openai: {
           status: isOpenAiConfigured() ? "configured" : "simulation_fallback",
-          defaultModel: process.env.OPENAI_MODEL || "gpt-4o-mini",
+          defaultModel: getEffectiveOpenAiModel(),
+          webSearchEnabled: isOpenAiWebSearchEnabled(),
         },
         draculinoService: {
           status: "operational",

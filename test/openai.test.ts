@@ -5,7 +5,9 @@ import {
   OpenAiLogService,
   estimateCostUsd,
   isOpenAiConfigured,
+  isOpenAiWebSearchEnabled,
   getOpenAiConfig,
+  getEffectiveOpenAiModel,
   executeChatCompletion,
   generateFunnyInsult,
 } from "../lib/openai";
@@ -21,26 +23,23 @@ test("OpenAI Cost Estimation across Models", () => {
   assert.ok(config, "Config should return status object");
   assert.equal(typeof isOpenAiConfigured(), "boolean");
 
-  // gpt-4o-mini ($0.15 prompt / $0.60 completion per 1M tokens)
-  const costMini = estimateCostUsd("gpt-4o-mini", 1_000_000, 1_000_000);
-  assert.equal(costMini, 0.75);
-
   // gpt-4o ($2.50 prompt / $10.00 completion per 1M tokens)
   const cost4o = estimateCostUsd("gpt-4o", 1_000_000, 1_000_000);
   assert.equal(cost4o, 12.5);
 
   // Small token sample
-  const sampleCost = estimateCostUsd("gpt-4o-mini", 50, 50);
+  const sampleCost = estimateCostUsd(getEffectiveOpenAiModel(), 50, 50);
   assert.ok(sampleCost >= 0);
   assert.ok(sampleCost < 0.001);
 });
 
 test("OpenAiLogService: Log interaction, list with filters, and aggregate usage", async () => {
   const testId = `test_run_${Date.now()}`;
+  const model = getEffectiveOpenAiModel();
 
   // Log a successful interaction
   const log1 = await OpenAiLogService.logInteraction({
-    model: "gpt-4o-mini",
+    model,
     prompt: `Test prompt 1 for ${testId}`,
     completion: "Test completion 1 output",
     promptTokens: 25,
@@ -53,13 +52,13 @@ test("OpenAiLogService: Log interaction, list with filters, and aggregate usage"
   });
 
   assert.ok(log1.id, "Log must have an ID");
-  assert.equal(log1.model, "gpt-4o-mini");
+  assert.equal(log1.model, model);
   assert.equal(log1.status, "success");
   assert.equal(log1.totalTokens, 55);
 
   // Log an error interaction
   const log2 = await OpenAiLogService.logInteraction({
-    model: "gpt-4o",
+    model,
     prompt: `Test prompt 2 for ${testId}`,
     completion: "",
     promptTokens: 10,
@@ -91,28 +90,47 @@ test("OpenAiLogService: Log interaction, list with filters, and aggregate usage"
   const summary = await OpenAiLogService.getUsageSummary();
   assert.ok(summary.totalRequests >= 2);
   assert.ok(summary.totalTokens >= 65);
-  assert.ok(summary.modelsUsed.length >= 2);
+  assert.ok(summary.modelsUsed.length >= 1);
 
-  const miniStats = summary.modelsUsed.find((m) => m.model === "gpt-4o-mini");
-  assert.ok(miniStats, "gpt-4o-mini stats should exist");
-  assert.ok(miniStats.totalTokens >= 55);
+  const modelStats = summary.modelsUsed.find((m) => m.model === model);
+  assert.ok(modelStats, "model stats should exist");
+  assert.ok(modelStats.totalTokens >= 55);
 });
 
 test("OpenAI Service: executeChatCompletion and generateFunnyInsult", async () => {
+  const model = getEffectiveOpenAiModel();
   const result = await executeChatCompletion({
     prompt: "Vtipná hláška pro ranní trénink",
-    model: "gpt-4o-mini",
     userIdentifier: "test_service_user",
   });
 
   assert.ok(result.completion, "Completion should be generated");
   assert.ok(result.log, "Interaction log must be created");
-  assert.equal(result.log.model, "gpt-4o-mini");
+  assert.equal(result.log.model, model);
   assert.equal(result.log.status, "success");
   assert.ok(result.log.totalTokens > 0);
 
   const insult = await generateFunnyInsult("Nestíhám trénink");
   assert.ok(typeof insult === "string" && insult.length > 0);
+
+  // Verification with optional temperature param
+  const tempResult = await executeChatCompletion({
+    prompt: "Test completion with custom temperature",
+    temperature: 0.7,
+    userIdentifier: "test_temp_user",
+  });
+  assert.ok(tempResult.completion);
+  assert.equal(tempResult.log.status, "success");
+
+  // Verification with web search enabled
+  assert.equal(typeof isOpenAiWebSearchEnabled(), "boolean");
+  const webSearchResult = await executeChatCompletion({
+    prompt: "Jaké je dnešní datum a novinky ve sportu?",
+    webSearch: true,
+    userIdentifier: "test_websearch_user",
+  });
+  assert.ok(webSearchResult.completion);
+  assert.equal(webSearchResult.log.status, "success");
 });
 
 test("OpenAI API Endpoints: Usage, Messages, Test Completion, and Reset", async () => {
@@ -130,7 +148,6 @@ test("OpenAI API Endpoints: Usage, Messages, Test Completion, and Reset", async 
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       prompt: "Vysvětli sweep z half guardu.",
-      model: "gpt-4o-mini",
     }),
   });
 

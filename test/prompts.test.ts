@@ -63,7 +63,6 @@ test("ScheduledPromptService: Create prompts per user with 3 time options", asyn
     prompt: "Zrekapituluj ranní strategii a priority dne.",
     scheduledTime: "9am",
     title: "Ranní brief",
-    model: "gpt-4o-mini",
   });
 
   assert.ok(prompt9am.id.startsWith("prm_"));

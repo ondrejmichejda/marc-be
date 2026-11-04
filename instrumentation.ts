@@ -1,5 +1,16 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    // 1. OpenAI Configuration & Model Info on Startup
+    const { getEffectiveOpenAiModel, isOpenAiConfigured, isOpenAiWebSearchEnabled } = await import(
+      "@/lib/openai"
+    );
+    const activeOpenAiModel = getEffectiveOpenAiModel();
+    const webSearchStatus = isOpenAiWebSearchEnabled() ? "Enabled" : "Disabled";
+    console.log(
+      `🤖 [OpenAI Startup] OPENAI_MODEL="${process.env.OPENAI_MODEL || ""}" (Active Model: ${activeOpenAiModel}, Web Search: ${webSearchStatus}, API Key: ${isOpenAiConfigured() ? "Configured" : "Simulation Mode"})`
+    );
+
+    // 2. Database Initialization
     const { initDatabase, isDbConfigured } = await import("@/lib/db");
     if (isDbConfigured()) {
       try {
