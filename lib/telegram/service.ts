@@ -388,42 +388,7 @@ export class TelegramService {
       });
     }
 
-    const timeEmoji =
-      params.scheduledTime === "9am"
-        ? "🌅 (09:00 Ráno)"
-        : params.scheduledTime === "1pm"
-        ? "☀️ (13:00 Odpoledne)"
-        : params.scheduledTime === "5pm"
-        ? "🌇 (17:00 Večer)"
-        : "✨";
-
-    const greeting = subscriber?.firstName
-      ? `Ahoj ${subscriber.firstName}!`
-      : params.userName
-      ? `Ahoj ${params.userName}!`
-      : "Ahoj!";
-
-    let formattedMessage =
-      `🤖 *Johan Bot AI Odpověď* ${timeEmoji}\n\n` +
-      `${greeting}\n\n`;
-
-    if (params.promptTitle) {
-      formattedMessage += `📌 *${params.promptTitle}*\n`;
-    }
-
-    if (params.promptText) {
-      const truncatedPrompt =
-        params.promptText.length > 120
-          ? `${params.promptText.slice(0, 117)}...`
-          : params.promptText;
-      formattedMessage += `💬 _Zadání: "${truncatedPrompt}"_\n\n`;
-    } else {
-      formattedMessage += "\n";
-    }
-
-    formattedMessage +=
-      `📝 *Výstup:*\n${params.completion}\n\n` +
-      `_Odesláno přes Johan Bot Telegram integraci_`;
+    const formattedMessage = params.completion?.trim() || "";
 
     if (!subscriber) {
       const queryStr = [firstName, lastName].filter(Boolean).join(" ") || params.userEmail || "user";

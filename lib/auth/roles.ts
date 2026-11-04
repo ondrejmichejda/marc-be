@@ -113,7 +113,7 @@ export const BASE_MENU_ITEMS: MenuItem[] = [
     label: "AI Prompts",
     icon: "✨",
     badge: "Scheduled",
-    description: "Create and manage scheduled AI prompts (9am, 1pm, 5pm)",
+    description: "Create and manage scheduled AI prompts (6am, 9am, 1pm, 5pm)",
     category: "General",
     allowedRoles: ["admin", "operator", "user"],
   },

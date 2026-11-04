@@ -161,8 +161,11 @@ test("TelegramService: sendResponseToUserByName and sendAiPromptResponse using J
   assert.equal(aiPromptRes.success, true);
   assert.ok(aiPromptRes.subscriber);
   assert.equal(aiPromptRes.subscriber.chatId, 2001);
-  assert.ok(aiPromptRes.formattedMessage.includes("Johan Bot AI Odpověď"));
-  assert.ok(aiPromptRes.formattedMessage.includes("09:00 Ráno"));
+  assert.equal(
+    aiPromptRes.formattedMessage,
+    "1. Technika guard pass\n2. Strečink kyčlí\n3. Hydratace"
+  );
+  assert.ok(!aiPromptRes.formattedMessage.includes("Johan Bot AI Odpověď"));
 
   // 3. Unmatched user returns success: false with clear error message
   const unmatchedRes = await TelegramService.sendAiPromptResponse({

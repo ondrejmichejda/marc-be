@@ -131,6 +131,17 @@ test("OpenAI Service: executeChatCompletion and generateFunnyInsult", async () =
   });
   assert.ok(webSearchResult.completion);
   assert.equal(webSearchResult.log.status, "success");
+
+  // Verification with streaming and reasoning parameters
+  const streamResult = await executeChatCompletion({
+    prompt: "Předpověď počasí pro Český Těšín na dnešek.",
+    stream: true,
+    reasoningEffort: "medium",
+    serviceTier: "default",
+    userIdentifier: "test_stream_user",
+  });
+  assert.ok(streamResult.completion);
+  assert.equal(streamResult.log.status, "success");
 });
 
 test("OpenAI API Endpoints: Usage, Messages, Test Completion, and Reset", async () => {

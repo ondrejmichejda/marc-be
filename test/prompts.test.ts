@@ -16,15 +16,17 @@ import {
 } from "../app/api/prompts/[id]/route";
 import { POST as postRunPromptApi } from "../app/api/prompts/[id]/run/route";
 
-test("Scheduled AI Prompt Time Options Validation (9am, 1pm, 5pm)", () => {
-  // 3 Valid Options
-  assert.equal(SCHEDULED_TIME_OPTIONS.length, 3);
-  assert.deepEqual(Array.from(SCHEDULED_TIME_OPTIONS), ["9am", "1pm", "5pm"]);
+test("Scheduled AI Prompt Time Options Validation (6am, 9am, 1pm, 5pm)", () => {
+  // 4 Valid Options
+  assert.equal(SCHEDULED_TIME_OPTIONS.length, 4);
+  assert.deepEqual(Array.from(SCHEDULED_TIME_OPTIONS), ["6am", "9am", "1pm", "5pm"]);
 
   // isValidScheduledTime
+  assert.equal(isValidScheduledTime("6am"), true);
   assert.equal(isValidScheduledTime("9am"), true);
   assert.equal(isValidScheduledTime("1pm"), true);
   assert.equal(isValidScheduledTime("5pm"), true);
+  assert.equal(isValidScheduledTime("6AM"), true);
   assert.equal(isValidScheduledTime("9AM"), true);
   assert.equal(isValidScheduledTime("3pm"), false);
   assert.equal(isValidScheduledTime("12am"), false);
@@ -32,6 +34,9 @@ test("Scheduled AI Prompt Time Options Validation (9am, 1pm, 5pm)", () => {
   assert.equal(isValidScheduledTime(null), false);
 
   // normalizeScheduledTime
+  assert.equal(normalizeScheduledTime("6am"), "6am");
+  assert.equal(normalizeScheduledTime("06:00"), "6am");
+  assert.equal(normalizeScheduledTime("6:00 AM"), "6am");
   assert.equal(normalizeScheduledTime("9am"), "9am");
   assert.equal(normalizeScheduledTime("09:00"), "9am");
   assert.equal(normalizeScheduledTime("9:00 AM"), "9am");
@@ -45,16 +50,32 @@ test("Scheduled AI Prompt Time Options Validation (9am, 1pm, 5pm)", () => {
   assert.throws(() => normalizeScheduledTime("midnight"), /Invalid scheduled time/);
 
   // Time details mapping
+  assert.equal(SCHEDULED_TIME_DETAILS["6am"].period, "Morning");
   assert.equal(SCHEDULED_TIME_DETAILS["9am"].period, "Morning");
   assert.equal(SCHEDULED_TIME_DETAILS["1pm"].period, "Afternoon");
   assert.equal(SCHEDULED_TIME_DETAILS["5pm"].period, "Evening");
 });
 
-test("ScheduledPromptService: Create prompts per user with 3 time options", async () => {
+test("ScheduledPromptService: Create prompts per user with 4 time options", async () => {
   await ScheduledPromptService.clearAll();
 
   const userA = "user_alpha_101";
   const userB = "user_beta_202";
+
+  // Create prompt for User A at 6am
+  const prompt6am = await ScheduledPromptService.createPrompt({
+    userId: userA,
+    userEmail: "alpha@marc.dev",
+    prompt: "Ranní 10minutová mobilita a dechová cvičení.",
+    scheduledTime: "6am",
+    title: "Ranní úsvit",
+  });
+
+  assert.ok(prompt6am.id.startsWith("prm_"));
+  assert.equal(prompt6am.userId, userA);
+  assert.equal(prompt6am.scheduledTime, "6am");
+  assert.equal(prompt6am.title, "Ranní úsvit");
+  assert.equal(prompt6am.isActive, true);
 
   // Create prompt for User A at 9am
   const prompt9am = await ScheduledPromptService.createPrompt({
@@ -89,28 +110,33 @@ test("ScheduledPromptService: Create prompts per user with 3 time options", asyn
   });
   assert.equal(prompt5pm.scheduledTime, "5pm");
 
-  // Create prompt for User B at 9am
+  // Create prompt for User B at 6am
   const promptUserB = await ScheduledPromptService.createPrompt({
     userId: userB,
-    prompt: "User B morning prompt.",
-    scheduledTime: "9am",
+    prompt: "User B early morning prompt.",
+    scheduledTime: "6am",
   });
   assert.equal(promptUserB.userId, userB);
 
   // List prompts for User A
   const userAPrompts = await ScheduledPromptService.getPromptsByUser(userA);
-  assert.equal(userAPrompts.length, 3, "User A should have exactly 3 prompts");
+  assert.equal(userAPrompts.length, 4, "User A should have exactly 4 prompts");
 
   // Filter User A prompts by time
+  const userA6amOnly = await ScheduledPromptService.getPromptsByUser(userA, { scheduledTime: "6am" });
+  assert.equal(userA6amOnly.length, 1);
+  assert.equal(userA6amOnly[0].id, prompt6am.id);
+
   const userA9amOnly = await ScheduledPromptService.getPromptsByUser(userA, { scheduledTime: "9am" });
   assert.equal(userA9amOnly.length, 1);
   assert.equal(userA9amOnly[0].id, prompt9am.id);
 
   // Summary stats for User A
   const summaryA = await ScheduledPromptService.getSummary(userA);
-  assert.equal(summaryA.total, 3);
-  assert.equal(summaryA.active, 3);
+  assert.equal(summaryA.total, 4);
+  assert.equal(summaryA.active, 4);
   assert.equal(summaryA.paused, 0);
+  assert.equal(summaryA.byTime["6am"], 1);
   assert.equal(summaryA.byTime["9am"], 1);
   assert.equal(summaryA.byTime["1pm"], 1);
   assert.equal(summaryA.byTime["5pm"], 1);
@@ -118,7 +144,7 @@ test("ScheduledPromptService: Create prompts per user with 3 time options", asyn
   // Summary stats for User B
   const summaryB = await ScheduledPromptService.getSummary(userB);
   assert.equal(summaryB.total, 1);
-  assert.equal(summaryB.byTime["9am"], 1);
+  assert.equal(summaryB.byTime["6am"], 1);
 });
 
 test("ScheduledPromptService: Update, Delete, and Execution", async () => {

@@ -1,6 +1,7 @@
-export type PromptScheduledTime = "9am" | "1pm" | "5pm";
+export type PromptScheduledTime = "6am" | "9am" | "1pm" | "5pm";
 
 export const SCHEDULED_TIME_OPTIONS: readonly PromptScheduledTime[] = [
+  "6am",
   "9am",
   "1pm",
   "5pm",
@@ -22,6 +23,20 @@ export interface ScheduledTimeInfo {
 }
 
 export const SCHEDULED_TIME_DETAILS: Record<PromptScheduledTime, ScheduledTimeInfo> = {
+  "6am": {
+    id: "6am",
+    timeLabel: "6:00 AM",
+    displayTime: "06:00",
+    period: "Morning",
+    icon: "🌄",
+    description: "Early morning prompt execution at 6:00 AM",
+    colorClass: {
+      bg: "bg-emerald-500/10",
+      text: "text-emerald-300",
+      border: "border-emerald-500/30",
+      badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+    },
+  },
   "9am": {
     id: "9am",
     timeLabel: "9:00 AM",
@@ -74,9 +89,18 @@ export function isValidScheduledTime(value: unknown): value is PromptScheduledTi
 
 export function normalizeScheduledTime(value: string): PromptScheduledTime {
   if (typeof value !== "string") {
-    throw new Error(`Invalid scheduled time '${value}'. Allowed options are: 9am, 1pm, 5pm.`);
+    throw new Error(`Invalid scheduled time '${value}'. Allowed options are: 6am, 9am, 1pm, 5pm.`);
   }
   const normalized = value.trim().toLowerCase().replace(/\s+/g, "");
+  if (
+    normalized === "6am" ||
+    normalized === "06:00" ||
+    normalized === "6:00" ||
+    normalized === "6:00am" ||
+    normalized === "06:00am"
+  ) {
+    return "6am";
+  }
   if (
     normalized === "9am" ||
     normalized === "09:00" ||
@@ -109,7 +133,7 @@ export function normalizeScheduledTime(value: string): PromptScheduledTime {
   if (isValidScheduledTime(normalized)) {
     return normalized;
   }
-  throw new Error(`Invalid scheduled time '${value}'. Allowed options are: 9am, 1pm, 5pm.`);
+  throw new Error(`Invalid scheduled time '${value}'. Allowed options are: 6am, 9am, 1pm, 5pm.`);
 }
 
 export interface ScheduledAiPrompt {
@@ -148,8 +172,42 @@ export interface ScheduledPromptsSummary {
   active: number;
   paused: number;
   byTime: {
+    "6am": number;
     "9am": number;
     "1pm": number;
     "5pm": number;
   };
+}
+
+export interface PromptCronExecutionResult {
+  promptId: string;
+  userId: string;
+  userEmail?: string;
+  userName?: string;
+  title: string;
+  scheduledTime: PromptScheduledTime;
+  success: boolean;
+  completionPreview?: string;
+  durationMs: number;
+  telegramDelivery?: {
+    sent: boolean;
+    subscriber?: {
+      chatId: number;
+      firstName?: string;
+      lastName?: string;
+      username?: string;
+    };
+    error?: string;
+  };
+  error?: string;
+}
+
+export interface PromptCronBatchSummary {
+  timestamp: string;
+  targetTime: PromptScheduledTime | "all";
+  totalFound: number;
+  executed: number;
+  successful: number;
+  failed: number;
+  results: PromptCronExecutionResult[];
 }

@@ -28,7 +28,7 @@ async function resolveUserId(req: NextRequest): Promise<{ userId: string; userEm
  * GET /api/prompts
  * Returns scheduled AI prompts for the authenticated/specified user.
  * Optional query parameters:
- *  - time: "9am" | "1pm" | "5pm" | "all"
+ *  - time: "6am" | "9am" | "1pm" | "5pm" | "all"
  *  - status: "active" | "paused" | "all"
  *  - search: string
  *  - userId: string (admin or override)
@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
  * Creates a new scheduled AI prompt for the user.
  * Body parameters:
  *  - prompt: string (required)
- *  - scheduledTime: "9am" | "1pm" | "5pm" (required)
+ *  - scheduledTime: "6am" | "9am" | "1pm" | "5pm" (required)
  *  - title?: string
  *  - isActive?: boolean (default: true)
  *  - userId?: string (override)
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     if (!scheduledTimeRaw) {
       return NextResponse.json(
         {
-          error: "Field 'scheduledTime' is required. Allowed options are: 9am, 1pm, 5pm.",
+          error: "Field 'scheduledTime' is required. Allowed options are: 6am, 9am, 1pm, 5pm.",
           allowedOptions: SCHEDULED_TIME_OPTIONS,
         },
         { status: 400 }
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
     } catch {
       return NextResponse.json(
         {
-          error: `Invalid scheduledTime '${scheduledTimeRaw}'. Allowed options are: 9am, 1pm, 5pm.`,
+          error: `Invalid scheduledTime '${scheduledTimeRaw}'. Allowed options are: 6am, 9am, 1pm, 5pm.`,
           allowedOptions: SCHEDULED_TIME_OPTIONS,
         },
         { status: 400 }

@@ -85,9 +85,9 @@ export function getOpenAIClient(): OpenAI {
 }
 
 /**
- * Executes a chat completion and automatically records token usage and metrics into the log service.
+ * Executes a chat completion or response and automatically records token usage and metrics into the log service.
  * Always utilizes the active OpenAI model from OPENAI_MODEL environment variable or default fallback.
- * Automatically enables web search options by default or when configured.
+ * Uses OpenAI's Responses API with reasoning, web search, text formatting, and resilient fallback handling.
  */
 export async function executeChatCompletion(params: {
   prompt: string;
@@ -98,12 +98,15 @@ export async function executeChatCompletion(params: {
   temperature?: number;
   webSearch?: boolean;
   webSearchContextSize?: "low" | "medium" | "high";
+  serviceTier?: "default" | "auto" | "flex" | "fast" | "priority" | "ultrafast";
+  reasoningEffort?: "low" | "medium" | "high";
+  stream?: boolean;
 }): Promise<{
   completion: string;
   log: OpenAiMessageLog;
 }> {
   const startTime = Date.now();
-  const model = getEffectiveOpenAiModel();
+  const model = params.model || getEffectiveOpenAiModel();
   const source = params.source || "system";
   const isWebSearch = params.webSearch !== undefined ? params.webSearch : isOpenAiWebSearchEnabled();
 
@@ -140,64 +143,207 @@ export async function executeChatCompletion(params: {
     }
 
     const openai = getOpenAIClient();
-    const requestPayload: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-      model,
-      messages,
-    };
-    if (typeof params.temperature === "number") {
-      requestPayload.temperature = params.temperature;
-    }
-    if (isWebSearch) {
-      requestPayload.web_search_options = {
-        search_context_size: params.webSearchContextSize || "medium",
-      };
-    }
 
-    let response: OpenAI.Chat.Completions.ChatCompletion;
+    let content = "";
+    let promptTokens = Math.round(params.prompt.length / 4);
+    let completionTokens = 0;
+    let totalTokens = promptTokens;
+    let rawPayloadRecord: Record<string, unknown> = {};
+
+    // 1. Primary execution via OpenAI Responses API with reasoning, web search, and structured text options
+    let responsesSucceeded = false;
+
     try {
-      response = await openai.chat.completions.create(requestPayload);
-    } catch (err: unknown) {
-      const errMessage = (err instanceof Error ? err.message : String(err)).toLowerCase();
-      const status = (err as { status?: number }).status;
+      const responsesInput: Array<{
+        role: "user" | "system" | "developer";
+        content: Array<{
+          type: "input_text";
+          text: string;
+        }>;
+      }> = [];
 
-      const isTempError =
-        requestPayload.temperature !== undefined &&
-        (errMessage.includes("temperature") || status === 400);
+      if (params.systemPrompt) {
+        responsesInput.push({
+          role: "system",
+          content: [
+            {
+              type: "input_text",
+              text: params.systemPrompt,
+            },
+          ],
+        });
+      }
 
-      const isWebSearchError =
-        requestPayload.web_search_options !== undefined &&
-        (errMessage.includes("web_search") || errMessage.includes("search_options") || status === 400);
+      responsesInput.push({
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: params.prompt,
+          },
+        ],
+      });
 
-      if (isTempError || isWebSearchError) {
-        if (isTempError) {
-          delete requestPayload.temperature;
-        }
-        if (isWebSearchError) {
-          delete requestPayload.web_search_options;
-        }
+      const tools = isWebSearch
+        ? [
+            {
+              type: "web_search" as const,
+              user_location: {
+                type: "approximate" as const,
+              },
+              search_context_size: params.webSearchContextSize || "medium",
+            },
+          ]
+        : undefined;
 
-        try {
-          response = await openai.chat.completions.create(requestPayload);
-        } catch (retryErr: unknown) {
-          if (requestPayload.web_search_options !== undefined || requestPayload.temperature !== undefined) {
-            delete requestPayload.temperature;
-            delete requestPayload.web_search_options;
-            response = await openai.chat.completions.create(requestPayload);
-          } else {
-            throw retryErr;
+      const basePayload = {
+        model,
+        service_tier: params.serviceTier || "default",
+        input: responsesInput,
+        text: {
+          format: {
+            type: "text" as const,
+          },
+          verbosity: "medium" as const,
+        },
+        reasoning: {
+          effort: params.reasoningEffort || "medium",
+          mode: "standard" as const,
+          summary: "auto" as const,
+        },
+        ...(tools && tools.length > 0 ? { tools } : {}),
+        store: true,
+        include: [
+          "reasoning.encrypted_content" as const,
+          "web_search_call.action.sources" as const,
+        ],
+        ...(typeof params.temperature === "number" ? { temperature: params.temperature } : {}),
+      };
+
+      if (params.stream) {
+        const stream = await openai.responses.create({
+          ...basePayload,
+          stream: true,
+        });
+
+        let streamedText = "";
+        for await (const event of stream) {
+          if (event.type === "response.output_text.delta" && event.delta) {
+            streamedText += event.delta;
+          } else if (event.type === "response.completed" && event.response?.output_text) {
+            streamedText = event.response.output_text;
+            if (event.response.usage) {
+              promptTokens = event.response.usage.input_tokens ?? promptTokens;
+              completionTokens = event.response.usage.output_tokens ?? Math.round(streamedText.length / 4);
+              totalTokens = event.response.usage.total_tokens ?? (promptTokens + completionTokens);
+            }
           }
         }
+        content = streamedText.trim();
+        rawPayloadRecord = { mode: "responses_stream", model };
+        responsesSucceeded = true;
       } else {
-        throw err;
+        const response = await openai.responses.create({
+          ...basePayload,
+          stream: false,
+        });
+        content = response.output_text?.trim() || "";
+
+        if (!content && Array.isArray(response.output)) {
+          for (const item of response.output) {
+            if (item.type === "message" && Array.isArray(item.content)) {
+              for (const part of item.content) {
+                if (part.type === "output_text") {
+                  content += part.text;
+                }
+              }
+            }
+          }
+          content = content.trim();
+        }
+
+        if (response.usage) {
+          promptTokens = response.usage.input_tokens ?? promptTokens;
+          completionTokens = response.usage.output_tokens ?? Math.round(content.length / 4);
+          totalTokens = response.usage.total_tokens ?? (promptTokens + completionTokens);
+        } else {
+          completionTokens = Math.round(content.length / 4);
+          totalTokens = promptTokens + completionTokens;
+        }
+
+        rawPayloadRecord = response as unknown as Record<string, unknown>;
+        responsesSucceeded = true;
       }
+    } catch (responsesErr: unknown) {
+      console.warn(
+        `[OpenAI Service] Responses API attempt encountered error, falling back to chat completions: ${
+          responsesErr instanceof Error ? responsesErr.message : String(responsesErr)
+        }`
+      );
+    }
+
+    // 2. Secondary fallback via standard chat completions if responses endpoint is unsupported
+    if (!responsesSucceeded) {
+      const requestPayload: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
+        model,
+        messages,
+      };
+      if (typeof params.temperature === "number") {
+        requestPayload.temperature = params.temperature;
+      }
+      if (isWebSearch) {
+        requestPayload.web_search_options = {
+          search_context_size: params.webSearchContextSize || "medium",
+        };
+      }
+
+      let chatResponse: OpenAI.Chat.Completions.ChatCompletion;
+      try {
+        chatResponse = await openai.chat.completions.create(requestPayload);
+      } catch (err: unknown) {
+        const errMessage = (err instanceof Error ? err.message : String(err)).toLowerCase();
+        const status = (err as { status?: number }).status;
+
+        const isTempError =
+          requestPayload.temperature !== undefined &&
+          (errMessage.includes("temperature") || status === 400);
+
+        const isWebSearchError =
+          requestPayload.web_search_options !== undefined &&
+          (errMessage.includes("web_search") || errMessage.includes("search_options") || status === 400);
+
+        if (isTempError || isWebSearchError) {
+          if (isTempError) {
+            delete requestPayload.temperature;
+          }
+          if (isWebSearchError) {
+            delete requestPayload.web_search_options;
+          }
+
+          try {
+            chatResponse = await openai.chat.completions.create(requestPayload);
+          } catch (retryErr: unknown) {
+            if (requestPayload.web_search_options !== undefined || requestPayload.temperature !== undefined) {
+              delete requestPayload.temperature;
+              delete requestPayload.web_search_options;
+              chatResponse = await openai.chat.completions.create(requestPayload);
+            } else {
+              throw retryErr;
+            }
+          }
+        } else {
+          throw err;
+        }
+      }
+
+      content = chatResponse.choices[0]?.message?.content?.trim() || "";
+      promptTokens = chatResponse.usage?.prompt_tokens ?? promptTokens;
+      completionTokens = chatResponse.usage?.completion_tokens ?? Math.round(content.length / 4);
+      totalTokens = chatResponse.usage?.total_tokens ?? (promptTokens + completionTokens);
+      rawPayloadRecord = chatResponse as unknown as Record<string, unknown>;
     }
 
     const durationMs = Date.now() - startTime;
-    const content = response.choices[0]?.message?.content?.trim() || "";
-
-    const promptTokens = response.usage?.prompt_tokens ?? Math.round(params.prompt.length / 4);
-    const completionTokens = response.usage?.completion_tokens ?? Math.round(content.length / 4);
-    const totalTokens = response.usage?.total_tokens ?? (promptTokens + completionTokens);
 
     const log = await OpenAiLogService.logInteraction({
       model,
@@ -210,7 +356,7 @@ export async function executeChatCompletion(params: {
       status: "success",
       userIdentifier: params.userIdentifier,
       source,
-      rawPayload: response as unknown as Record<string, unknown>,
+      rawPayload: rawPayloadRecord,
     });
 
     return { completion: content, log };
@@ -235,6 +381,90 @@ export async function executeChatCompletion(params: {
 
     throw new Error(`OpenAI API execution failed: ${errorMessage}`);
   }
+}
+
+/**
+ * Creates and returns an OpenAI Responses streaming generator configured with web search,
+ * reasoning, and text formatting.
+ */
+export async function createOpenAiResponsesStream(params: {
+  prompt: string;
+  systemPrompt?: string;
+  model?: string;
+  webSearch?: boolean;
+  webSearchContextSize?: "low" | "medium" | "high";
+  serviceTier?: "default" | "auto" | "flex" | "fast" | "priority" | "ultrafast";
+  reasoningEffort?: "low" | "medium" | "high";
+}) {
+  const openai = getOpenAIClient();
+  const model = params.model || getEffectiveOpenAiModel();
+  const isWebSearch = params.webSearch !== undefined ? params.webSearch : isOpenAiWebSearchEnabled();
+
+  const input: Array<{
+    role: "user" | "system" | "developer";
+    content: Array<{
+      type: "input_text";
+      text: string;
+    }>;
+  }> = [];
+
+  if (params.systemPrompt) {
+    input.push({
+      role: "system",
+      content: [
+        {
+          type: "input_text",
+          text: params.systemPrompt,
+        },
+      ],
+    });
+  }
+
+  input.push({
+    role: "user",
+    content: [
+      {
+        type: "input_text",
+        text: params.prompt,
+      },
+    ],
+  });
+
+  const tools = isWebSearch
+    ? [
+        {
+          type: "web_search" as const,
+          user_location: {
+            type: "approximate" as const,
+          },
+          search_context_size: params.webSearchContextSize || "medium",
+        },
+      ]
+    : undefined;
+
+  return await openai.responses.create({
+    model,
+    service_tier: params.serviceTier || "default",
+    input,
+    text: {
+      format: {
+        type: "text",
+      },
+      verbosity: "medium",
+    },
+    reasoning: {
+      effort: params.reasoningEffort || "medium",
+      mode: "standard",
+      summary: "auto",
+    },
+    ...(tools && tools.length > 0 ? { tools } : {}),
+    stream: true,
+    store: true,
+    include: [
+      "reasoning.encrypted_content",
+      "web_search_call.action.sources",
+    ],
+  });
 }
 
 /**

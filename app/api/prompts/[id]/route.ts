@@ -49,7 +49,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
 
 /**
  * PUT /api/prompts/[id]
- * Updates prompt fields (prompt text, scheduledTime [9am, 1pm, 5pm], title, model, isActive).
+ * Updates prompt fields (prompt text, scheduledTime [6am, 9am, 1pm, 5pm], title, model, isActive).
  */
 export async function PUT(req: NextRequest, context: RouteContext) {
   try {
@@ -63,7 +63,7 @@ export async function PUT(req: NextRequest, context: RouteContext) {
       } catch {
         return NextResponse.json(
           {
-            error: `Invalid scheduledTime '${body.scheduledTime}'. Allowed options are: 9am, 1pm, 5pm.`,
+            error: `Invalid scheduledTime '${body.scheduledTime}'. Allowed options are: 6am, 9am, 1pm, 5pm.`,
             allowedOptions: SCHEDULED_TIME_OPTIONS,
           },
           { status: 400 }

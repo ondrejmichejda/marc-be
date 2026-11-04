@@ -10,6 +10,8 @@ import {
   UpdateScheduledPromptInput,
   ScheduledPromptsSummary,
   PromptScheduledTime,
+  PromptCronBatchSummary,
+  PromptCronExecutionResult,
   normalizeScheduledTime,
   isValidScheduledTime,
 } from "./types";
@@ -99,7 +101,7 @@ export class ScheduledPromptService {
   }
 
   /**
-   * Creates a new scheduled AI prompt for a user with one of the 3 time options (9am, 1pm, 5pm).
+   * Creates a new scheduled AI prompt for a user with one of the available time options (6am, 9am, 1pm, 5pm).
    */
   static async createPrompt(input: CreateScheduledPromptInput): Promise<ScheduledAiPrompt> {
     if (!input.userId || input.userId.trim() === "") {
@@ -526,6 +528,7 @@ export class ScheduledPromptService {
       active: list.filter((p) => p.isActive).length,
       paused: list.filter((p) => !p.isActive).length,
       byTime: {
+        "6am": list.filter((p) => p.scheduledTime === "6am").length,
         "9am": list.filter((p) => p.scheduledTime === "9am").length,
         "1pm": list.filter((p) => p.scheduledTime === "1pm").length,
         "5pm": list.filter((p) => p.scheduledTime === "5pm").length,
@@ -551,5 +554,137 @@ export class ScheduledPromptService {
         console.warn("[ScheduledPromptService] DB clear failed:", err);
       }
     }
+  }
+
+  /**
+   * Retrieves all active scheduled prompts across all users or filtered by time.
+   */
+  static async getAllActivePrompts(
+    timeFilter?: PromptScheduledTime | "all" | string
+  ): Promise<ScheduledAiPrompt[]> {
+    let targetTime: PromptScheduledTime | undefined;
+    if (timeFilter && timeFilter !== "all") {
+      try {
+        targetTime = normalizeScheduledTime(timeFilter);
+      } catch {
+        targetTime = undefined;
+      }
+    }
+
+    if (isDbConfigured()) {
+      try {
+        const sql = await ensureDb();
+        const rows = (targetTime
+          ? await sql`
+              SELECT * FROM scheduled_ai_prompts
+              WHERE is_active = true AND scheduled_time = ${targetTime}
+              ORDER BY created_at ASC;
+            `
+          : await sql`
+              SELECT * FROM scheduled_ai_prompts
+              WHERE is_active = true
+              ORDER BY created_at ASC;
+            `) as Record<string, unknown>[];
+
+        return rows.map(mapPromptRow);
+      } catch (err) {
+        console.warn(
+          "[ScheduledPromptService] DB query all active prompts failed, falling back to local store:",
+          err
+        );
+      }
+    }
+
+    this.loadStorage();
+    let list = Array.from(this.localPrompts.values()).filter((p) => p.isActive);
+    if (targetTime) {
+      list = list.filter((p) => p.scheduledTime === targetTime);
+    }
+    return list.sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  }
+
+  /**
+   * Executes all active scheduled prompts matching the target time slot (or all active prompts).
+   * Designed for Vercel Task Scheduler / Cron Jobs and automated background dispatch.
+   */
+  static async executeScheduledPromptsBatch(options?: {
+    scheduledTime?: PromptScheduledTime | "all" | string;
+    userId?: string;
+  }): Promise<PromptCronBatchSummary> {
+    const rawTime = options?.scheduledTime;
+    let targetTime: PromptScheduledTime | "all" = "all";
+
+    if (rawTime && rawTime !== "all") {
+      try {
+        targetTime = normalizeScheduledTime(rawTime);
+      } catch {
+        targetTime = "all";
+      }
+    }
+
+    let prompts = await this.getAllActivePrompts(targetTime);
+    if (options?.userId) {
+      prompts = prompts.filter((p) => p.userId === options.userId);
+    }
+
+    const results: PromptCronExecutionResult[] = [];
+    let successfulCount = 0;
+    let failedCount = 0;
+
+    for (const prompt of prompts) {
+      try {
+        const execution = await this.executePromptNow(prompt.id, prompt.userId);
+        successfulCount++;
+
+        let userName: string | undefined;
+        try {
+          const user = await UserService.getUserById(prompt.userId);
+          userName = user?.name;
+        } catch {
+          // ignore user lookup failure
+        }
+
+        results.push({
+          promptId: prompt.id,
+          userId: prompt.userId,
+          userEmail: prompt.userEmail,
+          userName,
+          title: prompt.title,
+          scheduledTime: prompt.scheduledTime,
+          success: true,
+          completionPreview:
+            execution.completion.length > 150
+              ? `${execution.completion.slice(0, 150)}...`
+              : execution.completion,
+          durationMs: execution.durationMs,
+          telegramDelivery: execution.telegramDelivery,
+        });
+      } catch (err) {
+        failedCount++;
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        results.push({
+          promptId: prompt.id,
+          userId: prompt.userId,
+          userEmail: prompt.userEmail,
+          title: prompt.title,
+          scheduledTime: prompt.scheduledTime,
+          success: false,
+          durationMs: 0,
+          error: errorMessage,
+        });
+      }
+    }
+
+    return {
+      timestamp: new Date().toISOString(),
+      targetTime,
+      totalFound: prompts.length,
+      executed: results.length,
+      successful: successfulCount,
+      failed: failedCount,
+      results,
+    };
   }
 }

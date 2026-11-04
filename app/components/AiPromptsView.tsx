@@ -5,6 +5,7 @@ import {
   ScheduledAiPrompt,
   ScheduledPromptsSummary,
   PromptScheduledTime,
+  PromptCronBatchSummary,
   SCHEDULED_TIME_OPTIONS,
   SCHEDULED_TIME_DETAILS,
 } from "@/lib/prompts/types";
@@ -14,6 +15,11 @@ interface AiPromptsViewProps {
 }
 
 const SAMPLE_PROMPT_TEMPLATES = [
+  {
+    title: "Early Morning Mindset & Mobility",
+    time: "6am" as PromptScheduledTime,
+    text: "Navrhni ranní 10minutovou mobilitu a mentální nastavení pro klidný a produktivní start dne.",
+  },
   {
     title: "Morning Routine & Focus",
     time: "9am" as PromptScheduledTime,
@@ -79,6 +85,45 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
       error?: string;
     };
   } | null>(null);
+
+  // Vercel Cron Batch Trigger state
+  const [runningCronTime, setRunningCronTime] = useState<string | null>(null);
+  const [cronBatchResult, setCronBatchResult] = useState<PromptCronBatchSummary | null>(null);
+
+  const handleTriggerCronBatch = async (timeSlot: string) => {
+    setRunningCronTime(timeSlot);
+    setError(null);
+    setActionSuccess(null);
+
+    try {
+      const res = await fetch(
+        `/api/cron/prompts?time=${encodeURIComponent(timeSlot)}${
+          userId ? `&userId=${encodeURIComponent(userId)}` : ""
+        }`,
+        {
+          method: "POST",
+        }
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to trigger Vercel Cron execution.");
+        return;
+      }
+
+      setCronBatchResult(data);
+      setActionSuccess(
+        `Vercel Cron batch completed for ${String(
+          data.targetTime || timeSlot
+        ).toUpperCase()}: ${data.successful}/${data.executed} prompts executed successfully!`
+      );
+      fetchPrompts();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Network error triggering cron.");
+    } finally {
+      setRunningCronTime(null);
+    }
+  };
 
   // Fetch prompts
   const fetchPrompts = useCallback(async () => {
@@ -357,10 +402,19 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
         </div>
 
         {/* Time Option Quick Statistics */}
-        <div className="pt-4 border-t border-zinc-800/80 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1">
+        <div className="pt-4 border-t border-zinc-800/80 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1 col-span-2 sm:col-span-1">
             <span className="text-[11px] font-mono text-zinc-400 uppercase">Total Prompts</span>
             <p className="text-lg font-bold text-white">{summary?.total ?? prompts.length}</p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-800/40 space-y-1">
+            <span className="text-[11px] font-mono text-emerald-300 uppercase flex items-center gap-1">
+              <span>🌄</span> 6:00 AM
+            </span>
+            <p className="text-lg font-bold text-emerald-300">
+              {summary?.byTime["6am"] ?? prompts.filter((p) => p.scheduledTime === "6am").length}
+            </p>
           </div>
 
           <div className="p-3 rounded-xl bg-amber-950/20 border border-amber-800/40 space-y-1">
@@ -489,6 +543,161 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
         </div>
       )}
 
+      {/* Vercel Cron Task Scheduler Automation Bar */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800/90 shadow-md space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-violet-600/20 border border-violet-500/30 text-violet-400 text-lg">
+              ⏱️
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs sm:text-sm font-bold text-white">Vercel Cron & Task Scheduler</h3>
+                <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                  /api/cron/prompts
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400">
+                Automated background dispatch scheduled in <code className="text-zinc-300">vercel.json</code> for 6am, 9am, 1pm, and 5pm.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-mono text-zinc-500 mr-1 hidden sm:inline">Test Trigger:</span>
+            <button
+              type="button"
+              onClick={() => handleTriggerCronBatch("6am")}
+              disabled={Boolean(runningCronTime)}
+              className="px-2.5 py-1.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-800/50 text-[11px] font-semibold flex items-center gap-1 transition-all disabled:opacity-50"
+            >
+              <span>{runningCronTime === "6am" ? "⏳" : "🌄"}</span>
+              <span>6am Cron</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTriggerCronBatch("9am")}
+              disabled={Boolean(runningCronTime)}
+              className="px-2.5 py-1.5 rounded-lg bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 border border-amber-800/50 text-[11px] font-semibold flex items-center gap-1 transition-all disabled:opacity-50"
+            >
+              <span>{runningCronTime === "9am" ? "⏳" : "🌅"}</span>
+              <span>9am Cron</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTriggerCronBatch("1pm")}
+              disabled={Boolean(runningCronTime)}
+              className="px-2.5 py-1.5 rounded-lg bg-sky-950/40 hover:bg-sky-900/60 text-sky-300 border border-sky-800/50 text-[11px] font-semibold flex items-center gap-1 transition-all disabled:opacity-50"
+            >
+              <span>{runningCronTime === "1pm" ? "⏳" : "☀️"}</span>
+              <span>1pm Cron</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTriggerCronBatch("5pm")}
+              disabled={Boolean(runningCronTime)}
+              className="px-2.5 py-1.5 rounded-lg bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 border border-purple-800/50 text-[11px] font-semibold flex items-center gap-1 transition-all disabled:opacity-50"
+            >
+              <span>{runningCronTime === "5pm" ? "⏳" : "🌇"}</span>
+              <span>5pm Cron</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTriggerCronBatch("all")}
+              disabled={Boolean(runningCronTime)}
+              className="px-2.5 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-semibold flex items-center gap-1 transition-all disabled:opacity-50 shadow-sm"
+            >
+              <span>{runningCronTime === "all" ? "⏳" : "⚡"}</span>
+              <span>Run All Active</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Vercel Cron Batch Output Modal / Drawer */}
+        {cronBatchResult && (
+          <div className="p-4 rounded-xl bg-violet-950/20 border border-violet-800/40 space-y-3 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🚀</span>
+                <div>
+                  <h4 className="text-xs font-bold text-white">
+                    Vercel Cron Batch Run: {String(cronBatchResult.targetTime).toUpperCase()}
+                  </h4>
+                  <span className="text-[10px] text-violet-300 font-mono">
+                    Found {cronBatchResult.totalFound} • Executed {cronBatchResult.executed} • Success {cronBatchResult.successful} • Failed {cronBatchResult.failed}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCronBatchResult(null)}
+                className="p-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {cronBatchResult.results.length === 0 ? (
+              <p className="text-xs text-zinc-400 italic">No active prompts matched this time slot.</p>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {cronBatchResult.results.map((res) => (
+                  <div
+                    key={res.promptId}
+                    className="p-2.5 rounded-lg bg-zinc-950/80 border border-zinc-800/80 text-xs space-y-1"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-white">{res.title}</span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400">
+                          {res.scheduledTime}
+                        </span>
+                        {res.userName && (
+                          <span className="text-[10px] text-zinc-400">({res.userName})</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-mono text-zinc-500">{res.durationMs}ms</span>
+                        <span
+                          className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold ${
+                            res.success
+                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                              : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                          }`}
+                        >
+                          {res.success ? "OK" : "ERROR"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {res.completionPreview && (
+                      <p className="text-[11px] text-zinc-400 line-clamp-2 bg-zinc-900/60 p-1.5 rounded">
+                        {res.completionPreview}
+                      </p>
+                    )}
+
+                    {res.telegramDelivery && (
+                      <div className="text-[10px] flex items-center gap-1.5 text-zinc-400">
+                        <span>🤖 Johan Bot:</span>
+                        <span className={res.telegramDelivery.sent ? "text-emerald-400" : "text-amber-400"}>
+                          {res.telegramDelivery.sent
+                            ? `Doručeno ${res.telegramDelivery.subscriber?.firstName || ""}`
+                            : res.telegramDelivery.error || "Nepřiřazeno"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Main Grid: Create Form on Left / Top, Saved Prompts List on Right / Bottom */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Create Form Column (5 cols) */}
@@ -501,7 +710,7 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 <span>➕</span> Create Scheduled AI Prompt
               </h3>
-              <span className="text-[11px] font-mono text-zinc-500">3 Time Options</span>
+              <span className="text-[11px] font-mono text-zinc-500">4 Time Options</span>
             </div>
 
             {/* Quick Templates */}
@@ -537,12 +746,12 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
               />
             </div>
 
-            {/* 3 Scheduled Time Options (9am, 1pm, 5pm) */}
+            {/* Scheduled Time Options (6am, 9am, 1pm, 5pm) */}
             <div className="space-y-2">
               <label className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block">
-                Select Execution Time * (3 Options)
+                Select Execution Time * (4 Options)
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {SCHEDULED_TIME_OPTIONS.map((timeKey) => {
                   const details = SCHEDULED_TIME_DETAILS[timeKey];
                   const isSelected = newScheduledTime === timeKey;
@@ -701,7 +910,7 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
               <span className="text-3xl">📭</span>
               <h4 className="text-sm font-bold text-white">No Scheduled Prompts Found</h4>
               <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-                No prompts match the current filter. Create a prompt using the form on the left with one of the 3 time options (9am, 1pm, 5pm).
+                No prompts match the current filter. Create a prompt using the form on the left with one of the available time options (6am, 9am, 1pm, 5pm).
               </p>
             </div>
           ) : (
@@ -854,12 +1063,12 @@ export function AiPromptsView({ userId }: AiPromptsViewProps) {
                 />
               </div>
 
-              {/* Time selection (9am, 1pm, 5pm) */}
+              {/* Time selection (6am, 9am, 1pm, 5pm) */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block">
-                  Execution Time (3 Options)
+                  Execution Time (4 Options)
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {SCHEDULED_TIME_OPTIONS.map((timeKey) => {
                     const details = SCHEDULED_TIME_DETAILS[timeKey];
                     const isSelected = editScheduledTime === timeKey;

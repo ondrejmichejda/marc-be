@@ -223,8 +223,6 @@ export function registerCommandHandlers(bot: Bot<BotContext>): void {
     const surname = fromUser?.last_name;
     const fullName = [name, surname].filter(Boolean).join(" ");
 
-    await ctx.reply("🤖 *Johan Bot přemýšlí...*", { parse_mode: "Markdown" });
-
     try {
       const response = await respondToTelegramUserByName({
         name,
@@ -235,10 +233,7 @@ export function registerCommandHandlers(bot: Bot<BotContext>): void {
       });
 
       if (!response.telegramDelivery.sent) {
-        await ctx.reply(
-          `🤖 *Johan Bot Odpověď pro ${fullName}:*\n\n${response.completion}`,
-          { parse_mode: "Markdown" }
-        );
+        await ctx.reply(response.completion, { parse_mode: "Markdown" });
       }
     } catch (err) {
       console.error("[CommandHandler] Error executing /ai:", err);
