@@ -5,6 +5,7 @@ import { isTelegramConfigured, getTelegramConfig } from "@/lib/telegram/config";
 import { MessageService } from "@/lib/telegram/messages";
 import { TaskService } from "@/lib/telegram/handlers/taskHandler";
 import { SubscriberService } from "@/lib/telegram/subscribers";
+import { isOpenAiConfigured, getEffectiveOpenAiModel, isOpenAiWebSearchEnabled } from "@/lib/openai";
 
 export async function GET() {
   await connection();
@@ -101,7 +102,12 @@ export async function GET() {
           webhookUrl: botWebhookUrl,
           hasAdminConfigured: hasAdmin,
           interactiveMenuMode: true,
-          openAiEnabled: false,
+          openAiEnabled: isOpenAiConfigured(),
+        },
+        openai: {
+          status: isOpenAiConfigured() ? "configured" : "simulation_fallback",
+          defaultModel: getEffectiveOpenAiModel(),
+          webSearchEnabled: isOpenAiWebSearchEnabled(),
         },
         draculinoService: {
           status: "operational",

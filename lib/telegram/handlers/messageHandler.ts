@@ -7,6 +7,7 @@ import {
   executeMockedTaskCalculation,
 } from "./menuHandler";
 import { executeWhereCommand } from "./commandHandler";
+import { respondToTelegramUserByName } from "../../openai/service";
 
 /**
  * Registers message listeners for incoming Telegram updates.
@@ -83,7 +84,44 @@ export function registerMessageHandlers(bot: Bot<BotContext>): void {
       return;
     }
 
-    // 3. For any other incoming message not recognized as a command, show main menu with buttons
+    // 3. Direct inquiry addressed to Johan bot
+    if (
+      normalized.startsWith("johan ") ||
+      normalized.startsWith("johan,") ||
+      normalized.startsWith("johan:") ||
+      normalized.startsWith("ai:") ||
+      normalized.startsWith("dotaz:")
+    ) {
+      const promptQuery = text.replace(/^(johan[,:]?|ai:|dotaz:)\s*/i, "").trim();
+      if (promptQuery) {
+        const fromUser = ctx.from;
+        const name = fromUser?.first_name || "Příteli";
+        const surname = fromUser?.last_name;
+        const fullName = [name, surname].filter(Boolean).join(" ");
+
+        try {
+          const response = await respondToTelegramUserByName({
+            name,
+            surname,
+            fullName,
+            prompt: promptQuery,
+            userEmail: fromUser?.username ? `${fromUser.username}@telegram` : undefined,
+          });
+
+          if (!response.telegramDelivery.sent) {
+            await ctx.reply(response.completion, { parse_mode: "Markdown" });
+          }
+        } catch (err) {
+          console.error("[MessageHandler] Error in Johan Bot AI reply:", err);
+          await ctx.reply("❌ *Omlouvám se, nastala chyba při generování AI odpovědi.*", {
+            parse_mode: "Markdown",
+          });
+        }
+        return;
+      }
+    }
+
+    // 4. For any other incoming message not recognized as a command, show main menu with buttons
     await sendMainMenu(ctx);
   });
 }

@@ -1,10 +1,12 @@
 import { getTelegramBot } from "./bot";
+import { isTelegramConfigured } from "./config";
 import { formatTaskSummary, createTaskKeyboard } from "./handlers/taskHandler";
 import { MessageService } from "./messages";
-import { SubscriberService } from "./subscribers";
+import { SubscriberService, parseFullName } from "./subscribers";
 import {
   BroadcastResult,
   DeploymentNotificationOptions,
+  Subscriber,
   TaskItem,
 } from "./types";
 
@@ -236,5 +238,243 @@ export class TelegramService {
   static async getBotMe() {
     const bot = getTelegramBot();
     return await bot.api.getMe();
+  }
+
+  /**
+   * Finds an active Telegram subscriber by name and surname and sends them a message via Johan bot.
+   */
+  static async sendResponseToUserByName(params: {
+    name?: string;
+    surname?: string;
+    fullName?: string;
+    text: string;
+    parseMode?: "Markdown" | "HTML";
+  }): Promise<{
+    success: boolean;
+    subscriber?: Subscriber;
+    messageId?: number;
+    error?: string;
+  }> {
+    const targetName = params.name || params.fullName;
+    const targetSurname = params.surname;
+
+    if (!targetName && !targetSurname) {
+      return { success: false, error: "Missing name or surname parameter for user lookup." };
+    }
+
+    const subscriber = await SubscriberService.findSubscriberByNameAndSurname(
+      targetName || "",
+      targetSurname
+    );
+
+    if (!subscriber) {
+      const formattedLookup = [targetName, targetSurname].filter(Boolean).join(" ");
+      return {
+        success: false,
+        error: `No active Telegram subscriber found matching '${formattedLookup}'.`,
+      };
+    }
+
+    try {
+      if (!isTelegramConfigured()) {
+        // Simulation mode for tests / offline dev
+        await MessageService.logMessage({
+          chatId: subscriber.chatId,
+          userId: subscriber.userId,
+          username: subscriber.username,
+          firstName: subscriber.firstName,
+          lastName: subscriber.lastName,
+          chatType: subscriber.chatType || "private",
+          text: params.text,
+          direction: "outgoing",
+          messageType: "simulated_user_response",
+          rawPayload: { simulated: true, recipient: subscriber },
+        });
+
+        return {
+          success: true,
+          subscriber,
+        };
+      }
+
+      const bot = getTelegramBot();
+      const sent = await bot.api.sendMessage(subscriber.chatId, params.text, {
+        parse_mode: params.parseMode || "Markdown",
+      });
+
+      await MessageService.logMessage({
+        messageId: sent?.message_id,
+        chatId: subscriber.chatId,
+        userId: subscriber.userId,
+        username: subscriber.username,
+        firstName: subscriber.firstName,
+        lastName: subscriber.lastName,
+        chatType: subscriber.chatType || "private",
+        text: params.text,
+        direction: "outgoing",
+        messageType: "user_response",
+        rawPayload: sent,
+      });
+
+      return {
+        success: true,
+        subscriber,
+        messageId: sent?.message_id,
+      };
+    } catch (err) {
+      const errorMessage = (err as Error).message || String(err);
+      console.error("[TelegramService] Error sending response to matched user:", errorMessage);
+
+      // Still log message as outgoing failed attempt
+      await MessageService.logMessage({
+        chatId: subscriber.chatId,
+        userId: subscriber.userId,
+        username: subscriber.username,
+        firstName: subscriber.firstName,
+        lastName: subscriber.lastName,
+        chatType: subscriber.chatType || "private",
+        text: params.text,
+        direction: "outgoing",
+        messageType: "user_response_failed",
+        rawPayload: { error: errorMessage },
+      });
+
+      return {
+        success: false,
+        subscriber,
+        error: errorMessage,
+      };
+    }
+  }
+
+  /**
+   * Formats and delivers an AI prompt response to a user matched by name and surname using Johan bot integration.
+   */
+  static async sendAiPromptResponse(params: {
+    userIdentifier?: string;
+    userName?: string;
+    userSurname?: string;
+    userEmail?: string;
+    promptTitle?: string;
+    promptText?: string;
+    completion: string;
+    scheduledTime?: string;
+  }): Promise<{
+    success: boolean;
+    subscriber?: Subscriber;
+    formattedMessage: string;
+    error?: string;
+  }> {
+    // Determine lookup names
+    let firstName = params.userName;
+    let lastName = params.userSurname;
+
+    if (params.userName && !params.userSurname) {
+      const parsed = parseFullName(params.userName);
+      firstName = parsed.firstName;
+      lastName = parsed.lastName;
+    }
+
+    // Lookup subscriber
+    let subscriber = await SubscriberService.findSubscriberByNameAndSurname(
+      firstName || "",
+      lastName
+    );
+
+    if (!subscriber && params.userEmail) {
+      subscriber = await SubscriberService.matchSubscriberForUser({
+        name: params.userName,
+        email: params.userEmail,
+      });
+    }
+
+    const formattedMessage = params.completion?.trim() || "";
+
+    if (!subscriber) {
+      const queryStr = [firstName, lastName].filter(Boolean).join(" ") || params.userEmail || "user";
+      return {
+        success: false,
+        formattedMessage,
+        error: `Nebyl nalezen aktivní Telegram odběratel pro uživatele '${queryStr}'.`,
+      };
+    }
+
+    const sendRes = await this.sendMessageToChat(subscriber.chatId, formattedMessage, {
+      subscriber,
+      messageType: "ai_prompt_response",
+    });
+
+    return {
+      success: sendRes.success,
+      subscriber,
+      formattedMessage,
+      error: sendRes.error,
+    };
+  }
+
+  /**
+   * Helper to send a message to a specific chat with fallback and logging.
+   */
+  private static async sendMessageToChat(
+    chatId: number,
+    text: string,
+    meta?: { subscriber?: Subscriber; messageType?: string }
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (!isTelegramConfigured()) {
+        await MessageService.logMessage({
+          chatId,
+          userId: meta?.subscriber?.userId,
+          username: meta?.subscriber?.username,
+          firstName: meta?.subscriber?.firstName,
+          lastName: meta?.subscriber?.lastName,
+          chatType: meta?.subscriber?.chatType || "private",
+          text,
+          direction: "outgoing",
+          messageType: meta?.messageType || "message",
+          rawPayload: { simulated: true },
+        });
+        return { success: true };
+      }
+
+      const bot = getTelegramBot();
+      const sent = await bot.api.sendMessage(chatId, text, {
+        parse_mode: "Markdown",
+      });
+
+      await MessageService.logMessage({
+        messageId: sent?.message_id,
+        chatId,
+        userId: meta?.subscriber?.userId,
+        username: meta?.subscriber?.username,
+        firstName: meta?.subscriber?.firstName,
+        lastName: meta?.subscriber?.lastName,
+        chatType: meta?.subscriber?.chatType || "private",
+        text,
+        direction: "outgoing",
+        messageType: meta?.messageType || "message",
+        rawPayload: sent,
+      });
+
+      return { success: true };
+    } catch (err) {
+      const msg = (err as Error).message || String(err);
+      console.warn(`[TelegramService] Warning: Could not send message to chat ${chatId}:`, msg);
+
+      await MessageService.logMessage({
+        chatId,
+        userId: meta?.subscriber?.userId,
+        username: meta?.subscriber?.username,
+        firstName: meta?.subscriber?.firstName,
+        lastName: meta?.subscriber?.lastName,
+        chatType: meta?.subscriber?.chatType || "private",
+        text,
+        direction: "outgoing",
+        messageType: `${meta?.messageType || "message"}_failed`,
+        rawPayload: { error: msg },
+      });
+
+      return { success: false, error: msg };
+    }
   }
 }
