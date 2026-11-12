@@ -18,14 +18,16 @@ export async function GET(req: NextRequest, context: RouteContext) {
     const shouldRedirect = searchParams.get("redirect") === "true";
 
     if (file && file.url.startsWith("http")) {
+      // For private blobs, get a fresh signed download URL
+      const signedUrl = await FssBlobStorageService.getSignedDownloadUrl(file.url);
+
       if (shouldRedirect) {
-        const downloadUrl = file.downloadUrl || `${file.url}?download=1`;
-        return NextResponse.redirect(downloadUrl);
+        return NextResponse.redirect(signedUrl);
       }
 
       // Stream file directly to ensure clean download with original filename
       try {
-        const upstreamRes = await fetch(file.url);
+        const upstreamRes = await fetch(signedUrl);
         if (upstreamRes.ok) {
           const arrayBuf = await upstreamRes.arrayBuffer();
           const filename = file.name || "dokumentace";
@@ -47,7 +49,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
         }
       } catch (fetchErr) {
         console.warn("[Download Route] Upstream blob fetch failed, falling back to redirect:", fetchErr);
-        return NextResponse.redirect(file.downloadUrl || file.url);
+        return NextResponse.redirect(signedUrl);
       }
     }
 

@@ -12,11 +12,10 @@ let openaiClient: OpenAI | null = null;
 export const DEFAULT_OPENAI_MODEL = "gpt-4o";
 
 /**
- * Returns the effective OpenAI model name based on OPENAI_MODEL env variable,
- * falling back to DEFAULT_OPENAI_MODEL if not set.
+ * Returns the default OpenAI model name.
  */
 export function getEffectiveOpenAiModel(): string {
-  return process.env.OPENAI_MODEL?.trim() || DEFAULT_OPENAI_MODEL;
+  return DEFAULT_OPENAI_MODEL;
 }
 
 export const AVAILABLE_OPENAI_MODELS = [

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth/session";
 import { FireSafetySolutionService, FssBlobStorageService, FssTechnicalDocumentationFile } from "@/lib/fss";
 
 interface RouteContext {
@@ -41,12 +42,30 @@ export async function GET(_req: NextRequest, context: RouteContext) {
 export async function POST(req: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
+
+    // Require authentication for file uploads
+    const currentUser = await getCurrentUser(req);
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: "Authentication required. Please log in to upload files." },
+        { status: 401 }
+      );
+    }
+
     const solution = await FireSafetySolutionService.getSolutionById(id);
 
     if (!solution) {
       return NextResponse.json(
         { error: `Fire Safety Solution with ID '${id}' not found.` },
         { status: 404 }
+      );
+    }
+
+    // Verify ownership — only the solution owner can upload files
+    if (solution.userId !== currentUser.id) {
+      return NextResponse.json(
+        { error: "You do not have permission to upload files to this solution." },
+        { status: 403 }
       );
     }
 
@@ -75,7 +94,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     }
 
     const description = (formData.get("description") as string) || undefined;
-    const uploadedBy = (formData.get("uploadedBy") as string) || solution.userId || "user";
+    const uploadedBy = currentUser.id;
 
     let currentSolution = solution;
 

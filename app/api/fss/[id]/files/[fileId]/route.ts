@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth/session";
 import { FireSafetySolutionService } from "@/lib/fss";
 
 interface RouteContext {
@@ -45,15 +46,33 @@ export async function GET(_req: NextRequest, context: RouteContext) {
  * DELETE /api/fss/[id]/files/[fileId]
  * Deletes a technical documentation file from Vercel Blob and FSS record.
  */
-export async function DELETE(_req: NextRequest, context: RouteContext) {
+export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
     const { id, fileId } = await context.params;
+
+    // Require authentication for file deletion
+    const currentUser = await getCurrentUser(req);
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: "Authentication required. Please log in to delete files." },
+        { status: 401 }
+      );
+    }
+
     const solution = await FireSafetySolutionService.getSolutionById(id);
 
     if (!solution) {
       return NextResponse.json(
         { error: `Fire Safety Solution with ID '${id}' not found.` },
         { status: 404 }
+      );
+    }
+
+    // Verify ownership — only the solution owner can delete files
+    if (solution.userId !== currentUser.id) {
+      return NextResponse.json(
+        { error: "You do not have permission to delete files from this solution." },
+        { status: 403 }
       );
     }
 

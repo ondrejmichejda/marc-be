@@ -41,6 +41,7 @@ import { POST as resetFssPromptsApi } from "../app/api/fss/prompts/reset/route";
 import { POST as generateFssApi } from "../app/api/fss/generate/route";
 import { generateDocxExport, getExportFilename, FssBlobStorageService } from "../lib/fss";
 import { UserAiSettingsService } from "../lib/openai";
+import { UserService } from "../lib/auth/userService";
 import PizZip from "pizzip";
 
 test("Fire Safety Solutions: 18 Template Property Fields Metadata & Mappings", () => {
@@ -422,9 +423,18 @@ test("API Routes: Export endpoints GET /api/fss/[id]/export and POST /api/fss/ex
 });
 
 test("FSS Technical Documentation Files: Upload, Persistence, Retrieval, Download, and Deletion via Vercel Blob solution", async () => {
-  // 1. Create a solution
+  // Create an authenticated user for the test
+  const testProfile = {
+    id: `blob_test_${Date.now()}`,
+    email: `blob.test.${Date.now()}@gmail.com`,
+    name: "Blob Test User",
+    emailVerified: true,
+  };
+  const { user: testUser, token: testToken } = await UserService.registerOrLoginGoogleUser(testProfile);
+
+  // 1. Create a solution owned by the authenticated user
   const solution = await FireSafetySolutionService.createSolution({
-    userId: "test_blob_user",
+    userId: testUser.id,
     title: "Nemocnice Motol - Pavilon F",
     nazevStavby: "Nemocnice Motol - Pavilon F",
     investorName: "FN Motol",
@@ -477,6 +487,9 @@ test("FSS Technical Documentation Files: Upload, Persistence, Retrieval, Downloa
   const uploadMultiReq = new NextRequest(`http://localhost:3000/api/fss/${solution.id}/files`, {
     method: "POST",
     body: formData,
+    headers: {
+      Authorization: `Bearer ${testToken}`,
+    },
   });
   const uploadMultiRes = await uploadFssFilesApi(uploadMultiReq, { params: Promise.resolve({ id: solution.id }) });
   assert.equal(uploadMultiRes.status, 200);
@@ -531,6 +544,9 @@ test("FSS Technical Documentation Files: Upload, Persistence, Retrieval, Downloa
   const standaloneUploadReq = new NextRequest("http://localhost:3000/api/fss/files/upload", {
     method: "POST",
     body: standaloneFormData,
+    headers: {
+      Authorization: `Bearer ${testToken}`,
+    },
   });
   const standaloneUploadRes = await uploadStandaloneFileApi(standaloneUploadReq);
   assert.equal(standaloneUploadRes.status, 200);
@@ -540,6 +556,9 @@ test("FSS Technical Documentation Files: Upload, Persistence, Retrieval, Downloa
   // 10. DELETE /api/fss/[id]/files/[fileId] (Delete file endpoint)
   const deleteFileReq = new NextRequest(`http://localhost:3000/api/fss/${solution.id}/files/${targetFileId}`, {
     method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${testToken}`,
+    },
   });
   const deleteFileRes = await deleteFssFileByIdApi(deleteFileReq, {
     params: Promise.resolve({ id: solution.id, fileId: targetFileId }),
@@ -552,6 +571,7 @@ test("FSS Technical Documentation Files: Upload, Persistence, Retrieval, Downloa
 
   // Cleanup
   await FireSafetySolutionService.deleteSolution(solution.id);
+  await UserService.deleteUser(testUser.id);
 });
 
 test("FssPromptService: 18 General AI Prompts CRUD, Reset, and File Attachment Option", async () => {

@@ -445,7 +445,7 @@ export function OpenAiSystemView() {
                 <div className="py-2.5 flex justify-between items-center">
                   <span className="text-zinc-400">Active Model Configuration</span>
                   <span className="text-emerald-300 font-mono text-[11px] font-semibold">
-                    {config?.defaultModel || "gpt-4o"} (Centralized via OPENAI_MODEL)
+                    {config?.defaultModel || "gpt-4o"}
                   </span>
                 </div>
                 <div className="py-2.5 flex justify-between items-center">

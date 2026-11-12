@@ -7,7 +7,7 @@ export async function register() {
     const activeOpenAiModel = getEffectiveOpenAiModel();
     const webSearchStatus = isOpenAiWebSearchEnabled() ? "Enabled" : "Disabled";
     console.log(
-      `🤖 [OpenAI Startup] OPENAI_MODEL="${process.env.OPENAI_MODEL || ""}" (Active Model: ${activeOpenAiModel}, Web Search: ${webSearchStatus}, API Key: ${isOpenAiConfigured() ? "Configured" : "Simulation Mode"})`
+      `🤖 [OpenAI Startup] Active Model: ${activeOpenAiModel}, Web Search: ${webSearchStatus}, API Key: ${isOpenAiConfigured() ? "Configured" : "Simulation Mode"}`
     );
 
     // 2. Database Initialization
