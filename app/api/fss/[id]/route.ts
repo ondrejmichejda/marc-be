@@ -1,17 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
+import { RolesService } from "@/lib/auth/rolesService";
 import { FireSafetySolutionService } from "@/lib/fss";
 
-async function resolveUserId(req: NextRequest): Promise<{ userId: string; userEmail?: string }> {
+async function resolveUser(req: NextRequest): Promise<{
+  userId: string;
+  userEmail?: string;
+  isSystemUser: boolean;
+}> {
   const currentUser = await getCurrentUser(req);
   if (currentUser) {
-    return { userId: currentUser.id, userEmail: currentUser.email };
+    const role = await RolesService.getRole(currentUser.role);
+    const isSystemUser = role?.isSystem ?? false;
+    return { userId: currentUser.id, userEmail: currentUser.email, isSystemUser };
   }
   const headerUserId = req.headers.get("x-user-id") || req.headers.get("user-id");
   if (headerUserId && headerUserId.trim()) {
-    return { userId: headerUserId.trim(), userEmail: req.headers.get("x-user-email") || undefined };
+    return {
+      userId: headerUserId.trim(),
+      userEmail: req.headers.get("x-user-email") || undefined,
+      isSystemUser: false,
+    };
   }
-  return { userId: "default_user", userEmail: "user@marc.dev" };
+  return { userId: "default_user", userEmail: "user@marc.dev", isSystemUser: false };
 }
 
 interface RouteContext {
@@ -24,7 +35,8 @@ interface RouteContext {
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
-    const solution = await FireSafetySolutionService.getSolutionById(id);
+    const resolved = await resolveUser(req);
+    const solution = await FireSafetySolutionService.getSolutionById(id, resolved.userId, resolved.isSystemUser);
 
     if (!solution) {
       return NextResponse.json(
@@ -49,7 +61,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
 export async function PUT(req: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
-    const resolved = await resolveUserId(req);
+    const resolved = await resolveUser(req);
     const body = await req.json();
 
     const updated = await FireSafetySolutionService.updateSolution(id, resolved.userId, body);
@@ -79,7 +91,8 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
-    const deleted = await FireSafetySolutionService.deleteSolution(id);
+    const resolved = await resolveUser(req);
+    const deleted = await FireSafetySolutionService.deleteSolution(id, resolved.userId, resolved.isSystemUser);
 
     if (!deleted) {
       return NextResponse.json(
