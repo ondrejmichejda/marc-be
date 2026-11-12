@@ -149,8 +149,8 @@ test("FireSafetySolutionService: Create, List, Retrieve, Update, and Delete with
   assert.equal(listAfterReinit.length, 0, "Deleted solution must not reappear after storage reload");
 });
 
-test("Fire Safety Solutions: Demo solutions deletion and persistence", async () => {
-  // Create a demo-like solution or delete an item and reload storage
+test("Fire Safety Solutions: Deletion and persistence", async () => {
+  // Create a solution, delete it, and verify it does not reappear after storage reload
   const temp = await FireSafetySolutionService.createSolution({
     userId: "admin",
     title: "Dočasný projekt k odstranění",

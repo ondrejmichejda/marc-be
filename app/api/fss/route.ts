@@ -1,19 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
+import { RolesService } from "@/lib/auth/rolesService";
 import { FireSafetySolutionService } from "@/lib/fss";
 
-async function resolveUserId(req: NextRequest): Promise<{ userId: string; userEmail?: string }> {
+async function resolveUser(req: NextRequest): Promise<{
+  userId: string;
+  userEmail?: string;
+  isSystemUser: boolean;
+}> {
   const currentUser = await getCurrentUser(req);
   if (currentUser) {
-    return { userId: currentUser.id, userEmail: currentUser.email };
+    const role = await RolesService.getRole(currentUser.role);
+    const isSystemUser = role?.isSystem ?? false;
+    return { userId: currentUser.id, userEmail: currentUser.email, isSystemUser };
   }
 
   const headerUserId = req.headers.get("x-user-id") || req.headers.get("user-id");
   if (headerUserId && headerUserId.trim()) {
-    return { userId: headerUserId.trim(), userEmail: req.headers.get("x-user-email") || undefined };
+    return {
+      userId: headerUserId.trim(),
+      userEmail: req.headers.get("x-user-email") || undefined,
+      isSystemUser: false,
+    };
   }
 
-  return { userId: "default_user", userEmail: "user@marc.dev" };
+  return { userId: "default_user", userEmail: "user@marc.dev", isSystemUser: false };
 }
 
 /**
@@ -23,13 +34,14 @@ async function resolveUserId(req: NextRequest): Promise<{ userId: string; userEm
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const resolved = await resolveUserId(req);
+    const resolved = await resolveUser(req);
     const targetUserId = searchParams.get("userId") || resolved.userId;
     const search = searchParams.get("search") || undefined;
 
     const solutions = await FireSafetySolutionService.listSolutions({
-      userId: searchParams.has("all") ? undefined : targetUserId,
+      userId: searchParams.has("all") || resolved.isSystemUser ? undefined : targetUserId,
       search,
+      isSystemUser: resolved.isSystemUser,
     });
 
     return NextResponse.json({
@@ -51,7 +63,7 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const resolved = await resolveUserId(req);
+    const resolved = await resolveUser(req);
     const body = await req.json();
 
     const userId = (typeof body?.userId === "string" && body.userId.trim()) || resolved.userId;

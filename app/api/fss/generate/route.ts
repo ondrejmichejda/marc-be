@@ -6,6 +6,7 @@ import {
   FssTechnicalDocumentationFile,
 } from "@/lib/fss";
 import { getCurrentUser } from "@/lib/auth";
+import { RolesService } from "@/lib/auth/rolesService";
 
 /**
  * POST /api/fss/generate
@@ -17,12 +18,16 @@ export async function POST(req: NextRequest) {
     const currentUser = await getCurrentUser(req);
     const body = await req.json().catch(() => ({}));
 
+    const userIdentifier = currentUser?.email || currentUser?.id || "fss_user";
+    const effectiveUserId = currentUser?.id || body.userId;
+    const isSystemUser = currentUser?.role ? (await RolesService.getRole(currentUser.role))?.isSystem ?? false : false;
+
     let properties: Partial<FireSafetySolutionProperties> = body.properties || {};
     let files: FssTechnicalDocumentationFile[] = body.files || [];
 
     // If fssId is provided, enrich context from existing stored solution
     if (body.fssId) {
-      const existing = await FireSafetySolutionService.getSolutionById(body.fssId);
+      const existing = await FireSafetySolutionService.getSolutionById(body.fssId, effectiveUserId, isSystemUser);
       if (existing) {
         properties = {
           ...existing,
@@ -33,9 +38,6 @@ export async function POST(req: NextRequest) {
         }
       }
     }
-
-    const userIdentifier = currentUser?.email || currentUser?.id || "fss_user";
-    const effectiveUserId = currentUser?.id || body.userId;
     const solutionId = body.fssId || body.solutionId;
 
     // 1. Single property generation

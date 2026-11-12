@@ -1,8 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth/session";
+import { RolesService } from "@/lib/auth/rolesService";
 import { FireSafetySolutionService } from "@/lib/fss";
 
 interface RouteContext {
   params: Promise<{ id: string }> | { id: string };
+}
+
+async function resolveUser(req: NextRequest): Promise<{
+  userId: string;
+  userEmail?: string;
+  isSystemUser: boolean;
+}> {
+  const currentUser = await getCurrentUser(req);
+  if (currentUser) {
+    const role = await RolesService.getRole(currentUser.role);
+    const isSystemUser = role?.isSystem ?? false;
+    return { userId: currentUser.id, userEmail: currentUser.email, isSystemUser };
+  }
+  const headerUserId = req.headers.get("x-user-id") || req.headers.get("user-id");
+  if (headerUserId && headerUserId.trim()) {
+    return {
+      userId: headerUserId.trim(),
+      userEmail: req.headers.get("x-user-email") || undefined,
+      isSystemUser: false,
+    };
+  }
+  return { userId: "default_user", userEmail: "user@marc.dev", isSystemUser: false };
 }
 
 /**
@@ -12,7 +36,8 @@ interface RouteContext {
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
-    const solution = await FireSafetySolutionService.getSolutionById(id);
+    const resolved = await resolveUser(req);
+    const solution = await FireSafetySolutionService.getSolutionById(id, resolved.userId, resolved.isSystemUser);
 
     if (!solution) {
       return NextResponse.json(

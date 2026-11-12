@@ -15,54 +15,6 @@ interface StorageSchema {
   solutions: Record<string, FireSafetySolution>;
 }
 
-const DEFAULT_DEMO_SOLUTIONS: Omit<FireSafetySolution, "createdAt" | "updatedAt">[] = [
-  {
-    id: "fss_demo_admin_center",
-    userId: "admin",
-    title: "Administrativní budova Alpha - PBŘ",
-    nazevStavby: "Administrativní budova Alpha Park",
-    investorName: "Alpha Real Estate Development s.r.o.",
-    mistoStavby: "Praha 4 - Chodov, parc. č. 1420/12, k.ú. Chodov",
-    stupenDokumentace: "DSP - Dokumentace pro stavební povolení",
-    datum: "2026-11-10",
-    uvod: "Předmětem požárně bezpečnostního řešení je novostavba pětipodlažní administrativní budovy Alpha Park s jedním podzemním podlažím určeným pro hromadné garáže.",
-    seznamPodkladu: "1. Stavební výkresy zhotovené Atelierem Architektury 2026\n2. ČSN 73 0802 - Požární bezpečnost staveb - Nevýrobní objekty\n3. ČSN 73 0804 - Výrobní objekty\n4. ČSN 73 0818 - Obsazení objektů osobami\n5. Vyhláška MV č. 23/2008 Sb. o technických podmínkách požární ochrany staveb ve znění vyhl. č. 268/2011 Sb.",
-    seznamPriloh: "Příloha č. 1: Koordinační situační výkres požární bezpečnosti (M 1:500)\nPříloha č. 2: Půdorysy 1.PP až 5.NP s vyznačením požárních úseků (M 1:100)\nPříloha č. 3: Výpočtové protokoly SPB a odstupových vzdáleností",
-    kategorizaceStavbyZHlediskaPozarniBezpecnosti: "Stavba je zařazena do kategorie II (stavba se zvýšeným požárním nebezpečím dle § 39 vyhlášky č. 246/2001 Sb.) z důvodu přítomnosti shromažďovacích prostor a hromadných garáží.",
-    konstrukcniReseniStavby: "Železobetonový monolitický skelet se ztužujícími schodišťovými jádry. Obvodový plášť tvoří provětrávaná fasáda s minerální izolací třídy reakce na oheň A1. Konstrukční systém: nehořlavý (DP1).",
-    posouzeniPozarniBezpecnostiStaveb: "Objekt je rozdělen do samostatných požárních úseků: N01.01 (vstupní lobby), N01.02-N05.02 (kancelářské prostory po patrech), P01.01 (hromadná podzemní garáž), CHÚC A (schodišťový prostor). Stupeň požární bezpečnosti SPB IV pro 1.PP a SPB III pro nadzemní podlaží.",
-    pozarniOdolnostStavebnichKonstrukci: "Nosné sloupy a stěny: REI 90 DP1\nStropní desky: REI 60 DP1\nPožární uzávěry otvorů v CHÚC: EI 30-Sm DP1\nPožární stěny ohraničující garáže: REI 120 DP1",
-    zhodnoceniTechnickychZarizeniStavby: "Ústřední vytápění a chlazení přes fancoily. Vzduchotechnické potrubí procházející požárně dělicími konstrukcemi je opatřeno požárními klapkami s odolností EI 60-S. Hlavní vypínače TOTAL STOP a CENTRAL STOP jsou umístěny u vstupu v 1.NP.",
-    evakuaceADruhyAKapacityUnikovychCest: "Z 2.NP až 5.NP je navržena chráněná úniková cesta typu CHÚC A ústící na volné prostranství. Šířka únikového pruhu u = 1,5 u (900 mm na jedno rameno), kapacita plně vyhovuje pro 280 osob. Doba evakuace te = 2,4 min.",
-    pozarneNebezpecnyProstorOdstupoveVzdalenosti: "Odstupové vzdálenosti z požárně otevřených ploch fasády nepřesahují hranici pozemku investora (maximální odstup d = 4,25 m, vzdálenost k hranici pozemku min. 6,80 m). Požárně nebezpečný prostor nezasahuje na sousední objekty.",
-    zabezpeceniPozarniVodouNeboJinymiHasebnimiLatkami: "Vnější odběrné místo: stávající podzemní hydrant DN 100 ve vzdálenosti 45 m od objektu (vydatnost Q = 9,5 l/s). Vnitřní odběrná místa: v každém podlaží osazeny nástěnné hydrantové systémy s tvarově stálou hadicí D25 (délka 30 m).",
-    pozadavkyNaPozarneBezpecnostniZarizeniAZnaceni: "Objekt je vybaven elektrickou požární signalizací (EPS) v rozsahu celoplošné ochrany, nouzovým únikovým osvětlením s autonomním zdrojem na 60 minut a bezpečnostními fotoluminiscenčními tabulkami směru úniku dle ČSN ISO 3864-1.",
-    pozadavkyProHaseniPozaruAZachrannePrace: "Příjezdová komunikace šířky 4,0 m je napojena na ulici U Garáží. Nástupní plocha pro výškovou techniku HZS je situována podél severní fasády o rozměrech 4,0 x 12,0 m se zpevněným povrchem únosnosti 100 kN na nápravu.",
-  },
-  {
-    id: "fss_demo_logistics_hall",
-    userId: "admin",
-    title: "Skladová a logistická hala Beta - PBŘ",
-    nazevStavby: "Logistický park Beta - Hala H2",
-    investorName: "Beta Logistics Hub a.s.",
-    mistoStavby: "Brno - Slatina, parc. č. 850/4",
-    stupenDokumentace: "DSP - Dokumentace pro stavební povolení",
-    datum: "2026-11-05",
-    uvod: "Požárně bezpečnostní řešení jednopodlažní skladové haly s vestavkem administrativního zázemí pro skladování suchého zboží a logistiku.",
-    seznamPodkladu: "1. Architektonická studie a technické podklady haly H2\n2. ČSN 73 0804 - Výrobní objekty\n3. ČSN 73 0845 - Sklady\n4. ČSN 73 0873 - Zásobování požární vodou",
-    seznamPriloh: "Příloha č. 1: Situační výkres s PNP a hydranty\nPříloha č. 2: Půdorys haly a administrativního vestavku",
-    kategorizaceStavbyZHlediskaPozarniBezpecnosti: "Stavba kategorie II dle § 39 vyhlášky č. 246/2001 Sb.",
-    konstrukcniReseniStavby: "Ocelový skelet s příhradovými vazníky a sendvičovými panely s minerální výplní. Konstrukční systém DP1.",
-    posouzeniPozarniBezpecnostiStaveb: "Hala tvoří samostatný požární úsek P01.01/N01 o půdorysné ploše 4 500 m2. Administrativní vestavek tvoří P01.02/N01-N02. SPB II pro sklad, SPB III pro administrativu.",
-    pozarniOdolnostStavebnichKonstrukci: "Ocelové sloupy: chráněny nástřikem na R 45 DP1\nStřešní plášť: REI 30 DP1\nOddělující stěna vestavku: REI 90 DP1",
-    zhodnoceniTechnickychZarizeniStavby: "Sálavé tmavé plynové zářiče. Vzduchotechnické odvětrání kouře a tepla (SOZ) s automatickým otevíráním světlíků.",
-    evakuaceADruhyAKapacityUnikovychCest: "Nechráněné únikové cesty (NÚC) s maximální délkou 45 m k vnějším únikovým východům. Celkem 6 únikových dveří šířky 1200 mm.",
-    pozarneNebezpecnyProstorOdstupoveVzdalenosti: "Vzdálenost požárního odstupu z fasádních panelů d = 7,5 m, celá leží na pozemku investora.",
-    zabezpeceniPozarniVodouNeboJinymiHasebnimiLatkami: "Stabilní hasicí zařízení (SHZ) sprinklerového typu. Vnější nadzemní hydrant DN 150 s průtokem 20 l/s.",
-    pozadavkyNaPozarneBezpecnostniZarizeniAZnaceni: "Elektrická požární signalizace (EPS), SHZ, samočinné odvětrací zařízení (SOZ) a bezpečnostní značení.",
-    pozadavkyProHaseniPozaruAZachrannePrace: "Okružní zpevněná obslužná komunikace pro zásahová vozidla HZS, nástupní plocha podél jižní strany objektu.",
-  },
-];
 
 function sanitizeProperty(val: unknown): string {
   if (val === null || val === undefined) return "";
@@ -200,18 +152,6 @@ export class FireSafetySolutionService {
             this.localSolutions.set(id, item);
           }
         }
-      } else {
-        // Seed defaults only once on initial storage initialization when file does not exist
-        const now = new Date().toISOString();
-        this.localSolutions.clear();
-        for (const demo of DEFAULT_DEMO_SOLUTIONS) {
-          this.localSolutions.set(demo.id, {
-            ...demo,
-            createdAt: now,
-            updatedAt: now,
-          });
-        }
-        this.saveStorage();
       }
     } catch (err) {
       console.warn(
@@ -243,24 +183,26 @@ export class FireSafetySolutionService {
   static async listSolutions(options?: {
     userId?: string;
     search?: string;
+    isSystemUser?: boolean;
   }): Promise<FireSafetySolution[]> {
     if (isDbConfigured()) {
       try {
         const sql = await ensureDb();
         const searchPattern = options?.search ? `%${options.search.trim().toLowerCase()}%` : null;
+        const hasUserIdFilter = options?.userId && !options?.isSystemUser;
 
         let rows: Record<string, unknown>[];
-        if (options?.userId && searchPattern) {
+        if (hasUserIdFilter && searchPattern) {
           rows = (await sql`
             SELECT * FROM fire_safety_solutions
-            WHERE (user_id = ${options.userId} OR user_id = 'admin' OR user_id = 'system')
+            WHERE user_id = ${options.userId}
               AND (LOWER(title) LIKE ${searchPattern} OR LOWER(nazev_stavby) LIKE ${searchPattern} OR LOWER(investor_name) LIKE ${searchPattern})
             ORDER BY updated_at DESC;
           `) as Record<string, unknown>[];
-        } else if (options?.userId) {
+        } else if (hasUserIdFilter) {
           rows = (await sql`
             SELECT * FROM fire_safety_solutions
-            WHERE user_id = ${options.userId} OR user_id = 'admin' OR user_id = 'system'
+            WHERE user_id = ${options.userId}
             ORDER BY updated_at DESC;
           `) as Record<string, unknown>[];
         } else if (searchPattern) {
@@ -285,9 +227,9 @@ export class FireSafetySolutionService {
     this.loadStorage();
     let list = Array.from(this.localSolutions.values());
 
-    if (options?.userId) {
+    if (options?.userId && !options?.isSystemUser) {
       list = list.filter(
-        (item) => item.userId === options.userId || item.userId === "admin" || item.userId === "system"
+        (item) => item.userId === options.userId
       );
     }
 
@@ -306,9 +248,14 @@ export class FireSafetySolutionService {
   }
 
   /**
-   * Gets a single fire safety solution by ID.
+   * Gets a single fire safety solution by ID, optionally verifying ownership.
+   * System users (isSystemUser=true) bypass the ownership check.
    */
-  static async getSolutionById(id: string): Promise<FireSafetySolution | null> {
+  static async getSolutionById(
+    id: string,
+    userId?: string,
+    isSystemUser?: boolean
+  ): Promise<FireSafetySolution | null> {
     if (isDbConfigured()) {
       try {
         const sql = await ensureDb();
@@ -319,7 +266,9 @@ export class FireSafetySolutionService {
         `) as Record<string, unknown>[];
 
         if (rows.length > 0) {
-          return mapFssRow(rows[0]);
+          const solution = mapFssRow(rows[0]);
+          if (userId && !isSystemUser && solution.userId !== userId) return null;
+          return solution;
         }
         return null;
       } catch (err) {
@@ -330,6 +279,7 @@ export class FireSafetySolutionService {
     this.loadStorage();
     const item = this.localSolutions.get(id);
     if (!item) return null;
+    if (userId && !isSystemUser && item.userId !== userId) return null;
     return item;
   }
 
@@ -418,10 +368,10 @@ export class FireSafetySolutionService {
    */
   static async updateSolution(
     id: string,
-    _userId: string | undefined,
+    userId: string | undefined,
     input: UpdateFireSafetySolutionInput
   ): Promise<FireSafetySolution> {
-    const existing = await this.getSolutionById(id);
+    const existing = await this.getSolutionById(id, userId);
     if (!existing) {
       throw new Error(`Fire safety solution with ID '${id}' not found.`);
     }
@@ -546,15 +496,22 @@ export class FireSafetySolutionService {
   }
 
   /**
-   * Deletes a fire safety solution by ID.
+   * Deletes a fire safety solution by ID, optionally verifying ownership.
+   * System users (isSystemUser=true) bypass the ownership check.
    */
-  static async deleteSolution(id: string): Promise<boolean> {
+  static async deleteSolution(
+    id: string,
+    userId?: string,
+    isSystemUser?: boolean
+  ): Promise<boolean> {
     let dbDeleted = false;
     if (isDbConfigured()) {
       try {
         const sql = await ensureDb();
         const deletedRows = (await sql`
-          DELETE FROM fire_safety_solutions WHERE id = ${id} RETURNING id;
+          DELETE FROM fire_safety_solutions
+          WHERE id = ${id}${userId && !isSystemUser ? ` AND user_id = ${userId}` : ``}
+          RETURNING id;
         `) as Record<string, unknown>[];
         if (deletedRows && deletedRows.length > 0) {
           dbDeleted = true;
@@ -565,7 +522,15 @@ export class FireSafetySolutionService {
     }
 
     this.loadStorage();
-    const deletedLocally = this.localSolutions.delete(id);
+    let deletedLocally = false;
+    if (userId && !isSystemUser) {
+      const item = this.localSolutions.get(id);
+      if (item && item.userId === userId) {
+        deletedLocally = this.localSolutions.delete(id);
+      }
+    } else {
+      deletedLocally = this.localSolutions.delete(id);
+    }
     this.saveStorage();
 
     if (isDbConfigured()) {
@@ -639,13 +604,16 @@ export class FireSafetySolutionService {
   }
 
   /**
-   * Gets a specific technical documentation file from a solution.
+   * Gets a specific technical documentation file from a solution, optionally verifying ownership.
+   * System users (isSystemUser=true) bypass the ownership check.
    */
   static async getSolutionFile(
     solutionId: string,
-    fileId: string
+    fileId: string,
+    userId?: string,
+    isSystemUser?: boolean
   ): Promise<FssTechnicalDocumentationFile | null> {
-    const solution = await this.getSolutionById(solutionId);
+    const solution = await this.getSolutionById(solutionId, userId, isSystemUser);
     if (!solution || !solution.files) return null;
     return solution.files.find((f) => f.id === fileId) || null;
   }
