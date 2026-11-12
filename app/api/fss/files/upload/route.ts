@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth/session";
 import { FssBlobStorageService, FssTechnicalDocumentationFile } from "@/lib/fss";
 
 /**
@@ -7,6 +8,15 @@ import { FssBlobStorageService, FssTechnicalDocumentationFile } from "@/lib/fss"
  */
 export async function POST(req: NextRequest) {
   try {
+    // Require authentication for file uploads
+    const currentUser = await getCurrentUser(req);
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: "Authentication required. Please log in to upload files." },
+        { status: 401 }
+      );
+    }
+
     const formData = await req.formData();
     const uploadedFiles: FssTechnicalDocumentationFile[] = [];
 
@@ -32,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     const fssId = (formData.get("fssId") as string) || undefined;
     const description = (formData.get("description") as string) || undefined;
-    const uploadedBy = (formData.get("uploadedBy") as string) || "user";
+    const uploadedBy = currentUser.id;
 
     for (const file of fileEntries) {
       const buffer = Buffer.from(await file.arrayBuffer());

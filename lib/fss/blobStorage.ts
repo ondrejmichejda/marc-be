@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { put, del } from "@vercel/blob";
+import { put, del, head } from "@vercel/blob";
 import { FssTechnicalDocumentationFile } from "./types";
 
 export interface UploadOptions {
@@ -47,7 +47,7 @@ export class FssBlobStorageService {
       try {
         const token = process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
         const blob = await put(blobPathname, Buffer.from(buffer), {
-          access: "public",
+          access: "private",
           contentType,
           token,
           addRandomSuffix: false,
@@ -135,6 +135,29 @@ export class FssBlobStorageService {
     }
 
     return deleted;
+  }
+
+  /**
+   * Generates a fresh signed download URL for a private blob.
+   * For public blobs or local files, returns the original URL unchanged.
+   */
+  static async getSignedDownloadUrl(urlOrPathname: string): Promise<string> {
+    if (!urlOrPathname.startsWith("http")) {
+      return urlOrPathname;
+    }
+
+    if (!this.isVercelBlobConfigured()) {
+      return urlOrPathname;
+    }
+
+    try {
+      const token = process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
+      const result = await head(urlOrPathname, { token });
+      return result.downloadUrl || urlOrPathname;
+    } catch (err) {
+      console.warn("[FssBlobStorageService] Failed to get signed URL, falling back to original:", (err as Error).message);
+      return urlOrPathname;
+    }
   }
 
   /**
