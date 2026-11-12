@@ -37,6 +37,9 @@ export interface FireSafetySolution extends FireSafetySolutionProperties {
   userId: string;
   title: string;
   files?: FssTechnicalDocumentationFile[];
+  totalCostUsd?: number;
+  totalTokens?: number;
+  generationCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -46,12 +49,18 @@ export interface CreateFireSafetySolutionInput extends Partial<FireSafetySolutio
   title?: string;
   nazevStavby?: string;
   files?: FssTechnicalDocumentationFile[];
+  totalCostUsd?: number;
+  totalTokens?: number;
+  generationCount?: number;
   [key: string]: unknown;
 }
 
 export interface UpdateFireSafetySolutionInput extends Partial<FireSafetySolutionProperties> {
   title?: string;
   files?: FssTechnicalDocumentationFile[];
+  totalCostUsd?: number;
+  totalTokens?: number;
+  generationCount?: number;
   [key: string]: unknown;
 }
 

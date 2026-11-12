@@ -78,7 +78,7 @@ export const ROLE_DEFINITIONS: Record<string, RoleDefinition> = BUILTIN_ROLES;
 
 /**
  * Base master catalog of application menu items.
- * Includes Fire Safety Solutions, AI Prompts, and the admin-only System menu item.
+ * Includes Fire Safety Solutions, FSS AI Prompts, AI Settings, Scheduled Prompts, and System administration.
  */
 export const BASE_MENU_ITEMS: MenuItem[] = [
   {
@@ -88,6 +88,24 @@ export const BASE_MENU_ITEMS: MenuItem[] = [
     badge: "FSS",
     description: "Manage Fire Safety Solutions, building documentation, and fire safety assessments",
     category: "General",
+    allowedRoles: ["admin", "operator", "user"],
+  },
+  {
+    id: "fss_ai_prompts",
+    label: "FSS AI Prompts",
+    icon: "📐",
+    badge: "PBŘ Prompts",
+    description: "General AI prompts configuration for Fire Safety Solution properties generation",
+    category: "Administration",
+    allowedRoles: ["admin"],
+  },
+  {
+    id: "openai_settings",
+    label: "AI Settings",
+    icon: "⚡",
+    badge: "Personal",
+    description: "Configure personal OpenAI API key, default model, and web search",
+    category: "Administration",
     allowedRoles: ["admin", "operator", "user"],
   },
   {
@@ -114,6 +132,8 @@ export const ALL_MENU_ITEMS = BASE_MENU_ITEMS;
 
 export const DEFAULT_MENU_MAPPINGS: Record<string, string[]> = {
   fire_safety_solutions: ["admin", "operator", "user"],
+  fss_ai_prompts: ["admin"],
+  openai_settings: ["admin", "operator", "user"],
   ai_prompts: ["admin", "operator", "user"],
   system: ["admin"],
 };

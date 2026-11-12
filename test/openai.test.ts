@@ -8,6 +8,7 @@ import {
   isOpenAiWebSearchEnabled,
   getOpenAiConfig,
   getEffectiveOpenAiModel,
+  isReasoningModel,
   executeChatCompletion,
   generateFunnyInsult,
 } from "../lib/openai";
@@ -22,6 +23,14 @@ test("OpenAI Cost Estimation across Models", () => {
   const config = getOpenAiConfig();
   assert.ok(config, "Config should return status object");
   assert.equal(typeof isOpenAiConfigured(), "boolean");
+
+  // Reasoning model detection
+  assert.equal(isReasoningModel("o1"), true);
+  assert.equal(isReasoningModel("o1-mini"), true);
+  assert.equal(isReasoningModel("o3-mini"), true);
+  assert.equal(isReasoningModel("o4-mini"), true);
+  assert.equal(isReasoningModel("gpt-4o"), false);
+  assert.equal(isReasoningModel("gpt-4o-mini"), false);
 
   // gpt-4o ($2.50 prompt / $10.00 completion per 1M tokens)
   const cost4o = estimateCostUsd("gpt-4o", 1_000_000, 1_000_000);
@@ -121,6 +130,16 @@ test("OpenAI Service: executeChatCompletion and generateFunnyInsult", async () =
   });
   assert.ok(tempResult.completion);
   assert.equal(tempResult.log.status, "success");
+
+  // Verification with reasoning model and temperature (should not throw temperature error)
+  const reasoningModelResult = await executeChatCompletion({
+    prompt: "Test completion with reasoning model and temperature",
+    model: "o3-mini",
+    temperature: 0.3,
+    userIdentifier: "test_reasoning_temp_user",
+  });
+  assert.ok(reasoningModelResult.completion);
+  assert.equal(reasoningModelResult.log.status, "success");
 
   // Verification with web search enabled
   assert.equal(typeof isOpenAiWebSearchEnabled(), "boolean");

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import {
+import type {
   FireSafetySolution,
   FireSafetySolutionProperties,
-  FSS_PROPERTY_FIELDS,
   FssPropertyFieldMeta,
   FssTechnicalDocumentationFile,
 } from "@/lib/fss/types";
+import { FSS_PROPERTY_FIELDS } from "@/lib/fss/types";
+import type { FssPropertyPrompt } from "@/lib/fss/prompts";
 
 interface FireSafetySolutionsViewProps {
   userId?: string;
@@ -94,6 +95,61 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
   const [inspectingSolution, setInspectingSolution] = useState<FireSafetySolution | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
+  // Modal Accumulated AI Usage state
+  const [modalCostUsd, setModalCostUsd] = useState<number>(0);
+  const [modalTokens, setModalTokens] = useState<number>(0);
+  const [modalGenCount, setModalGenCount] = useState<number>(0);
+
+  // FSS AI Prompts & Generation state
+  const [fssPrompts, setFssPrompts] = useState<FssPropertyPrompt[]>([]);
+  const [viewingPrompt, setViewingPrompt] = useState<FssPropertyPrompt | null>(null);
+  const [generatingAll, setGeneratingAll] = useState<boolean>(false);
+  const [generatingFieldKey, setGeneratingFieldKey] = useState<string | null>(null);
+  const [fieldAiStats, setFieldAiStats] = useState<
+    Record<string, { tokens: number; costUsd: number; durationMs: number }>
+  >({});
+  const [lastBatchAiStats, setLastBatchAiStats] = useState<{
+    totalTokens: number;
+    costUsd: number;
+    durationMs: number;
+    successfulCount: number;
+  } | null>(null);
+
+  const formatCostUsd = (cost?: number) => {
+    if (cost === undefined || cost === null) return "$0.0000";
+    if (cost === 0) return "$0.00";
+    if (cost < 0.0001) return "< $0.0001";
+    return `$${cost.toFixed(4)}`;
+  };
+
+  const totalSolutionsCost = useMemo(() => {
+    return solutions.reduce((acc, item) => acc + (Number(item.totalCostUsd) || 0), 0);
+  }, [solutions]);
+
+  const totalSolutionsTokens = useMemo(() => {
+    return solutions.reduce((acc, item) => acc + (Number(item.totalTokens) || 0), 0);
+  }, [solutions]);
+
+  useEffect(() => {
+    let ignore = false;
+    async function loadPrompts() {
+      try {
+        const res = await fetch("/api/fss/prompts");
+        if (res.ok && !ignore) {
+          const data = await res.json();
+          setFssPrompts(data.prompts || []);
+        }
+      } catch {
+        // silent fallback
+      }
+    }
+
+    loadPrompts();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   // Fetch list of solutions
   const fetchSolutions = useCallback(async () => {
     setLoading(true);
@@ -144,11 +200,190 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
     };
   }, [searchQuery]);
 
+  const handleGenerateAllWithAi = async () => {
+    setGeneratingAll(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const res = await fetch("/api/fss/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          properties: formData,
+          files: modalFiles,
+          fssId: editingId || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Nepodařilo se vygenerovat vlastnosti pomocí AI.");
+      }
+
+      if (data.properties) {
+        setFormData((prev) => ({
+          ...prev,
+          ...data.properties,
+        }));
+        if (!customTitle && data.properties.nazevStavby) {
+          setCustomTitle(data.properties.nazevStavby);
+        }
+      }
+
+      const durSeconds = ((data.durationMs || 0) / 1000).toFixed(1);
+      const totalToks = Number(data.totalTokens ?? data.tokens ?? 0);
+      const totalCost = Number(data.estimatedTotalCostUsd ?? 0);
+
+      if (data.accumulatedCostUsd !== undefined) {
+        setModalCostUsd(Number(data.accumulatedCostUsd));
+        setModalTokens(Number(data.accumulatedTokens ?? 0));
+        setModalGenCount(Number(data.generationCount ?? 0));
+        if (editingId) {
+          setSolutions((prev) =>
+            prev.map((s) =>
+              s.id === editingId
+                ? {
+                    ...s,
+                    totalCostUsd: Number(data.accumulatedCostUsd),
+                    totalTokens: Number(data.accumulatedTokens ?? 0),
+                    generationCount: Number(data.generationCount ?? 0),
+                  }
+                : s
+            )
+          );
+        }
+      } else {
+        setModalCostUsd((prev) => Number((prev + totalCost).toFixed(6)));
+        setModalTokens((prev) => prev + totalToks);
+        setModalGenCount((prev) => prev + 1);
+      }
+
+      setLastBatchAiStats({
+        totalTokens: totalToks,
+        costUsd: totalCost,
+        durationMs: data.durationMs || 0,
+        successfulCount: data.successfulCount || 18,
+      });
+
+      if (data.results) {
+        const newStats: Record<string, { tokens: number; costUsd: number; durationMs: number }> = {};
+        const resultsMap = data.results as Record<
+          string,
+          { tokens?: number; totalTokens?: number; estimatedCostUsd?: number; durationMs?: number; error?: string }
+        >;
+        for (const [key, resItem] of Object.entries(resultsMap)) {
+          if (resItem && !resItem.error) {
+            newStats[key] = {
+              tokens: resItem.tokens || resItem.totalTokens || 0,
+              costUsd: resItem.estimatedCostUsd || 0,
+              durationMs: resItem.durationMs || 0,
+            };
+          }
+        }
+        setFieldAiStats((prev) => ({ ...prev, ...newStats }));
+      }
+
+      setSuccessMessage(
+        `✨ Úspěšně vygenerováno ${data.successfulCount || 18}/18 vlastností pomocí AI za ${durSeconds}s • ⚡ Spotřeba: ${totalToks.toLocaleString()} tokenů (${formatCostUsd(totalCost)} USD)${
+          modalFiles.length > 0 ? ` [${modalFiles.length} souborů]` : ""
+        }.`
+      );
+      setTimeout(() => setSuccessMessage(null), 8000);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setGeneratingAll(false);
+    }
+  };
+
+  const handleGenerateSingleProperty = async (fieldKey: string) => {
+    setGeneratingFieldKey(fieldKey);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const res = await fetch("/api/fss/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fieldKey,
+          properties: formData,
+          files: modalFiles,
+          fssId: editingId || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || data.result?.error || "Chyba při generování vlastnosti.");
+      }
+
+      const generatedVal = data.value || data.result?.value || "";
+      if (generatedVal) {
+        setFormData((prev) => ({
+          ...prev,
+          [fieldKey]: generatedVal,
+        }));
+        if (fieldKey === "nazevStavby" && !customTitle) {
+          setCustomTitle(generatedVal);
+        }
+      }
+
+      const tokens = Number(data.tokens ?? data.result?.tokens ?? 0);
+      const cost = Number(data.estimatedCostUsd ?? data.result?.estimatedCostUsd ?? 0);
+      const durationMs = Number(data.durationMs || data.result?.durationMs || 0);
+
+      if (data.accumulatedCostUsd !== undefined) {
+        setModalCostUsd(Number(data.accumulatedCostUsd));
+        setModalTokens(Number(data.accumulatedTokens ?? 0));
+        setModalGenCount(Number(data.generationCount ?? 0));
+        if (editingId) {
+          setSolutions((prev) =>
+            prev.map((s) =>
+              s.id === editingId
+                ? {
+                    ...s,
+                    totalCostUsd: Number(data.accumulatedCostUsd),
+                    totalTokens: Number(data.accumulatedTokens ?? 0),
+                    generationCount: Number(data.generationCount ?? 0),
+                  }
+                : s
+            )
+          );
+        }
+      } else {
+        setModalCostUsd((prev) => Number((prev + cost).toFixed(6)));
+        setModalTokens((prev) => prev + tokens);
+        setModalGenCount((prev) => prev + 1);
+      }
+
+      setFieldAiStats((prev) => ({
+        ...prev,
+        [fieldKey]: { tokens, costUsd: cost, durationMs },
+      }));
+
+      const promptItem = fssPrompts.find((p) => p.fieldKey === fieldKey);
+      setSuccessMessage(
+        `✨ Pole "${promptItem?.propertyName || fieldKey}" bylo úspěšně vygenerováno pomocí AI • ⚡ Spotřeba: ${tokens.toLocaleString()} tokenů (${formatCostUsd(cost)} USD).`
+      );
+      setTimeout(() => setSuccessMessage(null), 6000);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setGeneratingFieldKey(null);
+    }
+  };
+
   const handleOpenCreateModal = () => {
     setEditingId(null);
     setCustomTitle("");
     setModalFiles([]);
     setUploadError(null);
+    setModalCostUsd(0);
+    setModalTokens(0);
+    setModalGenCount(0);
+    setLastBatchAiStats(null);
     setFormData({
       ...INITIAL_FORM_DATA,
       datum: new Date().toISOString().split("T")[0],
@@ -163,6 +398,10 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
     setCustomTitle(solution.title || solution.nazevStavby);
     setModalFiles(solution.files || []);
     setUploadError(null);
+    setModalCostUsd(Number(solution.totalCostUsd || 0));
+    setModalTokens(Number(solution.totalTokens || 0));
+    setModalGenCount(Number(solution.generationCount || 0));
+    setLastBatchAiStats(null);
     setFormData({
       nazevStavby: solution.nazevStavby || "",
       investorName: solution.investorName || "",
@@ -300,6 +539,9 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
       title: customTitle.trim() || formData.nazevStavby || "Požárně bezpečnostní řešení",
       files: modalFiles,
       userId: userId || "admin",
+      totalCostUsd: modalCostUsd,
+      totalTokens: modalTokens,
+      generationCount: modalGenCount,
     };
 
     try {
@@ -472,7 +714,7 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
         </div>
 
         {/* Quick Stats Grid */}
-        <div className="pt-4 border-t border-zinc-800/80 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="pt-4 border-t border-zinc-800/80 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1">
             <span className="text-[11px] font-mono text-zinc-500 uppercase">Celkem projektů PBŘ</span>
             <p className="text-sm font-bold text-rose-400">{solutions.length} evidováno</p>
@@ -485,7 +727,16 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
             <span className="text-[11px] font-mono text-zinc-500 uppercase">Stupeň dokumentace</span>
             <p className="text-sm font-bold text-sky-400">DSP / DÚR / DPS</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1">
+          <div className="p-3.5 rounded-xl bg-purple-950/30 border border-purple-500/30 space-y-1">
+            <span className="text-[11px] font-mono text-purple-400 uppercase font-semibold">Kumulované AI náklady</span>
+            <p className="text-sm font-bold text-purple-200 font-mono">
+              {formatCostUsd(totalSolutionsCost)} USD
+            </p>
+            <span className="text-[10px] text-zinc-500 font-mono block">
+              {totalSolutionsTokens.toLocaleString()} tokenů
+            </span>
+          </div>
+          <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1 col-span-2 sm:col-span-1">
             <span className="text-[11px] font-mono text-zinc-500 uppercase">Stav integrace</span>
             <p className="text-sm font-bold text-emerald-400">Plně editovatelné</p>
           </div>
@@ -631,6 +882,24 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
                   </div>
                 </div>
 
+                {/* Accumulated AI Costs & Usage Tag */}
+                <div className="p-2.5 rounded-xl bg-purple-950/20 border border-purple-500/20 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">⚡</span>
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <span className="text-purple-300">AI Náklady:</span>
+                      <span className="font-mono font-bold text-purple-200">
+                        {formatCostUsd(item.totalCostUsd || 0)} USD
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 font-mono">
+                    <span>{(item.totalTokens || 0).toLocaleString()} tokenů</span>
+                    <span>•</span>
+                    <span className="text-purple-400/80">{item.generationCount || 0}x AI</span>
+                  </div>
+                </div>
+
                 {/* Snippets */}
                 {item.kategorizaceStavbyZHlediskaPozarniBezpecnosti && (
                   <div className="p-3 rounded-xl bg-zinc-950/40 border border-zinc-800/40 text-[11px] text-zinc-400 space-y-1 line-clamp-2">
@@ -725,7 +994,7 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
           <div className="w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden my-8 max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="p-6 bg-zinc-900/80 border-b border-zinc-800 flex items-center justify-between">
+            <div className="p-6 bg-zinc-900/80 border-b border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-rose-600/20 border border-rose-500/30 text-rose-400 text-xl">
                   {editingId ? "✏️" : "➕"}
@@ -735,36 +1004,94 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
                     {editingId ? "Upravit požárně bezpečnostní řešení" : "Nové požárně bezpečnostní řešení"}
                   </h2>
                   <p className="text-xs text-zinc-400">
-                    Vyplňte formulář s 18 vlastnostmi pro generování kompletního PBŘ.
+                    Vyplňte formulář s 18 vlastnostmi nebo využijte paralelní AI generování ze souborů.
                   </p>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all"
-              >
-                ✕
-              </button>
+              <div className="flex items-center gap-2.5 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={handleGenerateAllWithAi}
+                  disabled={generatingAll || submitting}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-950/50 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 ring-1 ring-purple-400/30"
+                  title="Paralelně vygenerovat všech 18 vlastností PBŘ pomocí AI modelů"
+                >
+                  <span className={generatingAll ? "animate-spin" : ""}>⚡</span>
+                  <span>{generatingAll ? "Generuji 18 polí..." : "Generovat (AI)"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
+            {/* AI Generation In-Progress Indicator Banner */}
+            {generatingAll && (
+              <div className="p-3.5 bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-zinc-900 border-b border-indigo-500/30 flex items-center justify-between gap-3 text-xs text-indigo-200 animate-pulse">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-lg animate-spin">⚡</span>
+                  <div>
+                    <span className="font-bold text-white">Probíhá paralelní generování PBŘ:</span>{" "}
+                    <span>AI analyzuje {modalFiles.length} přiložených souborů a formuluje 18 technických parametrů...</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  GPT-4o Parallel
+                </span>
+              </div>
+            )}
+
             {/* Category Sub-Tabs */}
-            <div className="px-6 py-2.5 bg-zinc-900/40 border-b border-zinc-800/80 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-              {FORM_CATEGORIES.map((cat) => (
+            <div className="px-6 py-2.5 bg-zinc-900/40 border-b border-zinc-800/80 flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
+              <div className="flex items-center gap-1.5 shrink-0">
+                {FORM_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setActiveFormCategory(cat.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                      activeFormCategory === cat.id
+                        ? "bg-rose-600 text-white shadow-sm"
+                        : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/30 text-purple-300 text-[11px] font-mono">
+                  <span>💰 Celkem za PBŘ:</span>
+                  <span className="font-bold text-purple-200">{formatCostUsd(modalCostUsd)} USD</span>
+                  <span className="text-purple-400/60">({modalTokens.toLocaleString()} tok.)</span>
+                </div>
+
+                {lastBatchAiStats && (
+                  <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px] font-mono">
+                    <span>⚡ Poslední běh:</span>
+                    <span className="font-semibold">{lastBatchAiStats.totalTokens.toLocaleString()} tok.</span>
+                    <span className="text-emerald-500/40">•</span>
+                    <span className="font-semibold">{formatCostUsd(lastBatchAiStats.costUsd)} USD</span>
+                  </div>
+                )}
+
                 <button
-                  key={cat.id}
                   type="button"
-                  onClick={() => setActiveFormCategory(cat.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                    activeFormCategory === cat.id
-                      ? "bg-rose-600 text-white shadow-sm"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60"
-                  }`}
+                  onClick={handleGenerateAllWithAi}
+                  disabled={generatingAll || submitting}
+                  className="px-3 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-[11px] font-bold transition-all disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  {cat.label}
+                  <span>⚡</span>
+                  <span>Generovat vše AI</span>
                 </button>
-              ))}
+              </div>
             </div>
 
             {/* Modal Form Content */}
@@ -793,6 +1120,9 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
                 <div className="space-y-4">
                   {filteredFields.map((field: FssPropertyFieldMeta) => {
                     const currentValue = formData[field.key] || "";
+                    const promptItem = fssPrompts.find((p) => p.fieldKey === field.key);
+                    const isGeneratingThis = generatingFieldKey === field.key;
+
                     return (
                       <div
                         key={field.key}
@@ -808,7 +1138,56 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
                             )}
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {fieldAiStats[field.key] && (
+                              <span
+                                className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold inline-flex items-center gap-1"
+                                title={`Spotřeba AI pro toto pole: ${fieldAiStats[field.key].tokens.toLocaleString()} tokenů (${formatCostUsd(fieldAiStats[field.key].costUsd)} USD) za ${fieldAiStats[field.key].durationMs} ms`}
+                              >
+                                <span>⚡</span>
+                                <span>{fieldAiStats[field.key].tokens.toLocaleString()} tok.</span>
+                                <span className="text-emerald-500/40">•</span>
+                                <span>{formatCostUsd(fieldAiStats[field.key].costUsd)}</span>
+                              </span>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setViewingPrompt(
+                                  promptItem || {
+                                    id: `prompt_${field.key}`,
+                                    fieldKey: field.key,
+                                    placeholderKey: field.placeholder,
+                                    propertyName: field.label,
+                                    category: field.category,
+                                    description: field.description || "",
+                                    systemPrompt: "Jsi certifikovaný specialista požární bezpečnosti staveb (PBŘ).",
+                                    userPrompt: `Generuj hodnotu pro ${field.label}.`,
+                                    includeFiles: true,
+                                    isActive: true,
+                                    updatedAt: new Date().toISOString(),
+                                  }
+                                )
+                              }
+                              className="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold transition-all inline-flex items-center gap-1 active:scale-95"
+                              title="Zobrazit obecný AI prompt pro tuto vlastnost"
+                            >
+                              <span>✨</span>
+                              <span>Prompt</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={isGeneratingThis || generatingAll}
+                              onClick={() => handleGenerateSingleProperty(field.key)}
+                              className="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 font-semibold transition-all inline-flex items-center gap-1 active:scale-95 disabled:opacity-50"
+                              title="Vygenerovat tuto vlastnost pomocí AI na základě podkladů"
+                            >
+                              <span>{isGeneratingThis ? "⏳" : "⚡"}</span>
+                              <span>{isGeneratingThis ? "Generuji..." : "AI"}</span>
+                            </button>
+
                             <span
                               onClick={() => handleCopyPlaceholder(field.placeholder)}
                               title="Klikněte pro zkopírování tagu šablony"
@@ -825,11 +1204,11 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
 
                         {field.type === "textarea" ? (
                           <textarea
-                            rows={3}
-                            placeholder={`Zadejte ${field.label.toLowerCase()}...`}
+                            rows={7}
+                            placeholder={`Zadejte ${field.label.toLowerCase()} nebo vygenerujte tlačítkem AI...`}
                             value={currentValue}
                             onChange={(e) => handleFieldChange(field.key, e.target.value)}
-                            className="w-full px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-rose-500/50 resize-y leading-relaxed font-sans"
+                            className="w-full px-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs sm:text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-rose-500/50 resize-y leading-relaxed font-sans min-h-[160px] shadow-inner transition-colors"
                           />
                         ) : (
                           <input
@@ -837,7 +1216,7 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
                             placeholder={`Zadejte ${field.label.toLowerCase()}...`}
                             value={currentValue}
                             onChange={(e) => handleFieldChange(field.key, e.target.value)}
-                            className="w-full px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-rose-500/50 font-sans"
+                            className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs sm:text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-rose-500/50 font-sans transition-colors"
                           />
                         )}
                       </div>
@@ -1034,6 +1413,39 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
             </div>
 
             <div className="p-6 overflow-y-auto space-y-4 flex-1">
+              {/* Accumulated AI Generation Stats */}
+              <div className="p-4 rounded-xl bg-gradient-to-r from-purple-950/40 via-indigo-950/40 to-zinc-900 border border-purple-500/30 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-purple-200 flex items-center gap-1.5">
+                    <span>💰</span>
+                    <span>Kumulované náklady na AI generování pro toto PBŘ:</span>
+                  </span>
+                  <span className="text-xs font-mono font-bold text-purple-300 px-2.5 py-1 rounded bg-purple-500/20 border border-purple-500/30">
+                    {formatCostUsd(inspectingSolution.totalCostUsd || 0)} USD
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-1">
+                  <div className="p-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/60">
+                    <span className="text-[10px] text-zinc-500 font-mono block uppercase">Spotřebováno tokenů</span>
+                    <span className="font-semibold text-zinc-200 font-mono">
+                      {(inspectingSolution.totalTokens || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/60">
+                    <span className="text-[10px] text-zinc-500 font-mono block uppercase">Počet spuštěných AI běhů</span>
+                    <span className="font-semibold text-zinc-200 font-mono">
+                      {inspectingSolution.generationCount || 0}x
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/60">
+                    <span className="text-[10px] text-zinc-500 font-mono block uppercase">Stav AI asistence</span>
+                    <span className="font-semibold text-emerald-400">
+                      {(inspectingSolution.totalTokens || 0) > 0 ? "Aktivní využití AI" : "Zatím negenerováno"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {/* Technical Documentation Files Section */}
               {inspectingSolution.files && inspectingSolution.files.length > 0 && (
                 <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-3">
@@ -1092,9 +1504,9 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
                         {f.placeholder} {copiedKey === f.placeholder ? "✓" : "📋"}
                       </span>
                     </div>
-                    <p className="text-xs text-zinc-200 bg-zinc-950/80 p-2.5 rounded-lg border border-zinc-800/60 font-mono whitespace-pre-wrap">
-                      {val || <span className="text-zinc-600 italic">Nevyplněno</span>}
-                    </p>
+                    <div className="text-xs sm:text-sm text-zinc-100 bg-zinc-950/80 p-3.5 rounded-xl border border-zinc-800/60 font-sans leading-relaxed whitespace-pre-wrap min-h-[60px]">
+                      {val || <span className="text-zinc-600 italic font-mono text-xs">Nevyplněno</span>}
+                    </div>
                   </div>
                 );
               })}
@@ -1131,6 +1543,120 @@ export function FireSafetySolutionsView({ userId }: FireSafetySolutionsViewProps
                 className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition-all"
               >
                 Zavřít
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GENERAL AI PROMPT READER MODAL (Readable for anyone in FSS creation form) */}
+      {viewingPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-scaleIn">
+            <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-purple-600/20 border border-purple-500/30 text-purple-300 text-xl">
+                  ✨
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    AI Prompt pro vlastnost: {viewingPrompt.propertyName}
+                  </h3>
+                  <span className="text-xs text-indigo-400 font-mono">
+                    {viewingPrompt.placeholderKey} • Kategorie: {viewingPrompt.category}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setViewingPrompt(null)}
+                className="w-8 h-8 rounded-full bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-4 text-xs">
+              {/* Prompt Description */}
+              {viewingPrompt.description && (
+                <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800 text-zinc-300 leading-relaxed">
+                  {viewingPrompt.description}
+                </div>
+              )}
+
+              {/* System Prompt */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block">
+                  System Prompt (Expertní PBŘ role & normy ČSN)
+                </span>
+                <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 font-mono text-zinc-300 whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto">
+                  {viewingPrompt.systemPrompt}
+                </div>
+              </div>
+
+              {/* User Prompt Template */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block">
+                  User Prompt Template
+                </span>
+                <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 font-mono text-zinc-300 whitespace-pre-wrap leading-relaxed max-h-32 overflow-y-auto">
+                  {viewingPrompt.userPrompt}
+                </div>
+              </div>
+
+              {/* Settings Badges */}
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-zinc-800/80 text-[11px] font-mono">
+                <span
+                  className={`px-2.5 py-1 rounded-full border ${
+                    viewingPrompt.includeFiles
+                      ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
+                      : "bg-zinc-800 text-zinc-400 border-zinc-700"
+                  }`}
+                >
+                  {viewingPrompt.includeFiles
+                    ? "📁 Zahrnuje nahrané soubory do kontextu"
+                    : "🚫 Bez souborů"}
+                </span>
+
+                <span className="px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                  🌡️ Teplota: {viewingPrompt.temperature !== undefined ? viewingPrompt.temperature : 0.3}
+                </span>
+
+                {viewingPrompt.model && (
+                  <span className="px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                    🤖 {viewingPrompt.model}
+                  </span>
+                )}
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[11px] leading-relaxed">
+                ℹ️ <strong>Globální prompt:</strong> Tento prompt je obecný pro celou aplikaci.
+                Administrátoři jej mohou upravovat v menu <strong>Systém → FSS AI Prompts</strong>.
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-zinc-800 bg-zinc-900/60 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setViewingPrompt(null)}
+                className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300"
+              >
+                Zavřít
+              </button>
+
+              <button
+                type="button"
+                disabled={generatingFieldKey === viewingPrompt.fieldKey || generatingAll}
+                onClick={() => {
+                  const fieldKey = viewingPrompt.fieldKey;
+                  setViewingPrompt(null);
+                  handleGenerateSingleProperty(fieldKey);
+                }}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md transition-all active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <span>⚡</span>
+                <span>Spustit generování tohoto pole</span>
               </button>
             </div>
           </div>

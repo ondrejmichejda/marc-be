@@ -7,6 +7,8 @@ import {
   FireSafetySolutionService,
   FSS_PROPERTY_FIELDS,
   TEMPLATE_PLACEHOLDER_TO_FIELD_KEY,
+  FssPromptService,
+  DEFAULT_FSS_PROMPTS,
 } from "../lib/fss";
 import { GET as getFssApi, POST as createFssApi } from "../app/api/fss/route";
 import {
@@ -30,7 +32,15 @@ import {
 import { GET as downloadFssFileApi } from "../app/api/fss/[id]/files/[fileId]/download/route";
 import { GET as downloadFssFileDirectApi } from "../app/api/fss/files/[fileId]/download/route";
 import { POST as uploadStandaloneFileApi } from "../app/api/fss/files/upload/route";
+import { GET as getFssPromptsApi } from "../app/api/fss/prompts/route";
+import {
+  GET as getFssPromptByFieldApi,
+  PUT as putFssPromptByFieldApi,
+} from "../app/api/fss/prompts/[fieldKey]/route";
+import { POST as resetFssPromptsApi } from "../app/api/fss/prompts/reset/route";
+import { POST as generateFssApi } from "../app/api/fss/generate/route";
 import { generateDocxExport, getExportFilename, FssBlobStorageService } from "../lib/fss";
+import { UserAiSettingsService } from "../lib/openai";
 import PizZip from "pizzip";
 
 test("Fire Safety Solutions: 18 Template Property Fields Metadata & Mappings", () => {
@@ -131,6 +141,32 @@ test("FireSafetySolutionService: Create, List, Retrieve, Update, and Delete with
   assert.equal(deleted, true);
   const afterDelete = await FireSafetySolutionService.getSolutionById(created.id);
   assert.equal(afterDelete, null);
+
+  // 6. Verify permanence: re-initialize storage in memory and verify item does not reappear
+  (FireSafetySolutionService as unknown as { initialized: boolean }).initialized = false;
+  const listAfterReinit = await FireSafetySolutionService.listSolutions({ search: "Oasis" });
+  assert.equal(listAfterReinit.length, 0, "Deleted solution must not reappear after storage reload");
+});
+
+test("Fire Safety Solutions: Demo solutions deletion and persistence", async () => {
+  // Create a demo-like solution or delete an item and reload storage
+  const temp = await FireSafetySolutionService.createSolution({
+    userId: "admin",
+    title: "Dočasný projekt k odstranění",
+    nazevStavby: "Dočasný projekt",
+  });
+
+  const id = temp.id;
+  const delRes = await FireSafetySolutionService.deleteSolution(id);
+  assert.equal(delRes, true);
+
+  // Force service storage re-initialization
+  (FireSafetySolutionService as unknown as { initialized: boolean }).initialized = false;
+  const found = await FireSafetySolutionService.getSolutionById(id);
+  assert.equal(found, null);
+
+  const list = await FireSafetySolutionService.listSolutions();
+  assert.equal(list.some((s) => s.id === id), false);
 });
 
 test("Fire Safety Solutions: Template Placeholders Input Compatibility", async () => {
@@ -516,4 +552,351 @@ test("FSS Technical Documentation Files: Upload, Persistence, Retrieval, Downloa
 
   // Cleanup
   await FireSafetySolutionService.deleteSolution(solution.id);
+});
+
+test("FssPromptService: 18 General AI Prompts CRUD, Reset, and File Attachment Option", async () => {
+  // 1. List all prompts (must have exactly 18 prompts)
+  const prompts = await FssPromptService.listPrompts();
+  assert.equal(prompts.length, 18, "Must contain general prompts for all 18 FSS properties");
+
+  // Verify all fields are covered
+  for (const field of FSS_PROPERTY_FIELDS) {
+    const prompt = prompts.find((p) => p.fieldKey === field.key);
+    assert.ok(prompt, `General prompt for field '${field.key}' must exist`);
+    assert.equal(prompt.placeholderKey, field.placeholder);
+    assert.ok(prompt.systemPrompt.length > 0, "System prompt must not be empty");
+    assert.ok(prompt.userPrompt.length > 0, "User prompt must not be empty");
+    assert.equal(typeof prompt.includeFiles, "boolean");
+  }
+
+  // 2. Retrieve a single prompt by fieldKey
+  const promptNazev = await FssPromptService.getPromptByFieldKey("nazevStavby");
+  assert.ok(promptNazev);
+  assert.equal(promptNazev?.fieldKey, "nazevStavby");
+  assert.equal(promptNazev?.propertyName, "Název stavby");
+
+  // 3. Update prompt (Admin modification)
+  const updatedPrompt = await FssPromptService.updatePrompt(
+    "nazevStavby",
+    {
+      description: "Upravený popis pro název stavby",
+      systemPrompt: "Vlastní systémový prompt pro název stavby",
+      includeFiles: true,
+      temperature: 0.15,
+    },
+    "admin_test"
+  );
+
+  assert.equal(updatedPrompt.description, "Upravený popis pro název stavby");
+  assert.equal(updatedPrompt.systemPrompt, "Vlastní systémový prompt pro název stavby");
+  assert.equal(updatedPrompt.temperature, 0.15);
+  assert.equal(updatedPrompt.updatedBy, "admin_test");
+
+  // Verify persistent retrieval
+  const retrievedUpdated = await FssPromptService.getPromptByFieldKey("nazevStavby");
+  assert.equal(retrievedUpdated?.systemPrompt, "Vlastní systémový prompt pro název stavby");
+
+  // 4. Reset to defaults
+  const resetList = await FssPromptService.resetPromptsToDefaults("admin_reset");
+  assert.equal(resetList.length, 18);
+  const resetNazev = await FssPromptService.getPromptByFieldKey("nazevStavby");
+  assert.equal(resetNazev?.systemPrompt, DEFAULT_FSS_PROMPTS.find((p) => p.fieldKey === "nazevStavby")?.systemPrompt);
+});
+
+test("FssPromptService: Single Property & Parallel Generation across 18 Properties with Uploaded Files", async () => {
+  const sampleFiles = [
+    {
+      id: "doc_test_1",
+      name: "Architektonicka_studie_A1.pdf",
+      size: 512000,
+      contentType: "application/pdf",
+      uploadedAt: new Date().toISOString(),
+      description: "Architektonická studie 6NP bytového domu",
+      url: "/api/fss/files/doc_test_1/download",
+      pathname: "fss/general/doc_test_1",
+    },
+    {
+      id: "doc_test_2",
+      name: "Koordinacni_situace.dwg",
+      size: 1024000,
+      contentType: "application/acad",
+      uploadedAt: new Date().toISOString(),
+      description: "Situační výkres se sousedními parcelami",
+      url: "/api/fss/files/doc_test_2/download",
+      pathname: "fss/general/doc_test_2",
+    },
+  ];
+
+  const knownProperties = {
+    nazevStavby: "Bytový komplex Green Park",
+    investorName: "Green Park Development a.s.",
+    mistoStavby: "Brno, k.ú. Královo Pole",
+  };
+
+  // 1. Verify token enforcement: generation fails when user has not configured API key
+  const unconfiguredResult = await FssPromptService.generateProperty({
+    fieldKey: "konstrukcniReseniStavby",
+    properties: knownProperties,
+    files: sampleFiles,
+    userId: "unconfigured_user_without_key",
+  });
+  assert.ok(unconfiguredResult.error, "Must return error when user has no API token configured");
+  assert.ok(
+    unconfiguredResult.error.includes("OpenAI API token není nastaven"),
+    "Error message must instruct user to set OpenAI API token in AI Settings"
+  );
+
+  // 2. Configure personal OpenAI API token for test user
+  const testUserId = "test_fss_engineer_user";
+  await UserAiSettingsService.saveSettings(testUserId, {
+    apiKey: "sk-test-mock-user-token-12345",
+    defaultModel: "gpt-4o",
+    webSearchEnabled: true,
+  });
+
+  // 3. Single property generation with configured user token
+  const singleResult = await FssPromptService.generateProperty({
+    fieldKey: "konstrukcniReseniStavby",
+    properties: knownProperties,
+    files: sampleFiles,
+    userIdentifier: "test_engineer@company.cz",
+    userId: testUserId,
+  });
+
+  assert.equal(singleResult.fieldKey, "konstrukcniReseniStavby");
+  assert.ok(singleResult.value.length > 0, "Generated value must not be empty");
+  assert.equal(singleResult.filesIncludedCount, 2);
+  assert.ok(singleResult.durationMs >= 0);
+  assert.ok(typeof singleResult.tokens === "number" && singleResult.tokens > 0, "Tokens must be tracked for single property");
+  assert.ok(typeof singleResult.estimatedCostUsd === "number" && singleResult.estimatedCostUsd >= 0, "Estimated cost in USD must be calculated for single property");
+
+  // 4. Full parallel generation for all 18 properties
+  const allResult = await FssPromptService.generateAllProperties({
+    properties: knownProperties,
+    files: sampleFiles,
+    userIdentifier: "test_engineer@company.cz",
+    userId: testUserId,
+  });
+
+  assert.equal(allResult.success, true);
+  assert.equal(allResult.totalProperties, 18);
+  assert.equal(allResult.successfulCount, 18);
+  assert.equal(allResult.failedCount, 0);
+  assert.ok(typeof allResult.totalTokens === "number" && allResult.totalTokens > 0, "Total tokens must be aggregated");
+  assert.ok(typeof allResult.estimatedTotalCostUsd === "number" && allResult.estimatedTotalCostUsd >= 0, "Total estimated USD cost must be aggregated");
+
+  // Verify all 18 properties are present in generated properties map
+  for (const field of FSS_PROPERTY_FIELDS) {
+    const val = (allResult.properties as Record<string, string>)[field.key];
+    assert.ok(val !== undefined, `Property ${field.key} must be generated in parallel`);
+    assert.ok(val.length > 0, `Value for ${field.key} must not be empty`);
+  }
+});
+
+test("FSS AI Prompts & Parallel Generation REST API Endpoints", async () => {
+  const testUserId = "test_fss_api_user";
+  await UserAiSettingsService.saveSettings(testUserId, {
+    apiKey: "sk-test-fss-api-key",
+    defaultModel: "gpt-4o",
+  });
+
+  // 1. GET /api/fss/prompts (Readable for anyone within application)
+  const getPromptsRes = await getFssPromptsApi();
+  assert.equal(getPromptsRes.status, 200);
+  const getPromptsData = await getPromptsRes.json();
+  assert.equal(getPromptsData.success, true);
+  assert.equal(getPromptsData.count, 18);
+  assert.equal(getPromptsData.prompts.length, 18);
+
+  // 2. GET /api/fss/prompts/[fieldKey]
+  const getSinglePromptReq = new NextRequest("http://localhost:3000/api/fss/prompts/posouzeniPozarniBezpecnostiStaveb");
+  const getSinglePromptRes = await getFssPromptByFieldApi(getSinglePromptReq, {
+    params: Promise.resolve({ fieldKey: "posouzeniPozarniBezpecnostiStaveb" }),
+  });
+  assert.equal(getSinglePromptRes.status, 200);
+  const singlePromptData = await getSinglePromptRes.json();
+  assert.equal(singlePromptData.prompt.fieldKey, "posouzeniPozarniBezpecnostiStaveb");
+  assert.equal(singlePromptData.prompt.placeholderKey, "{{POSOUZENI_POZARNI_BEZPECNOSTI_STAVEB}}");
+
+  // 3. PUT /api/fss/prompts/[fieldKey] (Update single prompt)
+  const putReq = new NextRequest("http://localhost:3000/api/fss/prompts/posouzeniPozarniBezpecnostiStaveb", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userPrompt: "Aktualizovaný user prompt pro posouzení požární bezpečnosti staveb.",
+      includeFiles: true,
+      temperature: 0.25,
+    }),
+  });
+  const putRes = await putFssPromptByFieldApi(putReq, {
+    params: Promise.resolve({ fieldKey: "posouzeniPozarniBezpecnostiStaveb" }),
+  });
+  assert.equal(putRes.status, 200);
+  const putData = await putRes.json();
+  assert.equal(putData.success, true);
+  assert.equal(putData.prompt.userPrompt, "Aktualizovaný user prompt pro posouzení požární bezpečnosti staveb.");
+
+  // 4. POST /api/fss/generate (Single property generation endpoint with user token)
+  const genSingleReq = new NextRequest("http://localhost:3000/api/fss/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fieldKey: "investorName",
+      userId: testUserId,
+      properties: {
+        nazevStavby: "Rezidence Pod Lipami",
+      },
+      files: [
+        {
+          id: "test_f1",
+          name: "Smlouva_o_dilo.pdf",
+          size: 12000,
+          contentType: "application/pdf",
+          uploadedAt: new Date().toISOString(),
+          description: "Investor: POD LIPAMI RESIDENCE s.r.o.",
+        },
+      ],
+    }),
+  });
+  const genSingleRes = await generateFssApi(genSingleReq);
+  assert.equal(genSingleRes.status, 200);
+  const genSingleData = await genSingleRes.json();
+  assert.equal(genSingleData.success, true);
+  assert.equal(genSingleData.fieldKey, "investorName");
+  assert.ok(genSingleData.value.length > 0);
+  assert.ok(typeof genSingleData.tokens === "number" && genSingleData.tokens > 0, "Single API response must include tokens");
+  assert.ok(typeof genSingleData.estimatedCostUsd === "number" && genSingleData.estimatedCostUsd >= 0, "Single API response must include cost in USD");
+
+  // 5. POST /api/fss/generate (Parallel generation across all 18 properties)
+  const genAllReq = new NextRequest("http://localhost:3000/api/fss/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId: testUserId,
+      properties: {
+        nazevStavby: "Logistické centrum VGP Park",
+        investorName: "VGP CZ s.r.o.",
+        mistoStavby: "Plzeň - Borská pole",
+      },
+      files: [
+        {
+          id: "test_f2",
+          name: "Technicka_dokumentace_Hala_A.pdf",
+          size: 340000,
+          contentType: "application/pdf",
+          uploadedAt: new Date().toISOString(),
+          description: "Jednopodlažní skladová hala, půdorys 80x40m, DP1",
+        },
+      ],
+    }),
+  });
+  const genAllRes = await generateFssApi(genAllReq);
+  assert.equal(genAllRes.status, 200);
+  const genAllData = await genAllRes.json();
+  assert.equal(genAllData.success, true);
+  assert.equal(genAllData.totalProperties, 18);
+  assert.equal(genAllData.successfulCount, 18);
+  assert.ok(genAllData.properties.nazevStavby !== undefined);
+  assert.ok(genAllData.properties.evakuaceADruhyAKapacityUnikovychCest !== undefined);
+  assert.ok(genAllData.properties.pozadavkyProHaseniPozaruAZachrannePrace !== undefined);
+  assert.ok(typeof genAllData.totalTokens === "number" && genAllData.totalTokens > 0, "Bulk API response must include totalTokens");
+  assert.ok(typeof genAllData.estimatedTotalCostUsd === "number" && genAllData.estimatedTotalCostUsd >= 0, "Bulk API response must include estimatedTotalCostUsd");
+
+  // 6. POST /api/fss/prompts/reset (Reset prompts endpoint)
+  const resetReq = new NextRequest("http://localhost:3000/api/fss/prompts/reset", {
+    method: "POST",
+  });
+  const resetRes = await resetFssPromptsApi(resetReq);
+  assert.equal(resetRes.status, 200);
+  const resetData = await resetRes.json();
+  assert.equal(resetData.success, true);
+  assert.equal(resetData.count, 18);
+});
+
+test("Fire Safety Solutions: Per-FSS Accumulated Cost and Token Tracking", async () => {
+  const costUserId = "cost_tracker_user";
+  await UserAiSettingsService.saveSettings(costUserId, {
+    apiKey: "sk-test-cost-tracker-token",
+    defaultModel: "gpt-4o",
+  });
+
+  // 1. Create a solution
+  const testFss = await FireSafetySolutionService.createSolution({
+    userId: costUserId,
+    title: "Centrum Inovací a Výzkumu",
+    nazevStavby: "Centrum Inovací a Výzkumu Brno",
+    investorName: "VUT Brno",
+    mistoStavby: "Technologická 1, Brno",
+  });
+
+  assert.equal(testFss.totalCostUsd, 0, "Initial cost should be 0");
+  assert.equal(testFss.totalTokens, 0, "Initial tokens should be 0");
+  assert.equal(testFss.generationCount, 0, "Initial generation count should be 0");
+
+  // 2. Accumulate AI usage directly via service
+  const updated1 = await FireSafetySolutionService.accumulateAiUsage(testFss.id, 0.00125, 450);
+  assert.ok(updated1);
+  assert.equal(updated1.totalCostUsd, 0.00125);
+  assert.equal(updated1.totalTokens, 450);
+  assert.equal(updated1.generationCount, 1);
+
+  // 3. Second accumulation increments correctly
+  const updated2 = await FireSafetySolutionService.accumulateAiUsage(testFss.id, 0.0025, 800);
+  assert.ok(updated2);
+  assert.equal(updated2.totalCostUsd, 0.00375);
+  assert.equal(updated2.totalTokens, 1250);
+  assert.equal(updated2.generationCount, 2);
+
+  // 4. API generation with fssId accumulating cost for single property
+  const genSingleReq = new NextRequest("http://localhost:3000/api/fss/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fssId: testFss.id,
+      fieldKey: "uvod",
+      userId: costUserId,
+    }),
+  });
+  const genSingleRes = await generateFssApi(genSingleReq);
+  assert.equal(genSingleRes.status, 200);
+  const genSingleData = await genSingleRes.json();
+  assert.equal(genSingleData.success, true);
+  assert.equal(genSingleData.fssId, testFss.id);
+  assert.ok(typeof genSingleData.accumulatedCostUsd === "number");
+  assert.ok(genSingleData.accumulatedCostUsd > 0.00375, "Accumulated cost must increase after API call");
+  assert.ok(genSingleData.accumulatedTokens > 1250, "Accumulated tokens must increase after API call");
+  assert.equal(genSingleData.generationCount, 3, "Generation count must increment to 3");
+
+  // Verify stored solution matches accumulated values
+  const retrievedAfterSingle = await FireSafetySolutionService.getSolutionById(testFss.id);
+  assert.ok(retrievedAfterSingle);
+  assert.equal(retrievedAfterSingle.totalCostUsd, genSingleData.accumulatedCostUsd);
+  assert.equal(retrievedAfterSingle.totalTokens, genSingleData.accumulatedTokens);
+  assert.equal(retrievedAfterSingle.generationCount, 3);
+
+  // 5. API generation with fssId accumulating cost for all properties
+  const genAllReq = new NextRequest("http://localhost:3000/api/fss/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fssId: testFss.id,
+      fieldKeys: ["nazevStavby", "investorName"],
+      userId: costUserId,
+    }),
+  });
+  const genAllRes = await generateFssApi(genAllReq);
+  assert.equal(genAllRes.status, 200);
+  const genAllData = await genAllRes.json();
+  assert.equal(genAllData.success, true);
+  assert.equal(genAllData.fssId, testFss.id);
+  assert.ok(genAllData.accumulatedCostUsd > genSingleData.accumulatedCostUsd);
+  assert.ok(genAllData.accumulatedTokens > genSingleData.accumulatedTokens);
+  assert.equal(genAllData.generationCount, 4);
+
+  // Final check on retrieved FSS
+  const finalRetrieved = await FireSafetySolutionService.getSolutionById(testFss.id);
+  assert.ok(finalRetrieved);
+  assert.equal(finalRetrieved.totalCostUsd, genAllData.accumulatedCostUsd);
+  assert.equal(finalRetrieved.totalTokens, genAllData.accumulatedTokens);
+  assert.equal(finalRetrieved.generationCount, 4);
 });

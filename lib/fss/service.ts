@@ -162,6 +162,9 @@ function mapFssRow(row: Record<string, unknown>): FireSafetySolution {
       row.pozadavky_pro_haseni_pozaru_a_zachranne_prace || ""
     ),
     files: parsedFiles,
+    totalCostUsd: Number(row.total_cost_usd || 0),
+    totalTokens: Number(row.total_tokens || 0),
+    generationCount: Number(row.generation_count || 0),
     createdAt:
       row.created_at instanceof Date
         ? row.created_at.toISOString()
@@ -186,26 +189,29 @@ export class FireSafetySolutionService {
     if (this.initialized) return;
     this.initialized = true;
 
-    // Seed defaults
-    const now = new Date().toISOString();
-    for (const demo of DEFAULT_DEMO_SOLUTIONS) {
-      this.localSolutions.set(demo.id, {
-        ...demo,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
-
     try {
       const filePath = this.getStoragePath();
       if (fs.existsSync(filePath)) {
         const raw = fs.readFileSync(filePath, "utf-8");
         const parsed: StorageSchema = JSON.parse(raw);
-        if (parsed.solutions) {
+        this.localSolutions.clear();
+        if (parsed.solutions && typeof parsed.solutions === "object") {
           for (const [id, item] of Object.entries(parsed.solutions)) {
             this.localSolutions.set(id, item);
           }
         }
+      } else {
+        // Seed defaults only once on initial storage initialization when file does not exist
+        const now = new Date().toISOString();
+        this.localSolutions.clear();
+        for (const demo of DEFAULT_DEMO_SOLUTIONS) {
+          this.localSolutions.set(demo.id, {
+            ...demo,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+        this.saveStorage();
       }
     } catch (err) {
       console.warn(
@@ -270,9 +276,7 @@ export class FireSafetySolutionService {
           `) as Record<string, unknown>[];
         }
 
-        if (rows.length > 0) {
-          return rows.map(mapFssRow);
-        }
+        return rows.map(mapFssRow);
       } catch (err) {
         console.warn("[FireSafetySolutionService] DB list failed, falling back to local store:", err);
       }
@@ -317,6 +321,7 @@ export class FireSafetySolutionService {
         if (rows.length > 0) {
           return mapFssRow(rows[0]);
         }
+        return null;
       } catch (err) {
         console.warn("[FireSafetySolutionService] DB getById failed, falling back:", err);
       }
@@ -347,6 +352,9 @@ export class FireSafetySolutionService {
       title,
       ...normalized,
       files: input.files || [],
+      totalCostUsd: Number(input.totalCostUsd || 0),
+      totalTokens: Number(input.totalTokens || 0),
+      generationCount: Number(input.generationCount || 0),
       createdAt: now,
       updatedAt: now,
     };
@@ -368,6 +376,9 @@ export class FireSafetySolutionService {
             pozadavky_na_pozarne_bezpecnostni_zarizeni_a_znaceni,
             pozadavky_pro_haseni_pozaru_a_zachranne_prace,
             files,
+            total_cost_usd,
+            total_tokens,
+            generation_count,
             created_at, updated_at
           ) VALUES (
             ${newSolution.id}, ${newSolution.userId}, ${newSolution.title},
@@ -384,6 +395,9 @@ export class FireSafetySolutionService {
             ${newSolution.pozadavkyNaPozarneBezpecnostniZarizeniAZnaceni},
             ${newSolution.pozadavkyProHaseniPozaruAZachrannePrace},
             ${JSON.stringify(newSolution.files || [])}::jsonb,
+            ${newSolution.totalCostUsd},
+            ${newSolution.totalTokens},
+            ${newSolution.generationCount},
             ${now}, ${now}
           );
         `;
@@ -442,6 +456,18 @@ export class FireSafetySolutionService {
       updated.files = input.files;
     }
 
+    if (input.totalCostUsd !== undefined) {
+      updated.totalCostUsd = Number(input.totalCostUsd);
+    }
+
+    if (input.totalTokens !== undefined) {
+      updated.totalTokens = Number(input.totalTokens);
+    }
+
+    if (input.generationCount !== undefined) {
+      updated.generationCount = Number(input.generationCount);
+    }
+
     // If title was not explicitly changed but nazevStavby was updated, sync title if it was default
     if (!input.title && updated.nazevStavby && updated.title === existing.nazevStavby) {
       updated.title = updated.nazevStavby;
@@ -472,6 +498,9 @@ export class FireSafetySolutionService {
             pozadavky_na_pozarne_bezpecnostni_zarizeni_a_znaceni = ${updated.pozadavkyNaPozarneBezpecnostniZarizeniAZnaceni},
             pozadavky_pro_haseni_pozaru_a_zachranne_prace = ${updated.pozadavkyProHaseniPozaruAZachrannePrace},
             files = ${JSON.stringify(updated.files || [])}::jsonb,
+            total_cost_usd = ${updated.totalCostUsd || 0},
+            total_tokens = ${updated.totalTokens || 0},
+            generation_count = ${updated.generationCount || 0},
             updated_at = ${now}
           WHERE id = ${id};
         `;
@@ -488,23 +517,61 @@ export class FireSafetySolutionService {
   }
 
   /**
+   * Accumulates AI generation cost and token usage for a given solution.
+   */
+  static async accumulateAiUsage(
+    solutionId: string,
+    costUsd: number,
+    tokens: number
+  ): Promise<FireSafetySolution | null> {
+    const existing = await this.getSolutionById(solutionId);
+    if (!existing) return null;
+
+    const currentCost = Number(existing.totalCostUsd || 0);
+    const currentTokens = Number(existing.totalTokens || 0);
+    const currentCount = Number(existing.generationCount || 0);
+
+    const addedCost = Number(costUsd) || 0;
+    const addedTokens = Number(tokens) || 0;
+
+    const newCost = Number((currentCost + addedCost).toFixed(6));
+    const newTokens = currentTokens + addedTokens;
+    const newCount = currentCount + 1;
+
+    return this.updateSolution(solutionId, existing.userId, {
+      totalCostUsd: newCost,
+      totalTokens: newTokens,
+      generationCount: newCount,
+    });
+  }
+
+  /**
    * Deletes a fire safety solution by ID.
    */
   static async deleteSolution(id: string): Promise<boolean> {
+    let dbDeleted = false;
     if (isDbConfigured()) {
       try {
         const sql = await ensureDb();
-        await sql`DELETE FROM fire_safety_solutions WHERE id = ${id};`;
+        const deletedRows = (await sql`
+          DELETE FROM fire_safety_solutions WHERE id = ${id} RETURNING id;
+        `) as Record<string, unknown>[];
+        if (deletedRows && deletedRows.length > 0) {
+          dbDeleted = true;
+        }
       } catch (err) {
         console.warn("[FireSafetySolutionService] DB delete failed:", err);
       }
     }
 
     this.loadStorage();
-    const deleted = this.localSolutions.delete(id);
+    const deletedLocally = this.localSolutions.delete(id);
     this.saveStorage();
 
-    return deleted;
+    if (isDbConfigured()) {
+      return dbDeleted || deletedLocally;
+    }
+    return deletedLocally;
   }
 
   /**

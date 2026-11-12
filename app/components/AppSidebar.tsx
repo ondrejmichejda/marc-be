@@ -18,6 +18,8 @@ import { TelegramBotSystemView } from "./TelegramBotSystemView";
 import { OpenAiSystemView } from "./OpenAiSystemView";
 import { AiPromptsView } from "./AiPromptsView";
 import { FireSafetySolutionsView } from "./FireSafetySolutionsView";
+import { FssPromptsSystemView } from "./FssPromptsSystemView";
+import { UserAiSettingsView } from "./UserAiSettingsView";
 
 interface AppSidebarProps {
   initialUser?: User | null;
@@ -719,6 +721,19 @@ export function AppSidebar({
                 <FireSafetySolutionsView userId={user?.id} />
               )}
 
+              {/* Tab: FSS AI Prompts (Dedicated Menu Item) */}
+              {effectiveTab === "fss_ai_prompts" && (
+                <FssPromptsSystemView />
+              )}
+
+              {/* Tab: Personal OpenAI & Model Settings */}
+              {effectiveTab === "openai_settings" && (
+                <UserAiSettingsView
+                  userId={user?.id}
+                  onNavigateToFss={() => handleTabClick("fire_safety_solutions")}
+                />
+              )}
+
               {/* Tab: AI Prompts (Scheduled AI Prompts with 9am, 1pm, 5pm options) */}
               {effectiveTab === "ai_prompts" && (
                 <AiPromptsView userId={user?.id} />
@@ -1177,12 +1192,12 @@ export function AppSidebar({
                     <TelegramBotSystemView />
                   )}
 
-                  {/* Sub-Tab 5: OpenAI Subsystem */}
+                  {/* Sub-Tab 6: OpenAI Subsystem */}
                   {systemSubTab === "openai" && (
                     <OpenAiSystemView />
                   )}
 
-                  {/* Sub-Tab 6: Environment Telemetry */}
+                  {/* Sub-Tab 7: Environment Telemetry */}
                   {systemSubTab === "info" && (
                     <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800 space-y-4">
                       <h3 className="text-sm font-semibold text-white">System & Environment Telemetry</h3>

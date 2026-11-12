@@ -7,6 +7,7 @@ import {
   OpenAiUsageSummary,
   ModelUsageStats,
   DailyUsageStats,
+  ModelPricingGuideItem,
 } from "./types";
 
 interface StorageSchema {
@@ -14,22 +15,98 @@ interface StorageSchema {
 }
 
 // Pricing per 1M tokens (USD)
-const MODEL_PRICING: Record<string, { prompt: number; completion: number }> = {
+export const MODEL_PRICING: Record<string, { prompt: number; completion: number }> = {
   "gpt-4o-mini": { prompt: 0.15, completion: 0.6 },
+  "gpt-4o-mini-2024-07-18": { prompt: 0.15, completion: 0.6 },
   "gpt-4o": { prompt: 2.5, completion: 10.0 },
+  "gpt-4o-2024-08-06": { prompt: 2.5, completion: 10.0 },
+  "gpt-4o-2024-11-20": { prompt: 2.5, completion: 10.0 },
+  "chatgpt-4o-latest": { prompt: 5.0, completion: 15.0 },
+  "gpt-4.5-preview": { prompt: 75.0, completion: 150.0 },
   "gpt-4-turbo": { prompt: 10.0, completion: 30.0 },
+  "gpt-4-turbo-2024-04-09": { prompt: 10.0, completion: 30.0 },
+  "gpt-4": { prompt: 30.0, completion: 60.0 },
   "gpt-3.5-turbo": { prompt: 0.5, completion: 1.5 },
+  "o3-mini": { prompt: 1.1, completion: 4.4 },
+  "o3-mini-2025-01-31": { prompt: 1.1, completion: 4.4 },
+  "o1": { prompt: 15.0, completion: 60.0 },
+  "o1-2024-12-17": { prompt: 15.0, completion: 60.0 },
+  "o1-preview": { prompt: 15.0, completion: 60.0 },
+  "o1-mini": { prompt: 3.0, completion: 12.0 },
+  "o4-mini": { prompt: 1.1, completion: 4.4 },
 };
+
+export const MODEL_PRICING_GUIDE: ModelPricingGuideItem[] = [
+  {
+    model: "gpt-4o-mini",
+    name: "GPT-4o mini",
+    inputCostPer1M: 0.15,
+    outputCostPer1M: 0.6,
+    contextWindow: "128k",
+    tier: "cheapest",
+    recommendation: "Cenově nejvýhodnější (~15x levnější než GPT-4o), ideální pro koncepty a rychlé generování.",
+  },
+  {
+    model: "o3-mini",
+    name: "o3-mini (Reasoning)",
+    inputCostPer1M: 1.1,
+    outputCostPer1M: 4.4,
+    contextWindow: "200k",
+    tier: "very_low",
+    recommendation: "Výborný poměr cena/výkon pro složité požární normy a technické výpočty s hlubokým uvažováním.",
+  },
+  {
+    model: "gpt-4o",
+    name: "GPT-4o (Omni)",
+    inputCostPer1M: 2.5,
+    outputCostPer1M: 10.0,
+    contextWindow: "128k",
+    tier: "medium",
+    recommendation: "Vlajkový model pro finální technické formulace s vysokou stylistickou a odbornou kvalitou.",
+  },
+  {
+    model: "o1",
+    name: "o1 (Deep Reasoning)",
+    inputCostPer1M: 15.0,
+    outputCostPer1M: 60.0,
+    contextWindow: "200k",
+    tier: "high",
+    recommendation: "Hloubkové deduktivní uvažování pro nejsložitější nestandardní stavební posudky.",
+  },
+];
 
 export function estimateCostUsd(
   model: string,
   promptTokens: number,
   completionTokens: number
 ): number {
-  const pricing = MODEL_PRICING[model.toLowerCase()] || {
-    prompt: 0.2,
-    completion: 0.8,
-  };
+  const m = model.toLowerCase();
+  let pricing = MODEL_PRICING[m];
+
+  if (!pricing) {
+    if (m.includes("gpt-4o-mini")) {
+      pricing = MODEL_PRICING["gpt-4o-mini"];
+    } else if (m.includes("gpt-4o")) {
+      pricing = MODEL_PRICING["gpt-4o"];
+    } else if (m.includes("o3-mini") || m.includes("o4-mini")) {
+      pricing = MODEL_PRICING["o3-mini"];
+    } else if (m.includes("o1-mini")) {
+      pricing = MODEL_PRICING["o1-mini"];
+    } else if (m.startsWith("o1")) {
+      pricing = MODEL_PRICING["o1"];
+    } else if (m.includes("gpt-4.5")) {
+      pricing = MODEL_PRICING["gpt-4.5-preview"];
+    } else if (m.includes("gpt-4-turbo")) {
+      pricing = MODEL_PRICING["gpt-4-turbo"];
+    } else if (m.includes("gpt-4")) {
+      pricing = MODEL_PRICING["gpt-4"];
+    } else if (m.includes("gpt-3.5")) {
+      pricing = MODEL_PRICING["gpt-3.5-turbo"];
+    } else {
+      pricing = { prompt: 0.2, completion: 0.8 };
+    }
+  }
+
   const promptCost = (promptTokens / 1_000_000) * pricing.prompt;
   const completionCost = (completionTokens / 1_000_000) * pricing.completion;
   return Number((promptCost + completionCost).toFixed(6));
