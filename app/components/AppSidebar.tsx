@@ -17,6 +17,9 @@ import {
 import { TelegramBotSystemView } from "./TelegramBotSystemView";
 import { OpenAiSystemView } from "./OpenAiSystemView";
 import { AiPromptsView } from "./AiPromptsView";
+import { FireSafetySolutionsView } from "./FireSafetySolutionsView";
+import { FssPromptsSystemView } from "./FssPromptsSystemView";
+import { UserAiSettingsView } from "./UserAiSettingsView";
 
 interface AppSidebarProps {
   initialUser?: User | null;
@@ -84,7 +87,7 @@ const BADGE_COLOR_PRESETS: { name: string; colors: RoleBadgeColor }[] = [
 
 export function AppSidebar({
   initialUser = null,
-  activeTab = "mock_a",
+  activeTab = "fire_safety_solutions",
   onTabChange,
   children,
 }: AppSidebarProps) {
@@ -704,7 +707,7 @@ export function AppSidebar({
               </p>
               <button
                 type="button"
-                onClick={() => handleTabClick(activeMenuItems[0]?.id || "mock_a")}
+                onClick={() => handleTabClick(activeMenuItems[0]?.id || "fire_safety_solutions")}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md transition-all"
               >
                 Return to Default Module
@@ -713,202 +716,22 @@ export function AppSidebar({
           ) : (
             /* Dynamic Content Tabs */
             <div className="space-y-6">
-              {/* Tab: Mock Menu Item A */}
-              {effectiveTab === "mock_a" && (
-                <div className="space-y-6">
-                  <div className="p-8 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-md space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 text-2xl">
-                          🅰️
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h1 className="text-xl sm:text-2xl font-bold text-white">Menu Item A</h1>
-                            <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                              Active Mock Module
-                            </span>
-                          </div>
-                          <p className="text-xs text-zinc-400 mt-0.5">
-                            Business analytics, telemetry dashboard, and workspace metrics.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-zinc-800/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                      <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1">
-                        <span className="text-[11px] font-mono text-zinc-500 uppercase">Workspaces Active</span>
-                        <p className="text-sm font-bold text-emerald-400">12 Connected</p>
-                      </div>
-                      <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1">
-                        <span className="text-[11px] font-mono text-zinc-500 uppercase">Throughput</span>
-                        <p className="text-sm font-bold text-sky-400">1,480 req/min</p>
-                      </div>
-                      <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1">
-                        <span className="text-[11px] font-mono text-zinc-500 uppercase">Latency</span>
-                        <p className="text-sm font-bold text-indigo-300">18 ms avg</p>
-                      </div>
-                      <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1">
-                        <span className="text-[11px] font-mono text-zinc-500 uppercase">System Health</span>
-                        <p className="text-sm font-bold text-purple-300">99.98% Uptime</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800 space-y-3">
-                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <span>📊</span> Real-Time Analytics Stream
-                      </h3>
-                      <p className="text-xs text-zinc-400 leading-relaxed">
-                        Data ingestion stream is functioning normally. All telemetry collectors are reporting nominal throughput.
-                      </p>
-                      <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800/80 font-mono text-[11px] text-zinc-300 space-y-1">
-                        <p className="text-emerald-400">✓ Ingestion Worker #1: ACTIVE (PID 4021)</p>
-                        <p className="text-emerald-400">✓ Ingestion Worker #2: ACTIVE (PID 4022)</p>
-                        <p className="text-zinc-500">• Buffer queue depth: 0 items</p>
-                      </div>
-                    </div>
-
-                    <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800 space-y-3">
-                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <span>⚡</span> Module A Actions
-                      </h3>
-                      <p className="text-xs text-zinc-400">
-                        Trigger mock background analytics computation or refresh collector buffers.
-                      </p>
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => setActionMessage({ type: "success", text: "Mock Task A triggered successfully." })}
-                          className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md transition-all active:scale-95"
-                        >
-                          Trigger Mock Task A
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setActionMessage({ type: "success", text: "Telemetry cache flushed." })}
-                          className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-xs font-semibold transition-all active:scale-95"
-                        >
-                          Flush Cache
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {/* Tab: Fire Safety Solutions (FSS) */}
+              {effectiveTab === "fire_safety_solutions" && (
+                <FireSafetySolutionsView userId={user?.id} />
               )}
 
-              {/* Tab: Mock Menu Item B */}
-              {effectiveTab === "mock_b" && (
-                <div className="space-y-6">
-                  <div className="p-8 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-md space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-2xl bg-sky-600/20 border border-sky-500/30 text-sky-400 text-2xl">
-                          🅱️
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h1 className="text-xl sm:text-2xl font-bold text-white">Menu Item B</h1>
-                            <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                              Active Mock Module
-                            </span>
-                          </div>
-                          <p className="text-xs text-zinc-400 mt-0.5">
-                            Data processing, queue workers, and background task dispatching.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-zinc-800/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1">
-                        <span className="text-[11px] font-mono text-zinc-500 uppercase">Queue Dispatcher</span>
-                        <p className="text-sm font-bold text-sky-400">Idle / Ready</p>
-                      </div>
-                      <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1">
-                        <span className="text-[11px] font-mono text-zinc-500 uppercase">Concurrency</span>
-                        <p className="text-sm font-bold text-indigo-300">4 Workers</p>
-                      </div>
-                      <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1">
-                        <span className="text-[11px] font-mono text-zinc-500 uppercase">Completed Jobs</span>
-                        <p className="text-sm font-bold text-emerald-400">8,240 Total</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800 space-y-4">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <span>⚙️</span> Queue Dispatch Controls
-                    </h3>
-                    <p className="text-xs text-zinc-400">
-                      Simulate dispatching background batch jobs to worker instances.
-                    </p>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setActionMessage({ type: "success", text: "Dispatched mock batch job #4092 to queue." })}
-                        className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md transition-all active:scale-95"
-                      >
-                        Dispatch Batch Job
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              {/* Tab: FSS AI Prompts (Dedicated Menu Item) */}
+              {effectiveTab === "fss_ai_prompts" && (
+                <FssPromptsSystemView />
               )}
 
-              {/* Tab: Mock Menu Item C */}
-              {effectiveTab === "mock_c" && (
-                <div className="space-y-6">
-                  <div className="p-8 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-md space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-2xl bg-purple-600/20 border border-purple-500/30 text-purple-400 text-2xl">
-                          🅲
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h1 className="text-xl sm:text-2xl font-bold text-white">Menu Item C</h1>
-                            <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                              Active Mock Module
-                            </span>
-                          </div>
-                          <p className="text-xs text-zinc-400 mt-0.5">
-                            Reporting studio, compliance audits, and third-party integrations.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-zinc-800/80 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1">
-                        <span className="text-[11px] font-mono text-zinc-500 uppercase">Integration Connectors</span>
-                        <p className="text-sm font-bold text-purple-300">3 Configured (Google, Neon, Telegram)</p>
-                      </div>
-                      <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 space-y-1">
-                        <span className="text-[11px] font-mono text-zinc-500 uppercase">Audit Status</span>
-                        <p className="text-sm font-bold text-emerald-400">Compliant (No warnings)</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800 space-y-4">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <span>📑</span> Report Generator
-                    </h3>
-                    <p className="text-xs text-zinc-400">
-                      Generate mock summary exports for reporting and audit logs.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setActionMessage({ type: "success", text: "Mock report generated and exported." })}
-                      className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-md transition-all active:scale-95"
-                    >
-                      Export System Audit Report
-                    </button>
-                  </div>
-                </div>
+              {/* Tab: Personal OpenAI & Model Settings */}
+              {effectiveTab === "openai_settings" && (
+                <UserAiSettingsView
+                  userId={user?.id}
+                  onNavigateToFss={() => handleTabClick("fire_safety_solutions")}
+                />
               )}
 
               {/* Tab: AI Prompts (Scheduled AI Prompts with 9am, 1pm, 5pm options) */}
@@ -1369,12 +1192,12 @@ export function AppSidebar({
                     <TelegramBotSystemView />
                   )}
 
-                  {/* Sub-Tab 5: OpenAI Subsystem */}
+                  {/* Sub-Tab 6: OpenAI Subsystem */}
                   {systemSubTab === "openai" && (
                     <OpenAiSystemView />
                   )}
 
-                  {/* Sub-Tab 6: Environment Telemetry */}
+                  {/* Sub-Tab 7: Environment Telemetry */}
                   {systemSubTab === "info" && (
                     <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800 space-y-4">
                       <h3 className="text-sm font-semibold text-white">System & Environment Telemetry</h3>

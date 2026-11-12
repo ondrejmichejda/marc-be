@@ -436,6 +436,7 @@ export class ScheduledPromptService {
     const result = await executeChatCompletion({
       prompt: promptRecord.prompt,
       userIdentifier: promptRecord.userEmail || promptRecord.userId,
+      userId: promptRecord.userId || userId,
       source: `scheduled_prompt_${promptRecord.scheduledTime}`,
     });
 

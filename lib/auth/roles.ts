@@ -78,35 +78,35 @@ export const ROLE_DEFINITIONS: Record<string, RoleDefinition> = BUILTIN_ROLES;
 
 /**
  * Base master catalog of application menu items.
- * Includes Mock Menu Items A, B, and C as well as the admin-only System menu item.
+ * Includes Fire Safety Solutions, FSS AI Prompts, AI Settings, Scheduled Prompts, and System administration.
  */
 export const BASE_MENU_ITEMS: MenuItem[] = [
   {
-    id: "mock_a",
-    label: "Menu Item A",
-    icon: "🅰️",
-    badge: "Module A",
-    description: "Mock business application module A with analytics and workspace tools",
+    id: "fire_safety_solutions",
+    label: "Fire Safety Solutions",
+    icon: "🧯",
+    badge: "FSS",
+    description: "Manage Fire Safety Solutions, building documentation, and fire safety assessments",
     category: "General",
     allowedRoles: ["admin", "operator", "user"],
   },
   {
-    id: "mock_b",
-    label: "Menu Item B",
-    icon: "🅱️",
-    badge: "Module B",
-    description: "Mock business application module B with data processing and job queues",
-    category: "General",
-    allowedRoles: ["admin", "operator"],
+    id: "fss_ai_prompts",
+    label: "FSS AI Prompts",
+    icon: "📐",
+    badge: "PBŘ Prompts",
+    description: "General AI prompts configuration for Fire Safety Solution properties generation",
+    category: "Administration",
+    allowedRoles: ["admin"],
   },
   {
-    id: "mock_c",
-    label: "Menu Item C",
-    icon: "🅲",
-    badge: "Module C",
-    description: "Mock business application module C with reporting and external integrations",
-    category: "General",
-    allowedRoles: ["admin"],
+    id: "openai_settings",
+    label: "AI Settings",
+    icon: "⚡",
+    badge: "Personal",
+    description: "Configure personal OpenAI API key, default model, and web search",
+    category: "Administration",
+    allowedRoles: ["admin", "operator", "user"],
   },
   {
     id: "ai_prompts",
@@ -131,9 +131,9 @@ export const BASE_MENU_ITEMS: MenuItem[] = [
 export const ALL_MENU_ITEMS = BASE_MENU_ITEMS;
 
 export const DEFAULT_MENU_MAPPINGS: Record<string, string[]> = {
-  mock_a: ["admin", "operator", "user"],
-  mock_b: ["admin", "operator"],
-  mock_c: ["admin"],
+  fire_safety_solutions: ["admin", "operator", "user"],
+  fss_ai_prompts: ["admin"],
+  openai_settings: ["admin", "operator", "user"],
   ai_prompts: ["admin", "operator", "user"],
   system: ["admin"],
 };

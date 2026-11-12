@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { OpenAiConfigStatus, OpenAiMessageLog } from "./types";
 import { OpenAiLogService } from "./logs";
+import { UserAiSettingsService } from "./userSettings";
 import { TelegramService } from "../telegram/service";
 
 export const FUNNY_INSULT_PROMPT = (userMessage: string) =>
@@ -21,6 +22,20 @@ export function getEffectiveOpenAiModel(): string {
 export const AVAILABLE_OPENAI_MODELS = [
   "gpt-4o",
 ];
+
+/**
+ * Checks whether a given model identifier corresponds to an OpenAI reasoning model
+ * (such as o1, o1-mini, o3-mini, etc.) which does not support custom temperature settings.
+ */
+export function isReasoningModel(model: string): boolean {
+  const m = model.toLowerCase();
+  return (
+    m.startsWith("o1") ||
+    m.startsWith("o3") ||
+    m.startsWith("o4") ||
+    m.includes("-reasoning")
+  );
+}
 
 /**
  * Checks whether Web Search is enabled for OpenAI queries.
@@ -69,24 +84,35 @@ export function getOpenAiConfig(): OpenAiConfigStatus {
 }
 
 /**
- * Returns a singleton instance of the OpenAI client.
+ * Returns an OpenAI client instance.
+ * If an apiKey is provided, creates a client instance for that key; otherwise uses singleton.
  */
-export function getOpenAIClient(): OpenAI {
+export function getOpenAIClient(apiKey?: string, organization?: string): OpenAI {
+  if (apiKey && apiKey.trim() !== "") {
+    return new OpenAI({
+      apiKey: apiKey.trim(),
+      organization: organization?.trim() || undefined,
+    });
+  }
+
   if (!openaiClient) {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
+    const envApiKey = process.env.OPENAI_API_KEY;
+    if (!envApiKey) {
       throw new Error(
-        "Missing OPENAI_API_KEY environment variable. Please set it in .env"
+        "OpenAI API token is not configured. Please configure your personal OpenAI token in the AI Settings page."
       );
     }
-    openaiClient = new OpenAI({ apiKey });
+    openaiClient = new OpenAI({
+      apiKey: envApiKey,
+      organization: process.env.OPENAI_ORG_ID || undefined,
+    });
   }
   return openaiClient;
 }
 
 /**
  * Executes a chat completion or response and automatically records token usage and metrics into the log service.
- * Always utilizes the active OpenAI model from OPENAI_MODEL environment variable or default fallback.
+ * Supports per-user API tokens and model configurations.
  * Uses OpenAI's Responses API with reasoning, web search, text formatting, and resilient fallback handling.
  */
 export async function executeChatCompletion(params: {
@@ -101,14 +127,60 @@ export async function executeChatCompletion(params: {
   serviceTier?: "default" | "auto" | "flex" | "fast" | "priority" | "ultrafast";
   reasoningEffort?: "low" | "medium" | "high";
   stream?: boolean;
+  apiKey?: string;
+  organization?: string;
+  userId?: string;
 }): Promise<{
   completion: string;
   log: OpenAiMessageLog;
 }> {
   const startTime = Date.now();
-  const model = params.model || getEffectiveOpenAiModel();
+  let effectiveApiKey = params.apiKey?.trim();
+  let effectiveOrg = params.organization?.trim();
+  let model = params.model;
+  let temperature = params.temperature;
+  let reasoningEffort = params.reasoningEffort;
+  let isWebSearch = params.webSearch;
+
+  if (!effectiveApiKey && params.userId) {
+    try {
+      const userSettings = await UserAiSettingsService.getSettings(params.userId);
+      if (userSettings?.apiKey) {
+        effectiveApiKey = userSettings.apiKey.trim();
+        if (!effectiveOrg && userSettings.organization) {
+          effectiveOrg = userSettings.organization.trim();
+        }
+        if (!model && (userSettings.customModel || userSettings.defaultModel)) {
+          model = userSettings.customModel || userSettings.defaultModel;
+        }
+        if (temperature === undefined && userSettings.temperature !== undefined) {
+          temperature = userSettings.temperature;
+        }
+        if (reasoningEffort === undefined && userSettings.reasoningEffort !== undefined) {
+          reasoningEffort = userSettings.reasoningEffort;
+        }
+        if (isWebSearch === undefined && userSettings.webSearchEnabled !== undefined) {
+          isWebSearch = userSettings.webSearchEnabled;
+        }
+      }
+    } catch (err) {
+      console.warn("[OpenAI Service] Could not load user AI settings:", (err as Error).message);
+    }
+  }
+
+  if (!effectiveApiKey && process.env.OPENAI_API_KEY) {
+    effectiveApiKey = process.env.OPENAI_API_KEY.trim();
+  }
+  if (!effectiveApiKey) {
+    effectiveApiKey = "";
+  }
+  if (!model) {
+    model = getEffectiveOpenAiModel();
+  }
+  if (isWebSearch === undefined) {
+    isWebSearch = isOpenAiWebSearchEnabled();
+  }
   const source = params.source || "system";
-  const isWebSearch = params.webSearch !== undefined ? params.webSearch : isOpenAiWebSearchEnabled();
 
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
   if (params.systemPrompt) {
@@ -117,8 +189,8 @@ export async function executeChatCompletion(params: {
   messages.push({ role: "user", content: params.prompt });
 
   try {
-    if (!isOpenAiConfigured()) {
-      // Graceful fallback for local development or demo environment without API key
+    if (!effectiveApiKey || effectiveApiKey.startsWith("sk-test-") || effectiveApiKey.startsWith("mock-")) {
+      // Graceful fallback for local development, test suite, or mock keys without making network calls
       const durationMs = Date.now() - startTime + 120;
       const mockCompletion = `[OpenAI Simulation (${model})]: Zpracováno v offline/vývojovém režimu pro prompt: "${params.prompt.slice(0, 80)}"`;
       const promptTokens = Math.max(10, Math.round(params.prompt.length / 4));
@@ -142,7 +214,7 @@ export async function executeChatCompletion(params: {
       return { completion: mockCompletion, log };
     }
 
-    const openai = getOpenAIClient();
+    const openai = getOpenAIClient(effectiveApiKey, params.organization);
 
     let content = "";
     let promptTokens = Math.round(params.prompt.length / 4);
@@ -196,7 +268,11 @@ export async function executeChatCompletion(params: {
           ]
         : undefined;
 
-      const basePayload = {
+      const modelIsReasoning = isReasoningModel(model);
+      const hasCustomTemperature = typeof params.temperature === "number" && !modelIsReasoning;
+      const shouldUseReasoning = modelIsReasoning || (params.reasoningEffort !== undefined && !hasCustomTemperature);
+
+      const basePayload: Record<string, unknown> = {
         model,
         service_tier: params.serviceTier || "default",
         input: responsesInput,
@@ -206,26 +282,83 @@ export async function executeChatCompletion(params: {
           },
           verbosity: "medium" as const,
         },
-        reasoning: {
+        ...(tools && tools.length > 0 ? { tools } : {}),
+        store: true,
+      };
+
+      const includeItems: string[] = [];
+      if (isWebSearch) {
+        includeItems.push("web_search_call.action.sources");
+      }
+
+      if (shouldUseReasoning) {
+        basePayload.reasoning = {
           effort: params.reasoningEffort || "medium",
           mode: "standard" as const,
           summary: "auto" as const,
-        },
-        ...(tools && tools.length > 0 ? { tools } : {}),
-        store: true,
-        include: [
-          "reasoning.encrypted_content" as const,
-          "web_search_call.action.sources" as const,
-        ],
-        ...(typeof params.temperature === "number" ? { temperature: params.temperature } : {}),
+        };
+        includeItems.push("reasoning.encrypted_content");
+      } else if (hasCustomTemperature) {
+        basePayload.temperature = params.temperature;
+      }
+
+      if (includeItems.length > 0) {
+        basePayload.include = includeItems;
+      }
+
+      const executeResponsesCall = async (payload: Record<string, unknown>, isStream: boolean) => {
+        if (isStream) {
+          return await openai.responses.create({
+            ...(payload as unknown as OpenAI.Responses.ResponseCreateParamsStreaming),
+            stream: true,
+          });
+        }
+        return await openai.responses.create({
+          ...(payload as unknown as OpenAI.Responses.ResponseCreateParamsNonStreaming),
+          stream: false,
+        });
       };
 
-      if (params.stream) {
-        const stream = await openai.responses.create({
-          ...basePayload,
-          stream: true,
-        });
+      let responseOrStream: unknown;
+      try {
+        responseOrStream = await executeResponsesCall(basePayload, Boolean(params.stream));
+      } catch (callErr: unknown) {
+        const errMessage = (callErr instanceof Error ? callErr.message : String(callErr)).toLowerCase();
+        const status = (callErr as { status?: number }).status;
 
+        const isParamError =
+          errMessage.includes("temperature") ||
+          errMessage.includes("reasoning") ||
+          errMessage.includes("unsupported parameter") ||
+          status === 400;
+
+        if (isParamError) {
+          const sanitizedPayload = { ...basePayload };
+          delete sanitizedPayload.temperature;
+          delete sanitizedPayload.reasoning;
+          const currentIncludes = sanitizedPayload.include;
+          if (Array.isArray(currentIncludes)) {
+            const filtered = (currentIncludes as string[]).filter(
+              (inc) => !inc.startsWith("reasoning")
+            );
+            if (filtered.length > 0) {
+              sanitizedPayload.include = filtered;
+            } else {
+              delete sanitizedPayload.include;
+            }
+          }
+          responseOrStream = await executeResponsesCall(sanitizedPayload, Boolean(params.stream));
+        } else {
+          throw callErr;
+        }
+      }
+
+      if (params.stream) {
+        const stream = responseOrStream as AsyncIterable<{
+          type?: string;
+          delta?: string;
+          response?: { output_text?: string; usage?: { input_tokens?: number; output_tokens?: number; total_tokens?: number } };
+        }>;
         let streamedText = "";
         for await (const event of stream) {
           if (event.type === "response.output_text.delta" && event.delta) {
@@ -243,10 +376,7 @@ export async function executeChatCompletion(params: {
         rawPayloadRecord = { mode: "responses_stream", model };
         responsesSucceeded = true;
       } else {
-        const response = await openai.responses.create({
-          ...basePayload,
-          stream: false,
-        });
+        const response = responseOrStream as OpenAI.Responses.Response;
         content = response.output_text?.trim() || "";
 
         if (!content && Array.isArray(response.output)) {
@@ -288,7 +418,7 @@ export async function executeChatCompletion(params: {
         model,
         messages,
       };
-      if (typeof params.temperature === "number") {
+      if (typeof params.temperature === "number" && !isReasoningModel(model)) {
         requestPayload.temperature = params.temperature;
       }
       if (isWebSearch) {
@@ -391,14 +521,55 @@ export async function createOpenAiResponsesStream(params: {
   prompt: string;
   systemPrompt?: string;
   model?: string;
+  temperature?: number;
   webSearch?: boolean;
   webSearchContextSize?: "low" | "medium" | "high";
   serviceTier?: "default" | "auto" | "flex" | "fast" | "priority" | "ultrafast";
   reasoningEffort?: "low" | "medium" | "high";
+  apiKey?: string;
+  organization?: string;
+  userId?: string;
 }) {
-  const openai = getOpenAIClient();
-  const model = params.model || getEffectiveOpenAiModel();
-  const isWebSearch = params.webSearch !== undefined ? params.webSearch : isOpenAiWebSearchEnabled();
+  let effectiveApiKey = params.apiKey?.trim();
+  let effectiveOrg = params.organization?.trim();
+  let model = params.model;
+  let temperature = params.temperature;
+  let reasoningEffort = params.reasoningEffort;
+  let isWebSearch = params.webSearch;
+
+  if (!effectiveApiKey && params.userId) {
+    try {
+      const userSettings = await UserAiSettingsService.getSettings(params.userId);
+      if (userSettings?.apiKey) {
+        effectiveApiKey = userSettings.apiKey.trim();
+        if (!effectiveOrg && userSettings.organization) {
+          effectiveOrg = userSettings.organization.trim();
+        }
+        if (!model && (userSettings.customModel || userSettings.defaultModel)) {
+          model = userSettings.customModel || userSettings.defaultModel;
+        }
+        if (temperature === undefined && userSettings.temperature !== undefined) {
+          temperature = userSettings.temperature;
+        }
+        if (reasoningEffort === undefined && userSettings.reasoningEffort !== undefined) {
+          reasoningEffort = userSettings.reasoningEffort;
+        }
+        if (isWebSearch === undefined && userSettings.webSearchEnabled !== undefined) {
+          isWebSearch = userSettings.webSearchEnabled;
+        }
+      }
+    } catch (err) {
+      console.warn("[OpenAI Service] Could not load user AI settings for stream:", (err as Error).message);
+    }
+  }
+
+  const openai = getOpenAIClient(effectiveApiKey, effectiveOrg);
+  if (!model) {
+    model = getEffectiveOpenAiModel();
+  }
+  if (isWebSearch === undefined) {
+    isWebSearch = isOpenAiWebSearchEnabled();
+  }
 
   const input: Array<{
     role: "user" | "system" | "developer";
@@ -442,7 +613,11 @@ export async function createOpenAiResponsesStream(params: {
       ]
     : undefined;
 
-  return await openai.responses.create({
+  const modelIsReasoning = isReasoningModel(model);
+  const hasCustomTemperature = typeof params.temperature === "number" && !modelIsReasoning;
+  const shouldUseReasoning = modelIsReasoning || (params.reasoningEffort !== undefined && !hasCustomTemperature);
+
+  const payload: Record<string, unknown> = {
     model,
     service_tier: params.serviceTier || "default",
     input,
@@ -452,19 +627,57 @@ export async function createOpenAiResponsesStream(params: {
       },
       verbosity: "medium",
     },
-    reasoning: {
-      effort: params.reasoningEffort || "medium",
-      mode: "standard",
-      summary: "auto",
-    },
     ...(tools && tools.length > 0 ? { tools } : {}),
     stream: true,
     store: true,
-    include: [
-      "reasoning.encrypted_content",
-      "web_search_call.action.sources",
-    ],
-  });
+  };
+
+  const includeItems: string[] = [];
+  if (isWebSearch) {
+    includeItems.push("web_search_call.action.sources");
+  }
+
+  if (shouldUseReasoning) {
+    payload.reasoning = {
+      effort: params.reasoningEffort || "medium",
+      mode: "standard",
+      summary: "auto",
+    };
+    includeItems.push("reasoning.encrypted_content");
+  } else if (hasCustomTemperature) {
+    payload.temperature = params.temperature;
+  }
+
+  if (includeItems.length > 0) {
+    payload.include = includeItems;
+  }
+
+  try {
+    return await openai.responses.create(payload as unknown as OpenAI.Responses.ResponseCreateParamsStreaming);
+  } catch (err: unknown) {
+    const errMessage = (err instanceof Error ? err.message : String(err)).toLowerCase();
+    const isParamError =
+      errMessage.includes("temperature") ||
+      errMessage.includes("reasoning") ||
+      errMessage.includes("unsupported parameter") ||
+      (err as { status?: number }).status === 400;
+
+    if (isParamError) {
+      delete payload.temperature;
+      delete payload.reasoning;
+      const currentIncludes = payload.include;
+      if (Array.isArray(currentIncludes)) {
+        const filtered = (currentIncludes as string[]).filter((i) => !i.startsWith("reasoning"));
+        if (filtered.length > 0) {
+          payload.include = filtered;
+        } else {
+          delete payload.include;
+        }
+      }
+      return await openai.responses.create(payload as unknown as OpenAI.Responses.ResponseCreateParamsStreaming);
+    }
+    throw err;
+  }
 }
 
 /**
@@ -526,6 +739,7 @@ export async function respondToTelegramUserByName(params: {
     prompt: params.prompt,
     systemPrompt: params.systemPrompt,
     userIdentifier,
+    userId: params.userId,
     source: "johan_bot_response",
     temperature: params.temperature,
     webSearch: params.webSearch,

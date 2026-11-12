@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
 import { executeChatCompletion } from "@/lib/openai";
 
 /**
@@ -7,11 +8,17 @@ import { executeChatCompletion } from "@/lib/openai";
  */
 export async function POST(req: NextRequest) {
   try {
+    const user = await getCurrentUser(req);
+    const userId = user?.id;
+
     const body = await req.json();
     const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : "";
     const systemPrompt = typeof body?.systemPrompt === "string" ? body.systemPrompt.trim() : undefined;
     const temperature = typeof body?.temperature === "number" ? body.temperature : undefined;
     const webSearch = typeof body?.webSearch === "boolean" ? body.webSearch : undefined;
+    const model = typeof body?.model === "string" ? body.model.trim() : undefined;
+    const apiKey = typeof body?.apiKey === "string" ? body.apiKey.trim() : undefined;
+    const organization = typeof body?.organization === "string" ? body.organization.trim() : undefined;
 
     if (!prompt) {
       return NextResponse.json(
@@ -23,9 +30,13 @@ export async function POST(req: NextRequest) {
     const result = await executeChatCompletion({
       prompt,
       systemPrompt,
+      model,
       temperature,
       webSearch,
-      userIdentifier: body?.userIdentifier || "admin@system.console",
+      apiKey,
+      organization,
+      userId,
+      userIdentifier: user?.email || body?.userIdentifier || "admin@system.console",
       source: "system_console",
     });
 
