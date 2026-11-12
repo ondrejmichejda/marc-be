@@ -78,35 +78,17 @@ export const ROLE_DEFINITIONS: Record<string, RoleDefinition> = BUILTIN_ROLES;
 
 /**
  * Base master catalog of application menu items.
- * Includes Mock Menu Items A, B, and C as well as the admin-only System menu item.
+ * Includes Fire Safety Solutions, AI Prompts, and the admin-only System menu item.
  */
 export const BASE_MENU_ITEMS: MenuItem[] = [
   {
-    id: "mock_a",
-    label: "Menu Item A",
-    icon: "🅰️",
-    badge: "Module A",
-    description: "Mock business application module A with analytics and workspace tools",
+    id: "fire_safety_solutions",
+    label: "Fire Safety Solutions",
+    icon: "🧯",
+    badge: "FSS",
+    description: "Manage Fire Safety Solutions, building documentation, and fire safety assessments",
     category: "General",
     allowedRoles: ["admin", "operator", "user"],
-  },
-  {
-    id: "mock_b",
-    label: "Menu Item B",
-    icon: "🅱️",
-    badge: "Module B",
-    description: "Mock business application module B with data processing and job queues",
-    category: "General",
-    allowedRoles: ["admin", "operator"],
-  },
-  {
-    id: "mock_c",
-    label: "Menu Item C",
-    icon: "🅲",
-    badge: "Module C",
-    description: "Mock business application module C with reporting and external integrations",
-    category: "General",
-    allowedRoles: ["admin"],
   },
   {
     id: "ai_prompts",
@@ -131,9 +113,7 @@ export const BASE_MENU_ITEMS: MenuItem[] = [
 export const ALL_MENU_ITEMS = BASE_MENU_ITEMS;
 
 export const DEFAULT_MENU_MAPPINGS: Record<string, string[]> = {
-  mock_a: ["admin", "operator", "user"],
-  mock_b: ["admin", "operator"],
-  mock_c: ["admin"],
+  fire_safety_solutions: ["admin", "operator", "user"],
   ai_prompts: ["admin", "operator", "user"],
   system: ["admin"],
 };

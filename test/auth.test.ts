@@ -173,40 +173,42 @@ test("Authentication API Endpoints: /api/auth/me, /api/auth/users, /api/auth/log
   await UserService.deleteUser(user.id);
 });
 
-test("Mock Menu Items A, B, C and Administrator-Only System Menu", async () => {
+test("Fire Safety Solutions, AI Prompts and Administrator-Only System Menu", async () => {
   // Check master menu items catalog
   const baseIds = BASE_MENU_ITEMS.map((m) => m.id);
-  assert.ok(baseIds.includes("mock_a"), "Must include Mock Menu Item A");
-  assert.ok(baseIds.includes("mock_b"), "Must include Mock Menu Item B");
-  assert.ok(baseIds.includes("mock_c"), "Must include Mock Menu Item C");
+  assert.ok(baseIds.includes("fire_safety_solutions"), "Must include Fire Safety Solutions Menu Item");
+  assert.ok(baseIds.includes("ai_prompts"), "Must include AI Prompts Menu Item");
   assert.ok(baseIds.includes("system"), "Must include System Menu Item");
+  assert.equal(baseIds.includes("mock_a"), false, "Mock Menu Item A must be removed");
+  assert.equal(baseIds.includes("mock_b"), false, "Mock Menu Item B must be removed");
+  assert.equal(baseIds.includes("mock_c"), false, "Mock Menu Item C must be removed");
 
-  // 1. Admin Role Access: Can access Mock A, B, C and System
+  // 1. Admin Role Access: Can access Fire Safety Solutions, AI Prompts, and System
   const adminMenu = getMenuItemsForRole("admin");
   const adminMenuIds = adminMenu.map((m) => m.id);
-  assert.ok(adminMenuIds.includes("mock_a"));
-  assert.ok(adminMenuIds.includes("mock_b"));
-  assert.ok(adminMenuIds.includes("mock_c"));
+  assert.ok(adminMenuIds.includes("fire_safety_solutions"));
+  assert.ok(adminMenuIds.includes("ai_prompts"));
   assert.ok(adminMenuIds.includes("system"), "Administrator MUST have access to System menu");
 
-  // 2. Standard User Access: Can access Mock A, but NOT System
+  // 2. Standard User Access: Can access Fire Safety Solutions and AI Prompts, but NOT System
   const userMenu = getMenuItemsForRole("user");
   const userMenuIds = userMenu.map((m) => m.id);
-  assert.ok(userMenuIds.includes("mock_a"));
+  assert.ok(userMenuIds.includes("fire_safety_solutions"));
+  assert.ok(userMenuIds.includes("ai_prompts"));
   assert.equal(userMenuIds.includes("system"), false, "Standard user must NOT have access to System menu");
 
-  // 3. Operator Access: Can access Mock A and B, but NOT System
+  // 3. Operator Access: Can access Fire Safety Solutions and AI Prompts, but NOT System
   const operatorMenu = getMenuItemsForRole("operator");
   const operatorMenuIds = operatorMenu.map((m) => m.id);
-  assert.ok(operatorMenuIds.includes("mock_a"));
-  assert.ok(operatorMenuIds.includes("mock_b"));
+  assert.ok(operatorMenuIds.includes("fire_safety_solutions"));
+  assert.ok(operatorMenuIds.includes("ai_prompts"));
   assert.equal(operatorMenuIds.includes("system"), false, "Operator must NOT have access to System menu");
 
   // 4. Permission Helpers
   assert.equal(hasMenuAccess("admin", "system"), true);
   assert.equal(hasMenuAccess("operator", "system"), false);
   assert.equal(hasMenuAccess("user", "system"), false);
-  assert.equal(hasMenuAccess("user", "mock_a"), true);
+  assert.equal(hasMenuAccess("user", "fire_safety_solutions"), true);
 
   assert.equal(hasRoleLevel("admin", "operator"), true);
   assert.equal(hasRoleLevel("operator", "admin"), false);
@@ -304,9 +306,8 @@ test("Roles Management: Create Roles, Assign Users to Roles, and Map Menu Items 
     },
     body: JSON.stringify({
       mappings: {
-        mock_a: ["admin", "operator", "user", customRoleId],
-        mock_b: ["admin", "operator", customRoleId],
-        mock_c: ["admin"],
+        fire_safety_solutions: ["admin", "operator", "user", customRoleId],
+        ai_prompts: ["admin", "operator", customRoleId],
         system: ["admin"],
       },
     }),
@@ -316,14 +317,13 @@ test("Roles Management: Create Roles, Assign Users to Roles, and Map Menu Items 
   assert.equal(updateMappingsRes.status, 200);
   const updateMappingsData = await updateMappingsRes.json();
   assert.equal(updateMappingsData.success, true);
-  assert.ok(updateMappingsData.mappings.mock_b.includes(customRoleId));
+  assert.ok(updateMappingsData.mappings.ai_prompts.includes(customRoleId));
 
-  // Verify custom role now has access to Mock A and Mock B via RolesService
+  // Verify custom role now has access to fire_safety_solutions and ai_prompts via RolesService
   const customRoleMenu = await RolesService.getMenuItemsForRole(customRoleId);
   const customMenuIds = customRoleMenu.map((m) => m.id);
-  assert.ok(customMenuIds.includes("mock_a"));
-  assert.ok(customMenuIds.includes("mock_b"));
-  assert.equal(customMenuIds.includes("mock_c"), false);
+  assert.ok(customMenuIds.includes("fire_safety_solutions"));
+  assert.ok(customMenuIds.includes("ai_prompts"));
   assert.equal(customMenuIds.includes("system"), false);
 
   // 5. Test DELETE /api/auth/roles (Delete custom role)

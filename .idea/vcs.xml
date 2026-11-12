@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AgentCommitMessageProject"><![CDATA[{
+  "mode": "CUSTOM",
+  "instruction": "Use Conventional Commits. Check all unstaged files. Write one concise subject line in present tense. Add body as ticks with detailed description. use branch name $GIT_BRANCH_NAME and extract ticket name from it as [jira-ticket] reference, noted in [] brackets."
+}]]></component>
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
   </component>

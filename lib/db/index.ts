@@ -186,6 +186,43 @@ export async function initDatabase(): Promise<void> {
         );
       `;
 
+      // Create fire_safety_solutions table
+      await sql`
+        CREATE TABLE IF NOT EXISTS fire_safety_solutions (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          title TEXT,
+          nazev_stavby TEXT NOT NULL DEFAULT '',
+          investor_name TEXT NOT NULL DEFAULT '',
+          misto_stavby TEXT NOT NULL DEFAULT '',
+          stupen_dokumentace TEXT NOT NULL DEFAULT '',
+          datum TEXT NOT NULL DEFAULT '',
+          zhodnoceni_technickych_zarizeni_stavby TEXT NOT NULL DEFAULT '',
+          seznam_priloh TEXT NOT NULL DEFAULT '',
+          seznam_podkladu TEXT NOT NULL DEFAULT '',
+          uvod TEXT NOT NULL DEFAULT '',
+          kategorizace_stavby_z_hlediska_pozarni_bezpecnosti TEXT NOT NULL DEFAULT '',
+          konstrukcni_reseni_stavby TEXT NOT NULL DEFAULT '',
+          posouzeni_pozarni_bezpecnosti_staveb TEXT NOT NULL DEFAULT '',
+          pozarni_odolnost_stavebnich_konstrukci TEXT NOT NULL DEFAULT '',
+          evakuace_a_druhy_a_kapacity_unikovych_cest TEXT NOT NULL DEFAULT '',
+          pozarne_nebezpecny_prostor_odstupove_vzdalenosti TEXT NOT NULL DEFAULT '',
+          zabezpeceni_pozarni_vodou_nebo_jinymi_hasebnimi_latkami TEXT NOT NULL DEFAULT '',
+          pozadavky_na_pozarne_bezpecnostni_zarizeni_a_znaceni TEXT NOT NULL DEFAULT '',
+          pozadavky_pro_haseni_pozaru_a_zachranne_prace TEXT NOT NULL DEFAULT '',
+          files JSONB DEFAULT '[]'::jsonb,
+          raw_properties JSONB,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      // Ensure files column exists if table was previously created
+      await sql`
+        ALTER TABLE fire_safety_solutions
+        ADD COLUMN IF NOT EXISTS files JSONB DEFAULT '[]'::jsonb;
+      `;
+
       // Create roles table for dynamic role management
       await sql`
         CREATE TABLE IF NOT EXISTS roles (
@@ -226,12 +263,9 @@ export async function initDatabase(): Promise<void> {
         await sql`
           INSERT INTO role_menu_mappings (menu_item_id, role_id)
           VALUES
-            ('mock_a', 'admin'),
-            ('mock_a', 'operator'),
-            ('mock_a', 'user'),
-            ('mock_b', 'admin'),
-            ('mock_b', 'operator'),
-            ('mock_c', 'admin'),
+            ('fire_safety_solutions', 'admin'),
+            ('fire_safety_solutions', 'operator'),
+            ('fire_safety_solutions', 'user'),
             ('ai_prompts', 'admin'),
             ('ai_prompts', 'operator'),
             ('ai_prompts', 'user'),
