@@ -16,6 +16,14 @@ interface StorageSchema {
 
 // Pricing per 1M tokens (USD)
 export const MODEL_PRICING: Record<string, { prompt: number; completion: number }> = {
+  // GPT-6 Family
+  "gpt-6-astra": { prompt: 5.0, completion: 20.0 },
+  "gpt-6.1-sol": { prompt: 1.0, completion: 4.0 },
+  "gpt-6-sol": { prompt: 1.0, completion: 4.0 },
+  "gpt-6-luna": { prompt: 0.1, completion: 0.4 },
+  "gpt-6-instant": { prompt: 0.1, completion: 0.4 },
+  "gpt-6-cyber": { prompt: 4.0, completion: 16.0 },
+  // GPT-4o & Flagships
   "gpt-4o-mini": { prompt: 0.15, completion: 0.6 },
   "gpt-4o-mini-2024-07-18": { prompt: 0.15, completion: 0.6 },
   "gpt-4o": { prompt: 2.5, completion: 10.0 },
@@ -38,13 +46,31 @@ export const MODEL_PRICING: Record<string, { prompt: number; completion: number 
 
 export const MODEL_PRICING_GUIDE: ModelPricingGuideItem[] = [
   {
+    model: "gpt-6-luna",
+    name: "GPT-6 Luna",
+    inputCostPer1M: 0.1,
+    outputCostPer1M: 0.4,
+    contextWindow: "1.05M",
+    tier: "cheapest",
+    recommendation: "Bleskurychlý a cenově nejefektivnější model generace GPT-6 s 1.05M kontextem pro hromadné operace.",
+  },
+  {
     model: "gpt-4o-mini",
     name: "GPT-4o mini",
     inputCostPer1M: 0.15,
     outputCostPer1M: 0.6,
     contextWindow: "128k",
-    tier: "cheapest",
-    recommendation: "Cenově nejvýhodnější (~15x levnější než GPT-4o), ideální pro koncepty a rychlé generování.",
+    tier: "very_low",
+    recommendation: "Cenově výhodný a rychlý model pro standardní textové formulace a koncepty.",
+  },
+  {
+    model: "gpt-6.1-sol",
+    name: "GPT-6.1 Sol",
+    inputCostPer1M: 1.0,
+    outputCostPer1M: 4.0,
+    contextWindow: "1.05M",
+    tier: "very_low",
+    recommendation: "Vyvážený model GPT-6 s vysokou inteligencí za zlomek ceny vlajkové lodi pro denní praxi PBŘ.",
   },
   {
     model: "o3-mini",
@@ -63,6 +89,15 @@ export const MODEL_PRICING_GUIDE: ModelPricingGuideItem[] = [
     contextWindow: "128k",
     tier: "medium",
     recommendation: "Vlajkový model pro finální technické formulace s vysokou stylistickou a odbornou kvalitou.",
+  },
+  {
+    model: "gpt-6-astra",
+    name: "GPT-6 Astra (Flagship Reasoning)",
+    inputCostPer1M: 5.0,
+    outputCostPer1M: 20.0,
+    contextWindow: "1.05M",
+    tier: "high",
+    recommendation: "Špičkový vlajkový model GPT-6 s hlubokým inženýrským uvažováním a obřím 1.05M kontextem.",
   },
   {
     model: "o1",
@@ -84,7 +119,15 @@ export function estimateCostUsd(
   let pricing = MODEL_PRICING[m];
 
   if (!pricing) {
-    if (m.includes("gpt-4o-mini")) {
+    if (m.includes("gpt-6-luna") || m.includes("luna") || m.includes("gpt-6-instant")) {
+      pricing = MODEL_PRICING["gpt-6-luna"];
+    } else if (m.includes("gpt-6.1-sol") || m.includes("gpt-6-sol") || m.includes("sol")) {
+      pricing = MODEL_PRICING["gpt-6.1-sol"];
+    } else if (m.includes("gpt-6-astra") || m.includes("astra")) {
+      pricing = MODEL_PRICING["gpt-6-astra"];
+    } else if (m.includes("gpt-6-cyber") || m.includes("cyber")) {
+      pricing = MODEL_PRICING["gpt-6-cyber"];
+    } else if (m.includes("gpt-4o-mini")) {
       pricing = MODEL_PRICING["gpt-4o-mini"];
     } else if (m.includes("gpt-4o")) {
       pricing = MODEL_PRICING["gpt-4o"];

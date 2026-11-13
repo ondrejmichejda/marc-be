@@ -32,6 +32,8 @@ export function isReasoningModel(model: string): boolean {
     m.startsWith("o1") ||
     m.startsWith("o3") ||
     m.startsWith("o4") ||
+    m.includes("astra") ||
+    m.includes("cyber") ||
     m.includes("-reasoning")
   );
 }

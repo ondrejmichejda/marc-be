@@ -241,7 +241,7 @@ export class UserAiSettingsService {
    */
   static formatModelDetail(modelId: string): OpenAiModelInfo {
     const known = KNOWN_OPENAI_MODEL_DETAILS[modelId];
-    const isReasoning = isReasoningModel(modelId);
+    const isReasoning = known?.isReasoning !== undefined ? Boolean(known.isReasoning) : isReasoningModel(modelId);
 
     let category: OpenAiModelInfo["category"] = "other";
     let categoryLabel = "Ostatní";
@@ -250,6 +250,21 @@ export class UserAiSettingsService {
     if (isReasoning) {
       category = "reasoning";
       categoryLabel = "Reasoning (Uvažování)";
+    } else if (m.includes("gpt-6-astra") || m.includes("astra")) {
+      category = "flagship";
+      categoryLabel = "GPT-6 Vlajkový";
+    } else if (m.includes("gpt-6.1-sol") || m.includes("gpt-6-sol") || m.includes("sol")) {
+      category = "flagship";
+      categoryLabel = "GPT-6 Vyvážený";
+    } else if (m.includes("gpt-6-luna") || m.includes("luna")) {
+      category = "fast";
+      categoryLabel = "GPT-6 Rychlý & Úsporný";
+    } else if (m.includes("gpt-6-instant") || m.includes("instant")) {
+      category = "fast";
+      categoryLabel = "GPT-6 Interaktivní";
+    } else if (m.includes("gpt-6-cyber") || m.includes("cyber")) {
+      category = "reasoning";
+      categoryLabel = "GPT-6 Bezpečnostní";
     } else if (m.includes("gpt-4o") || m.includes("chatgpt-4o")) {
       category = "flagship";
       categoryLabel = "Vlajkový & Chat";
@@ -302,7 +317,7 @@ export class UserAiSettingsService {
   }
 
   /**
-   * Retrieves all available OpenAI models.
+   * Retrieves all available OpenAI models dynamically from https://api.openai.com/v1/models.
    * If a user key, provided key, or environment key is configured, queries OpenAI's live models API.
    * Falls back to a comprehensive catalog of all known OpenAI models.
    */
@@ -338,54 +353,99 @@ export class UserAiSettingsService {
       }
     }
 
-    // Try fetching live from OpenAI API if a real key is present
+    // Try fetching live from OpenAI API (https://api.openai.com/v1/models) if an API key is present
     if (
       effectiveKey &&
       !effectiveKey.startsWith("sk-test-") &&
       !effectiveKey.startsWith("mock-")
     ) {
       try {
-        const client = new OpenAI({
-          apiKey: effectiveKey,
-          organization: effectiveOrg,
-        });
+        let apiModelIds: string[] = [];
 
-        const res = await client.models.list();
-        const apiModelIds = res.data.map((m) => m.id);
+        // 1. Direct fetch to https://api.openai.com/v1/models
+        try {
+          const headers: Record<string, string> = {
+            Authorization: `Bearer ${effectiveKey}`,
+            "User-Agent": "MARC-AI-Settings/1.0",
+          };
+          if (effectiveOrg) {
+            headers["OpenAI-Organization"] = effectiveOrg;
+          }
 
-        // Sort models logically: popular first, then chat/reasoning models, then others
-        const sortedIds = Array.from(
-          new Set([...POPULAR_OPENAI_MODELS, ...apiModelIds, ...ALL_KNOWN_OPENAI_MODELS])
-        ).sort((a, b) => {
-          const aPop = POPULAR_OPENAI_MODELS.indexOf(a);
-          const bPop = POPULAR_OPENAI_MODELS.indexOf(b);
-          if (aPop !== -1 && bPop !== -1) return aPop - bPop;
-          if (aPop !== -1) return -1;
-          if (bPop !== -1) return 1;
+          const response = await fetch("https://api.openai.com/v1/models", {
+            method: "GET",
+            headers,
+            signal: AbortSignal.timeout(8000),
+          });
 
-          // Put chat/reasoning models before specialized ones
-          const aIsChat = a.startsWith("gpt-") || a.startsWith("o1") || a.startsWith("o3") || a.startsWith("o4") || a.startsWith("chatgpt-");
-          const bIsChat = b.startsWith("gpt-") || b.startsWith("o1") || b.startsWith("o3") || b.startsWith("o4") || b.startsWith("chatgpt-");
-          if (aIsChat && !bIsChat) return -1;
-          if (!aIsChat && bIsChat) return 1;
+          if (response.ok) {
+            const data = (await response.json()) as { data?: Array<{ id: string }> };
+            if (Array.isArray(data.data)) {
+              apiModelIds = data.data.map((m) => m.id);
+            }
+          }
+        } catch {
+          // Fall back to official SDK client if fetch is blocked or timed out
+        }
 
-          return a.localeCompare(b);
-        });
+        // 2. SDK fallback if direct fetch did not yield models
+        if (apiModelIds.length === 0) {
+          const client = new OpenAI({
+            apiKey: effectiveKey,
+            organization: effectiveOrg,
+          });
+          const res = await client.models.list();
+          apiModelIds = res.data.map((m) => m.id);
+        }
 
-        const modelDetails = sortedIds.map((id) => this.formatModelDetail(id));
-        const categories = Array.from(
-          new Set(modelDetails.map((m) => m.categoryLabel))
-        );
+        if (apiModelIds.length > 0) {
+          // Sort models logically: popular first, then chat/reasoning models, then others
+          const sortedIds = Array.from(
+            new Set([...POPULAR_OPENAI_MODELS, ...apiModelIds, ...ALL_KNOWN_OPENAI_MODELS])
+          ).sort((a, b) => {
+            const aPop = POPULAR_OPENAI_MODELS.indexOf(a);
+            const bPop = POPULAR_OPENAI_MODELS.indexOf(b);
+            if (aPop !== -1 && bPop !== -1) return aPop - bPop;
+            if (aPop !== -1) return -1;
+            if (bPop !== -1) return 1;
 
-        return {
-          success: true,
-          source: "openai-api",
-          models: sortedIds,
-          modelDetails,
-          categories,
-        };
+            // Put chat/reasoning models before specialized ones
+            const aIsChat =
+              a.startsWith("gpt-") ||
+              a.startsWith("o1") ||
+              a.startsWith("o3") ||
+              a.startsWith("o4") ||
+              a.startsWith("chatgpt-");
+            const bIsChat =
+              b.startsWith("gpt-") ||
+              b.startsWith("o1") ||
+              b.startsWith("o3") ||
+              b.startsWith("o4") ||
+              b.startsWith("chatgpt-");
+            if (aIsChat && !bIsChat) return -1;
+            if (!aIsChat && bIsChat) return 1;
+
+            return a.localeCompare(b);
+          });
+
+          const modelDetails = sortedIds.map((id) => this.formatModelDetail(id));
+          const categories = Array.from(
+            new Set(modelDetails.map((m) => m.categoryLabel))
+          );
+
+          return {
+            success: true,
+            source: "openai-api",
+            models: sortedIds,
+            modelDetails,
+            categories,
+          };
+        }
       } catch (err) {
-        console.warn("[UserAiSettingsService] Live OpenAI models.list failed, using catalog:", (err as Error).message);
+        console.warn(
+          "[UserAiSettingsService] Live query to https://api.openai.com/v1/models failed, falling back to catalog:",
+          (err as Error).message
+        );
       }
     }
 

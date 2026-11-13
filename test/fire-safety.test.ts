@@ -368,7 +368,9 @@ test("API Routes: Export endpoints GET /api/fss/[id]/export and POST /api/fss/ex
   });
 
   // 2. GET /api/fss/[id]/export
-  const exportByIdReq = new NextRequest(`http://localhost:3000/api/fss/${solution.id}/export`);
+  const exportByIdReq = new NextRequest(`http://localhost:3000/api/fss/${solution.id}/export`, {
+    headers: { "x-user-id": "test_export_user" },
+  });
   const exportByIdRes = await exportFssByIdApi(exportByIdReq, { params: Promise.resolve({ id: solution.id }) });
 
   assert.equal(exportByIdRes.status, 200);
@@ -385,7 +387,9 @@ test("API Routes: Export endpoints GET /api/fss/[id]/export and POST /api/fss/ex
   assert.ok(arrayBuffer.byteLength > 5000);
 
   // 3. GET /api/fss/export?id=...
-  const exportParamReq = new NextRequest(`http://localhost:3000/api/fss/export?id=${solution.id}`);
+  const exportParamReq = new NextRequest(`http://localhost:3000/api/fss/export?id=${solution.id}`, {
+    headers: { "x-user-id": "test_export_user" },
+  });
   const exportParamRes = await exportFssParamApi(exportParamReq);
   assert.equal(exportParamRes.status, 200);
   assert.equal(
@@ -465,7 +469,9 @@ test("FSS Technical Documentation Files: Upload, Persistence, Retrieval, Downloa
   assert.equal(updatedWithFile.files?.[0].id, uploadedBlob.id);
 
   // 4. GET /api/fss/[id]/files (List files endpoint)
-  const listFilesReq = new NextRequest(`http://localhost:3000/api/fss/${solution.id}/files`);
+  const listFilesReq = new NextRequest(`http://localhost:3000/api/fss/${solution.id}/files`, {
+    headers: { Authorization: `Bearer ${testToken}` },
+  });
   const listFilesRes = await getFssFilesApi(listFilesReq, { params: Promise.resolve({ id: solution.id }) });
   assert.equal(listFilesRes.status, 200);
   const listFilesData = await listFilesRes.json();
@@ -500,7 +506,11 @@ test("FSS Technical Documentation Files: Upload, Persistence, Retrieval, Downloa
 
   // 6. GET /api/fss/[id]/files/[fileId] (Retrieve single file metadata)
   const targetFileId = uploadMultiData.uploaded[0].id;
-  const getSingleFileReq = new NextRequest(`http://localhost:3000/api/fss/${solution.id}/files/${targetFileId}`);
+  const getSingleFileReq = new NextRequest(`http://localhost:3000/api/fss/${solution.id}/files/${targetFileId}`, {
+    headers: {
+      Authorization: `Bearer ${testToken}`,
+    },
+  });
   const getSingleFileRes = await getFssFileByIdApi(getSingleFileReq, {
     params: Promise.resolve({ id: solution.id, fileId: targetFileId }),
   });
@@ -509,7 +519,11 @@ test("FSS Technical Documentation Files: Upload, Persistence, Retrieval, Downloa
   assert.equal(singleFileData.file.name, "Vyres_1NP_Pozarni_Useky.dwg");
 
   // 7. GET /api/fss/[id]/files/[fileId]/download (Download streaming endpoint)
-  const downloadReq = new NextRequest(`http://localhost:3000/api/fss/${solution.id}/files/${targetFileId}/download`);
+  const downloadReq = new NextRequest(`http://localhost:3000/api/fss/${solution.id}/files/${targetFileId}/download`, {
+    headers: {
+      Authorization: `Bearer ${testToken}`,
+    },
+  });
   const downloadRes = await downloadFssFileApi(downloadReq, {
     params: Promise.resolve({ id: solution.id, fileId: targetFileId }),
   });
