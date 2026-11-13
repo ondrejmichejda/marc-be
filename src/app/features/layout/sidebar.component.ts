@@ -33,7 +33,7 @@ const DEFAULT_NAV_ITEMS: NavRouteMapping[] = [
     label: 'FSS AI Prompts',
     icon: '📐',
     badge: 'PBŘ Prompts',
-    description: 'General AI prompts for Fire Safety Solution properties generation',
+    description: 'AI prompt šablony a správa DOCX šablony (template.docx) pro PBŘ',
     category: 'Administration',
   },
   {

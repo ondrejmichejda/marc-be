@@ -644,7 +644,19 @@ export class FireSafetySolutionService {
     }
 
     const { generateDocxExport } = await import("./docxExport");
-    const { buffer, filename } = generateDocxExport(targetSolution);
+    const { FssTemplateService } = await import("./templateService");
+    
+    let templateBuf: Buffer | undefined;
+    try {
+      const activeTpl = await FssTemplateService.getActiveTemplateBuffer();
+      if (activeTpl?.buffer) {
+        templateBuf = activeTpl.buffer;
+      }
+    } catch {
+      // Fallback handled inside generateDocxExport
+    }
+
+    const { buffer, filename } = generateDocxExport(targetSolution, templateBuf);
 
     return {
       buffer,

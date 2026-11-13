@@ -10,15 +10,41 @@ import { FireSafetySolutionProperties } from "./types";
 const TEMPLATE_CANDIDATE_PATHS = [
   process.env.FSS_TEMPLATE_PATH,
   path.join(process.cwd(), "data", "templates", "template.docx"),
+  path.join(process.cwd(), "public", "templates", "template.docx"),
   "/Users/ondra/source/pbr/src/template.docx",
   path.join(process.cwd(), "..", "pbr", "src", "template.docx"),
-  path.join(process.cwd(), "public", "templates", "template.docx"),
 ].filter(Boolean) as string[];
 
 /**
- * Locates and reads the binary buffer of template.docx
+ * Locates and reads the binary buffer of template.docx.
+ * First checks if there is an active uploaded template in local storage / data directory,
+ * otherwise falls back to default candidates.
  */
-export function getTemplateBuffer(): Buffer {
+export function getTemplateBuffer(templateId?: string): Buffer {
+  // If specific templateId is requested, or checking for active local template
+  try {
+    const metaPath = path.join(process.cwd(), "data", "fss_templates.json");
+    if (fs.existsSync(metaPath)) {
+      const list = JSON.parse(fs.readFileSync(metaPath, "utf-8")) as Array<{
+        id: string;
+        filename: string;
+        isActive: boolean;
+      }>;
+      const target = templateId
+        ? list.find((t) => t.id === templateId)
+        : list.find((t) => t.isActive);
+
+      if (target) {
+        const targetPath = path.join(process.cwd(), "data", "templates", target.filename);
+        if (fs.existsSync(targetPath)) {
+          return fs.readFileSync(targetPath);
+        }
+      }
+    }
+  } catch {
+    // Fall back to candidate paths below
+  }
+
   for (const templatePath of TEMPLATE_CANDIDATE_PATHS) {
     try {
       if (fs.existsSync(templatePath)) {
@@ -141,12 +167,16 @@ export function buildTemplateData(solution: DocxExportInput): Record<string, str
 
 /**
  * Generates a docx Buffer with all placeholders replaced with solution values.
+ * Uses customTemplateBuffer if passed, otherwise retrieves the active/latest template buffer.
  */
-export function generateDocxExport(solution: DocxExportInput): {
+export function generateDocxExport(
+  solution: DocxExportInput,
+  customTemplateBuffer?: Buffer
+): {
   buffer: Buffer;
   filename: string;
 } {
-  const templateBuf = getTemplateBuffer();
+  const templateBuf = customTemplateBuffer || getTemplateBuffer();
   const zip = new PizZip(templateBuf);
 
   const doc = new Docxtemplater(zip, {

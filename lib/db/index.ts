@@ -248,6 +248,27 @@ export async function initDatabase(): Promise<void> {
         );
       `;
 
+      // Create fss_templates table for PBŘ DOCX templates management
+      await sql`
+        CREATE TABLE IF NOT EXISTS fss_templates (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          filename TEXT NOT NULL,
+          size INT NOT NULL,
+          mime_type TEXT NOT NULL DEFAULT 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          storage_type TEXT NOT NULL DEFAULT 'local',
+          url TEXT,
+          blob_url TEXT,
+          uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          uploaded_by TEXT DEFAULT 'admin',
+          version INT NOT NULL DEFAULT 1,
+          is_active BOOLEAN NOT NULL DEFAULT TRUE,
+          placeholders_count INT DEFAULT 0,
+          placeholders JSONB DEFAULT '[]'::jsonb,
+          notes TEXT
+        );
+      `;
+
       // Create user_openai_settings table for per-user OpenAI API keys & preferences
       await sql`
         CREATE TABLE IF NOT EXISTS user_openai_settings (

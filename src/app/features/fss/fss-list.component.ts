@@ -9,6 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatRippleModule } from '@angular/material/core';
+import { AutoResizeDirective } from '../../core/directives/auto-resize.directive';
 import { FssService } from '../../core/services/fss.service';
 import { AuthService } from '../../core/services/auth.service';
 import {
@@ -55,6 +56,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
     MatProgressSpinnerModule,
     MatProgressBarModule,
     MatRippleModule,
+    AutoResizeDirective,
   ],
   template: `
     <div class="space-y-6">
@@ -148,13 +150,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                     <h3 class="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors line-clamp-1">
                       {{ s.title || s.nazevStavby || 'Nepojmenované PBŘ' }}
                     </h3>
-                    <p class="text-[11px] text-zinc-400 mt-0.5">
-                      {{ s.mistoStavby || 'Lokalita neuvedena' }} • {{ s.investorName || 'Investor neuveden' }}
-                    </p>
                   </div>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-800 text-zinc-300 border border-zinc-700/60 whitespace-nowrap">
-                    {{ s.stupenDokumentace || 'DSP' }}
-                  </span>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 text-[11px] text-zinc-400 bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-800/80">
@@ -183,31 +179,39 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                   (click)="exportDocx(s)"
                   [disabled]="isExporting() === s.id"
                   class="!rounded-lg !text-xs !font-medium"
-                  matTooltip="Stáhnout jako Microsoft Word dokument"
+                  matTooltip="Stáhnout jako Microsoft Word dokument (.docx)"
                 >
-                  <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-sky-400">description</mat-icon>
-                  <span>{{ isExporting() === s.id ? 'Exportuji...' : 'DOCX' }}</span>
+                  @if (isExporting() === s.id) {
+                    <span class="flex items-center gap-1.5">
+                      <mat-spinner diameter="14"></mat-spinner>
+                      <span>Exportuji...</span>
+                    </span>
+                  } @else {
+                    <span class="flex items-center">
+                      <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-sky-400">description</mat-icon>
+                      <span>DOCX</span>
+                    </span>
+                  }
                 </button>
 
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1">
                   <button
-                    mat-stroked-button
+                    mat-icon-button
                     type="button"
                     (click)="openEditModal(s, 'files')"
-                    class="!rounded-lg !text-xs !font-medium !text-sky-300 !border-sky-500/30 !bg-sky-600/10 hover:!bg-sky-600/20"
-                    matTooltip="Nahrát a spravovat soubory projektu"
+                    class="!text-zinc-400 hover:!text-sky-400"
+                    [matTooltip]="'Nahrát a spravovat soubory (' + (s.files?.length || 0) + ')'"
                   >
-                    <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-sky-400">attach_file</mat-icon>
-                    <span>Soubory ({{ s.files?.length || 0 }})</span>
+                    <mat-icon>attach_file</mat-icon>
                   </button>
                   <button
-                    mat-stroked-button
+                    mat-icon-button
                     type="button"
                     (click)="openEditModal(s)"
-                    class="!rounded-lg !text-xs !font-medium !text-indigo-300 !border-indigo-500/30 !bg-indigo-600/10"
+                    class="!text-zinc-400 hover:!text-indigo-400"
+                    matTooltip="Upravit PBŘ"
                   >
-                    <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-indigo-400">edit</mat-icon>
-                    Upravit
+                    <mat-icon>edit</mat-icon>
                   </button>
                   <button
                     mat-icon-button
@@ -216,7 +220,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                     class="!text-zinc-500 hover:!text-rose-400"
                     matTooltip="Smazat řešení"
                   >
-                    <mat-icon class="!text-sm !w-4 !h-4">delete</mat-icon>
+                    <mat-icon>delete</mat-icon>
                   </button>
                 </div>
               </div>
@@ -257,14 +261,22 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                 </button>
                 <button
                   mat-flat-button
-                  color="primary"
                   type="button"
                   (click)="triggerBatchGeneration()"
                   [disabled]="isGeneratingBatch()"
-                  class="!rounded-xl !text-xs !font-semibold"
+                  class="!rounded-xl !text-xs !font-semibold !bg-indigo-600 hover:!bg-indigo-500 !text-white disabled:!opacity-60 disabled:!bg-indigo-600 disabled:!text-white shadow-md cursor-pointer shrink-0"
                 >
-                  <mat-icon class="!text-sm !w-4 !h-4 !mr-1">auto_awesome</mat-icon>
-                  <span>{{ isGeneratingBatch() ? 'Generování všech polí...' : 'AI Vygenerovat celé PBŘ' }}</span>
+                  @if (isGeneratingBatch()) {
+                    <span class="flex items-center gap-1.5">
+                      <mat-spinner diameter="14"></mat-spinner>
+                      <span>Generování všech polí...</span>
+                    </span>
+                  } @else {
+                    <span class="flex items-center">
+                      <mat-icon class="!text-sm !w-4 !h-4 !mr-1">auto_awesome</mat-icon>
+                      <span>AI Vygenerovat celé PBŘ</span>
+                    </span>
+                  }
                 </button>
                 <button
                   type="button"
@@ -283,7 +295,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                 <button
                   matRipple
                   type="button"
-                  (click)="activeCategory.set(cat.id)"
+                  (click)="setActiveCategory(cat.id)"
                   class="px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all cursor-pointer flex items-center gap-1.5"
                   [class]="activeCategory() === cat.id ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'"
                 >
@@ -334,15 +346,6 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                     type="text"
                     [(ngModel)]="customTitle"
                     placeholder="např. PBŘ - Polyfunkční dům Nová Waltrovka"
-                    class="w-full px-3.5 py-2 rounded-xl bg-zinc-800/90 border border-zinc-700/80 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-                <div class="space-y-1.5">
-                  <label class="block text-xs font-semibold text-zinc-300">Stupeň projektové dokumentace</label>
-                  <input
-                    type="text"
-                    [(ngModel)]="formData.stupenDokumentace"
-                    placeholder="např. DSP, DÚR, DPS, Pasportizace"
                     class="w-full px-3.5 py-2 rounded-xl bg-zinc-800/90 border border-zinc-700/80 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
@@ -400,7 +403,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                                 class="!text-zinc-400 hover:!text-white"
                                 matTooltip="Stáhnout soubor"
                               >
-                                <mat-icon class="!text-sm !w-4 !h-4">download</mat-icon>
+                                <mat-icon>download</mat-icon>
                               </button>
                               <button
                                 mat-icon-button
@@ -409,7 +412,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                                 class="!text-zinc-500 hover:!text-rose-400"
                                 matTooltip="Odstranit soubor"
                               >
-                                <mat-icon class="!text-sm !w-4 !h-4">delete</mat-icon>
+                                <mat-icon>delete</mat-icon>
                               </button>
                             </div>
                           </div>
@@ -463,10 +466,12 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
 
                       @if (field.type === 'textarea') {
                         <textarea
+                          autoResize
+                          [autoResize]="formData[field.key]"
                           rows="4"
                           [(ngModel)]="formData[field.key]"
                           [placeholder]="'Zadejte ' + field.label.toLowerCase() + '...'"
-                          class="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700/80 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-sans leading-relaxed"
+                          class="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700/80 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-sans leading-relaxed resize-none overflow-hidden"
                         ></textarea>
                       } @else if (field.type === 'date') {
                         <input
@@ -513,14 +518,22 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
               <div class="flex items-center gap-3">
                 <button
                   mat-flat-button
-                  color="primary"
                   type="button"
                   (click)="saveSolution()"
                   [disabled]="isSaving()"
-                  class="!rounded-xl !text-xs !font-semibold"
+                  class="!rounded-xl !text-xs !font-semibold !bg-indigo-600 hover:!bg-indigo-500 !text-white disabled:!opacity-60 disabled:!bg-indigo-600 disabled:!text-white shadow-md cursor-pointer"
                 >
-                  <mat-icon class="!text-sm !w-4 !h-4 !mr-1">save</mat-icon>
-                  {{ isSaving() ? 'Ukládání...' : (editingId() ? 'Uložit změny' : 'Vytvořit řešení PBŘ') }}
+                  @if (isSaving()) {
+                    <span class="flex items-center gap-1.5">
+                      <mat-spinner diameter="14"></mat-spinner>
+                      <span>Ukládání...</span>
+                    </span>
+                  } @else {
+                    <span class="flex items-center">
+                      <mat-icon class="!text-sm !w-4 !h-4 !mr-1">save</mat-icon>
+                      <span>{{ editingId() ? 'Uložit změny' : 'Vytvořit řešení PBŘ' }}</span>
+                    </span>
+                  }
                 </button>
               </div>
             </div>
@@ -660,6 +673,26 @@ export class FssListComponent implements OnInit {
     });
   }
 
+  setActiveCategory(catId: string): void {
+    this.activeCategory.set(catId);
+    this.adjustAllTextareas();
+  }
+
+  adjustAllTextareas(): void {
+    setTimeout(() => {
+      if (typeof document !== 'undefined') {
+        const textareas = document.querySelectorAll<HTMLTextAreaElement>('textarea');
+        textareas.forEach((ta) => {
+          ta.style.height = 'auto';
+          ta.style.overflowY = 'hidden';
+          if (ta.scrollHeight > 0) {
+            ta.style.height = `${ta.scrollHeight}px`;
+          }
+        });
+      }
+    }, 0);
+  }
+
   openCreateModal(initialCategory: string = 'all'): void {
     this.editingId.set(null);
     this.customTitle = '';
@@ -667,6 +700,7 @@ export class FssListComponent implements OnInit {
     this.modalFiles.set([]);
     this.activeCategory.set(initialCategory);
     this.isModalOpen.set(true);
+    this.adjustAllTextareas();
   }
 
   openEditModal(solution: FireSafetySolution, initialCategory: string = 'all'): void {
@@ -695,6 +729,7 @@ export class FssListComponent implements OnInit {
     this.modalFiles.set(solution.files || []);
     this.activeCategory.set(initialCategory);
     this.isModalOpen.set(true);
+    this.adjustAllTextareas();
   }
 
   closeModal(): void {
@@ -789,6 +824,7 @@ export class FssListComponent implements OnInit {
             if (this.editingId()) {
               this.loadSolutions();
             }
+            this.adjustAllTextareas();
           } else if (res.error) {
             this.errorMessage.set(res.error);
           }
@@ -805,11 +841,11 @@ export class FssListComponent implements OnInit {
     this.isGeneratingBatch.set(true);
     this.errorMessage.set(null);
 
-    const textareaFields = FSS_PROPERTY_FIELDS.filter((f) => f.type === 'textarea').map((f) => f.key);
+    const allFields = FSS_PROPERTY_FIELDS.map((f) => f.key);
 
     this.fssService
       .generateBatch({
-        fieldKeys: textareaFields,
+        fieldKeys: allFields,
         fssId: this.editingId() || undefined,
         properties: this.formData,
         files: this.modalFiles(),
@@ -825,10 +861,11 @@ export class FssListComponent implements OnInit {
               }
             }
             const tokenStr = res.totalTokens || res.tokens ? ` (${res.totalTokens || res.tokens} tokenů)` : '';
-            this.successMessage.set(`Všechna technická pole PBŘ byla vygenerována přes AI${tokenStr}.`);
+            this.successMessage.set(`Všechna pole PBŘ byla vygenerována přes AI${tokenStr}.`);
             if (this.editingId()) {
               this.loadSolutions();
             }
+            this.adjustAllTextareas();
           } else if (res.errors) {
             this.errorMessage.set('Některá pole se nepodařilo vygenerovat.');
           }

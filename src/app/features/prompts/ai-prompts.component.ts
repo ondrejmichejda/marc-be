@@ -9,6 +9,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRippleModule } from '@angular/material/core';
+import { AutoResizeDirective } from '../../core/directives/auto-resize.directive';
 import { PromptsService } from '../../core/services/prompts.service';
 import {
   ScheduledAiPrompt,
@@ -67,6 +68,7 @@ const QUICK_PRESETS: QuickPreset[] = [
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatRippleModule,
+    AutoResizeDirective,
   ],
   template: `
     <div class="space-y-6">
@@ -400,7 +402,7 @@ const QUICK_PRESETS: QuickPreset[] = [
                     class="!text-zinc-300 hover:!text-white"
                     matTooltip="Upravit prompt"
                   >
-                    <mat-icon class="!text-sm !w-4 !h-4">edit</mat-icon>
+                    <mat-icon>edit</mat-icon>
                   </button>
                   <button
                     mat-icon-button
@@ -409,7 +411,7 @@ const QUICK_PRESETS: QuickPreset[] = [
                     class="!text-zinc-500 hover:!text-rose-400"
                     matTooltip="Smazat prompt"
                   >
-                    <mat-icon class="!text-sm !w-4 !h-4">delete</mat-icon>
+                    <mat-icon>delete</mat-icon>
                   </button>
                 </div>
               </div>
@@ -490,10 +492,12 @@ const QUICK_PRESETS: QuickPreset[] = [
               <div class="space-y-1.5">
                 <label class="block font-semibold text-zinc-300">Text AI promptu</label>
                 <textarea
-                  rows="6"
+                  autoResize
+                  [autoResize]="formPrompt"
+                  rows="5"
                   [(ngModel)]="formPrompt"
                   placeholder="Zadejte podrobné instrukce pro model..."
-                  class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono leading-relaxed"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono leading-relaxed resize-none overflow-hidden"
                 ></textarea>
               </div>
 

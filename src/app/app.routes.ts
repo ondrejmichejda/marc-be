@@ -23,6 +23,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/fss/fss-prompts.component').then(m => m.FssPromptsComponent),
       },
       {
+        path: 'fss-templates',
+        loadComponent: () => import('./features/fss/fss-prompts.component').then(m => m.FssPromptsComponent),
+      },
+      {
         path: 'ai-settings',
         loadComponent: () => import('./features/ai-settings/user-ai-settings.component').then(m => m.UserAiSettingsComponent),
       },

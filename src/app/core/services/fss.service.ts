@@ -8,6 +8,8 @@ import {
   FssPromptTemplate,
   GenerateFieldResponse,
   GenerateBatchResponse,
+  FssTemplatesResponse,
+  FssTemplateActionResponse,
 } from '../models/fss.models';
 
 @Injectable({
@@ -126,5 +128,34 @@ export class FssService {
 
   resetPrompts(): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>('/api/fss/prompts/reset', {});
+  }
+
+  getTemplates(): Observable<FssTemplatesResponse> {
+    return this.http.get<FssTemplatesResponse>('/api/fss/templates');
+  }
+
+  uploadTemplate(formData: FormData): Observable<FssTemplateActionResponse> {
+    return this.http.post<FssTemplateActionResponse>('/api/fss/templates', formData);
+  }
+
+  activateTemplate(id: string): Observable<FssTemplateActionResponse> {
+    return this.http.post<FssTemplateActionResponse>(`/api/fss/templates/${encodeURIComponent(id)}/activate`, {});
+  }
+
+  deleteTemplate(id: string): Observable<{ success: boolean; message?: string }> {
+    return this.http.delete<{ success: boolean; message?: string }>(`/api/fss/templates/${encodeURIComponent(id)}`);
+  }
+
+  resetToDefaultTemplate(): Observable<{ success: boolean; message?: string }> {
+    return this.http.post<{ success: boolean; message?: string }>('/api/fss/templates/reset', {});
+  }
+
+  downloadTemplate(id?: string): Observable<Blob> {
+    const url = id ? `/api/fss/templates/${encodeURIComponent(id)}/download` : '/api/fss/templates/download';
+    return this.http.get(url, { responseType: 'blob' });
+  }
+
+  downloadDefaultTemplate(): Observable<Blob> {
+    return this.http.get('/api/fss/templates/download?default=true', { responseType: 'blob' });
   }
 }

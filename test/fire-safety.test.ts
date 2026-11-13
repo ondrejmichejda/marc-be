@@ -39,7 +39,7 @@ import {
 } from "../app/api/fss/prompts/[fieldKey]/route";
 import { POST as resetFssPromptsApi } from "../app/api/fss/prompts/reset/route";
 import { POST as generateFssApi } from "../app/api/fss/generate/route";
-import { generateDocxExport, getExportFilename, FssBlobStorageService } from "../lib/fss";
+import { generateDocxExport, getExportFilename, FssBlobStorageService, FssTemplateService } from "../lib/fss";
 import { UserAiSettingsService } from "../lib/openai";
 import { UserService } from "../lib/auth/userService";
 import PizZip from "pizzip";
@@ -293,6 +293,7 @@ test("API Routes: /api/fss and /api/fss/[id] integration", async () => {
 });
 
 test("Docx Export: generateDocxExport replaces all 18+ template placeholders and sets proper filename", async () => {
+  await FssTemplateService.resetToDefault();
   const sampleSolution: Partial<FireSafetySolution> = {
     title: "Polyfunkční dům Oasis Brno",
     nazevStavby: "Polyfunkční dům Oasis Brno",

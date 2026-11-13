@@ -277,3 +277,36 @@ export interface GenerateBatchResponse {
   generationCount?: number;
   errors?: Record<string, string>;
 }
+
+export interface FssTemplate {
+  id: string;
+  name: string;
+  filename: string;
+  size: number;
+  mimeType: string;
+  storageType: "blob" | "local" | "builtin";
+  url?: string;
+  blobUrl?: string;
+  uploadedAt: string;
+  uploadedBy: string;
+  version: number;
+  isActive: boolean;
+  placeholdersCount: number;
+  placeholders: string[];
+  notes?: string;
+}
+
+export interface FssTemplatesResponse {
+  success: boolean;
+  templates: FssTemplate[];
+  activeTemplate: FssTemplate | null;
+  defaultPlaceholders: string[];
+  isBuiltinDefault: boolean;
+}
+
+export interface FssTemplateActionResponse {
+  success: boolean;
+  message?: string;
+  template?: FssTemplate;
+  error?: string;
+}
