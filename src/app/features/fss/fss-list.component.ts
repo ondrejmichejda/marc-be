@@ -63,11 +63,11 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
             <mat-icon class="!text-amber-500">local_fire_department</mat-icon>
             <span>Fire Safety Solutions (PBŘ)</span>
           </h1>
-          <p class="text-xs sm:text-sm text-zinc-400 mt-1">
+          <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
             Požárně bezpečnostní řešení staveb, AI generování technických posouzení z projektové dokumentace a export do formátu DOCX.
           </p>
         </div>
@@ -88,47 +88,47 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
 
       <!-- Success & Error Messages -->
       @if (successMessage()) {
-        <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-200 text-xs flex items-center justify-between animate-in fade-in">
-          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-emerald-400">check_circle</mat-icon> {{ successMessage() }}</span>
-          <button type="button" (click)="successMessage.set(null)" class="text-emerald-400 hover:text-white">✕</button>
+        <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between animate-in fade-in">
+          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-emerald-600 dark:text-emerald-400">check_circle</mat-icon> {{ successMessage() }}</span>
+          <button type="button" (click)="successMessage.set(null)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-white">✕</button>
         </div>
       }
       @if (errorMessage()) {
-        <div class="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs flex items-center justify-between animate-in fade-in">
-          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-rose-400">error</mat-icon> {{ errorMessage() }}</span>
-          <button type="button" (click)="errorMessage.set(null)" class="text-rose-400 hover:text-white">✕</button>
+        <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs flex items-center justify-between animate-in fade-in">
+          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-rose-600 dark:text-rose-400">error</mat-icon> {{ errorMessage() }}</span>
+          <button type="button" (click)="errorMessage.set(null)" class="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-white">✕</button>
         </div>
       }
 
       <!-- Search & Filters -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 shadow-xs dark:shadow-none">
         <div class="relative flex-1 max-w-md">
           <input
             type="text"
             [ngModel]="searchQuery()"
             (ngModelChange)="searchQuery.set($event)"
             placeholder="Hledat v názvu stavby, investorovi, lokalitě..."
-            class="w-full pl-9 pr-4 py-2 rounded-xl bg-zinc-800/80 border border-zinc-700/60 text-xs text-white placeholder-zinc-400 focus:outline-none focus:border-indigo-500"
+            class="w-full pl-9 pr-4 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
           />
-          <mat-icon class="!text-zinc-400 !text-sm !w-4 !h-4 absolute left-3 top-2.5">search</mat-icon>
+          <mat-icon class="!text-zinc-400 dark:!text-zinc-500 !text-sm !w-4 !h-4 absolute left-3 top-2.5">search</mat-icon>
         </div>
 
-        <div class="text-xs text-zinc-400 flex items-center gap-3">
-          <span>Celkem projektů: <strong class="text-zinc-200">{{ filteredSolutions().length }}</strong></span>
+        <div class="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-3">
+          <span>Celkem projektů: <strong class="text-zinc-900 dark:text-zinc-200 font-semibold">{{ filteredSolutions().length }}</strong></span>
         </div>
       </div>
 
       <!-- Solutions List -->
       @if (isLoading()) {
-        <div class="py-16 text-center text-zinc-400 text-sm flex flex-col items-center justify-center gap-3">
+        <div class="py-16 text-center text-zinc-500 dark:text-zinc-400 text-sm flex flex-col items-center justify-center gap-3">
           <mat-spinner diameter="32"></mat-spinner>
           <span>Načítání řešení PBŘ...</span>
         </div>
       } @else if (filteredSolutions().length === 0) {
-        <div class="py-16 text-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/30 text-zinc-400 space-y-3">
+        <div class="py-16 text-center rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/30 text-zinc-500 dark:text-zinc-400 space-y-3 shadow-xs dark:shadow-none">
           <mat-icon class="!text-4xl !w-10 !h-10 text-amber-500 mx-auto">local_fire_department</mat-icon>
-          <p class="text-sm font-medium text-zinc-300">Žádná řešení PBŘ nebyla nalezena</p>
-          <p class="text-xs text-zinc-500 max-w-sm mx-auto">Vytvořte své první požárně bezpečnostní řešení a využijte AI pro vyplnění technických částí posouzení.</p>
+          <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-300">Žádná řešení PBŘ nebyla nalezena</p>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">Vytvořte své první požárně bezpečnostní řešení a využijte AI pro vyplnění technických částí posouzení.</p>
           <button
             mat-flat-button
             color="primary"
@@ -143,36 +143,36 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
       } @else {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           @for (s of filteredSolutions(); track s.id) {
-            <mat-card class="flex flex-col justify-between !p-5 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 hover:!border-zinc-700 transition-all !shadow-lg space-y-4 group">
+            <mat-card class="flex flex-col justify-between !p-5 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 hover:!border-zinc-300 dark:hover:!border-zinc-700 transition-all !shadow-sm dark:!shadow-lg space-y-4 group">
               <div class="space-y-3">
                 <div class="flex items-start justify-between gap-2">
                   <div>
-                    <h3 class="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors line-clamp-1">
+                    <h3 class="text-sm font-bold text-zinc-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors line-clamp-1">
                       {{ s.title || s.nazevStavby || 'Nepojmenované PBŘ' }}
                     </h3>
                   </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2 text-[11px] text-zinc-400 bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-800/80">
+                <div class="grid grid-cols-2 gap-2 text-[11px] text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800/80">
                   <div
-                    class="cursor-pointer hover:bg-zinc-800/50 p-1 -m-1 rounded-lg transition-colors group/files flex flex-col justify-center"
+                    class="cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800/50 p-1 -m-1 rounded-lg transition-colors group/files flex flex-col justify-center"
                     (click)="openEditModal(s, 'files')"
                     matTooltip="Spravovat a nahrát podklady k posouzení"
                   >
                     <div class="flex items-center justify-between">
-                      <span class="text-zinc-500 block text-[10px]">Přílohy</span>
-                      <mat-icon class="!text-[12px] !w-3 !h-3 text-zinc-500 group-hover/files:text-sky-400 transition-colors">open_in_new</mat-icon>
+                      <span class="text-zinc-500 dark:text-zinc-400 block text-[10px]">Přílohy</span>
+                      <mat-icon class="!text-[12px] !w-3 !h-3 text-zinc-400 dark:text-zinc-500 group-hover/files:text-sky-500 dark:group-hover/files:text-sky-400 transition-colors">open_in_new</mat-icon>
                     </div>
-                    <span class="text-zinc-200 font-medium group-hover/files:text-sky-300 transition-colors">📁 {{ s.files?.length || 0 }} souborů</span>
+                    <span class="text-zinc-800 dark:text-zinc-200 font-medium group-hover/files:text-sky-600 dark:group-hover/files:text-sky-300 transition-colors">📁 {{ s.files?.length || 0 }} souborů</span>
                   </div>
                   <div>
-                    <span class="text-zinc-500 block text-[10px]">AI Generování</span>
-                    <span class="text-zinc-200 font-medium">⚡ {{ s.generationCount || 0 }}x ({{ s.totalTokens || 0 }} tok. • {{ formatCost(s.totalCostUsd) }})</span>
+                    <span class="text-zinc-500 dark:text-zinc-400 block text-[10px]">AI Generování</span>
+                    <span class="text-zinc-800 dark:text-zinc-200 font-medium">⚡ {{ s.generationCount || 0 }}x ({{ s.totalTokens || 0 }} tok. • {{ formatCost(s.totalCostUsd) }})</span>
                   </div>
                 </div>
               </div>
 
-              <div class="flex items-center justify-between pt-3 border-t border-zinc-800/80">
+              <div class="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
                 <button
                   mat-stroked-button
                   type="button"
@@ -188,7 +188,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                     </span>
                   } @else {
                     <span class="flex items-center">
-                      <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-sky-400">description</mat-icon>
+                      <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-sky-500 dark:text-sky-400">description</mat-icon>
                       <span>DOCX</span>
                     </span>
                   }
@@ -199,7 +199,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                     mat-icon-button
                     type="button"
                     (click)="openEditModal(s, 'files')"
-                    class="!text-zinc-400 hover:!text-sky-400"
+                    class="!text-zinc-500 dark:!text-zinc-400 hover:!text-sky-600 dark:hover:!text-sky-400"
                     [matTooltip]="'Nahrát a spravovat soubory (' + (s.files?.length || 0) + ')'"
                   >
                     <mat-icon>attach_file</mat-icon>
@@ -208,7 +208,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                     mat-icon-button
                     type="button"
                     (click)="openEditModal(s)"
-                    class="!text-zinc-400 hover:!text-indigo-400"
+                    class="!text-zinc-500 dark:!text-zinc-400 hover:!text-indigo-600 dark:hover:!text-indigo-400"
                     matTooltip="Upravit PBŘ"
                   >
                     <mat-icon>edit</mat-icon>
@@ -217,7 +217,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                     mat-icon-button
                     type="button"
                     (click)="deleteSolution(s.id)"
-                    class="!text-zinc-500 hover:!text-rose-400"
+                    class="!text-zinc-400 dark:!text-zinc-500 hover:!text-rose-600 dark:hover:!text-rose-400"
                     matTooltip="Smazat řešení"
                   >
                     <mat-icon>delete</mat-icon>
@@ -231,19 +231,19 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
 
       <!-- Modal: Create / Edit Solution -->
       @if (isModalOpen()) {
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/80 backdrop-blur-sm flex justify-center p-2 sm:p-4 md:p-6 animate-in fade-in">
-          <mat-card class="relative w-full max-w-5xl !bg-zinc-900 !border !border-zinc-800 !rounded-2xl !shadow-2xl overflow-hidden flex flex-col max-h-[92vh] !p-0">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center p-2 sm:p-4 md:p-6 animate-in fade-in">
+          <mat-card class="relative w-full max-w-5xl !bg-white dark:!bg-zinc-900 !border !border-zinc-200 dark:!border-zinc-800 !rounded-2xl !shadow-2xl overflow-hidden flex flex-col max-h-[92vh] !p-0">
             <!-- Modal Header -->
-            <div class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/90">
+            <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-900/90">
               <div class="flex items-center gap-3">
-                <div class="p-2 rounded-xl bg-indigo-600/20 text-indigo-400 text-lg flex items-center justify-center">
+                <div class="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 text-lg flex items-center justify-center border border-indigo-100 dark:border-indigo-500/20">
                   <mat-icon class="!text-amber-500">local_fire_department</mat-icon>
                 </div>
                 <div>
-                  <h2 class="text-base sm:text-lg font-bold text-white">
+                  <h2 class="text-base sm:text-lg font-bold text-zinc-900 dark:text-white">
                     {{ editingId() ? 'Upravit řešení PBŘ & AI Posouzení' : 'Nové řešení PBŘ' }}
                   </h2>
-                  <p class="text-xs text-zinc-400">Vyplňte údaje stavby, přiložte projektové podklady a použijte AI pro technická posouzení.</p>
+                  <p class="text-xs text-zinc-500 dark:text-zinc-400">Vyplňte údaje stavby, přiložte projektové podklady a použijte AI pro technická posouzení.</p>
                 </div>
               </div>
 
@@ -253,10 +253,10 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                   type="button"
                   (click)="activeCategory.set('files')"
                   class="!rounded-xl !text-xs !font-medium"
-                  [class]="activeCategory() === 'files' ? '!text-sky-300 !border-sky-500/40 !bg-sky-600/10' : '!text-zinc-300 !border-zinc-700'"
+                  [class]="activeCategory() === 'files' ? '!text-sky-700 dark:!text-sky-300 !border-sky-400 dark:!border-sky-500/40 !bg-sky-50 dark:!bg-sky-600/10' : '!text-zinc-700 dark:!text-zinc-300 !border-zinc-200 dark:!border-zinc-700'"
                   matTooltip="Nahrát a spravovat přiložené soubory"
                 >
-                  <mat-icon class="!text-sm !w-4 !h-4 !mr-1 text-sky-400">attach_file</mat-icon>
+                  <mat-icon class="!text-sm !w-4 !h-4 !mr-1 text-sky-500 dark:text-sky-400">attach_file</mat-icon>
                   <span>Přílohy ({{ modalFiles().length }})</span>
                 </button>
                 <button
@@ -281,7 +281,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                 <button
                   type="button"
                   (click)="closeModal()"
-                  class="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 cursor-pointer"
+                  class="p-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
                 >
                   ✕
                 </button>
@@ -294,18 +294,18 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
             }
 
             <!-- Category Tabs -->
-            <div class="flex items-center gap-1 px-6 py-2.5 bg-zinc-950/60 border-b border-zinc-800 overflow-x-auto text-xs">
+            <div class="flex items-center gap-1 px-6 py-2.5 bg-zinc-100/70 dark:bg-zinc-950/60 border-b border-zinc-200 dark:border-zinc-800 overflow-x-auto text-xs">
               @for (cat of formCategories; track cat.id) {
                 <button
                   matRipple
                   type="button"
                   (click)="setActiveCategory(cat.id)"
                   class="px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all cursor-pointer flex items-center gap-1.5"
-                  [class]="activeCategory() === cat.id ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'"
+                  [class]="activeCategory() === cat.id ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60'"
                 >
                   <span>{{ cat.label }}</span>
                   @if (cat.id === 'files' && modalFiles().length > 0) {
-                    <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-400/20 text-indigo-200 font-bold">
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-100 dark:bg-indigo-400/20 text-indigo-700 dark:text-indigo-200 font-bold">
                       {{ modalFiles().length }}
                     </span>
                   }
@@ -317,16 +317,16 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
               <!-- Quick Files Notification Banner if not on files tab -->
               @if (activeCategory() !== 'files') {
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-sky-950/20 border border-sky-500/30 text-xs">
-                  <div class="flex items-center gap-2.5 text-zinc-300">
-                    <div class="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-500/30 text-xs">
+                  <div class="flex items-center gap-2.5 text-zinc-700 dark:text-zinc-300">
+                    <div class="p-1.5 rounded-lg bg-sky-100 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
                       <mat-icon class="!text-base !w-4 !h-4">attach_file</mat-icon>
                     </div>
                     <div>
-                      <span class="font-medium text-white">Podklady a výkresová dokumentace: </span>
-                      <span class="text-zinc-300">{{ modalFiles().length }} souborů přiloženo</span>
+                      <span class="font-semibold text-zinc-900 dark:text-white">Podklady a výkresová dokumentace: </span>
+                      <span class="text-zinc-700 dark:text-zinc-300">{{ modalFiles().length }} souborů přiloženo</span>
                       @if (modalFiles().length === 0) {
-                        <span class="text-zinc-400 block text-[11px]">Pro nejpřesnější generování PBŘ nahrajte výkresy, situace nebo technické zprávy.</span>
+                        <span class="text-zinc-500 dark:text-zinc-400 block text-[11px]">Pro nejpřesnější generování PBŘ nahrajte výkresy, situace nebo technické zprávy.</span>
                       }
                     </div>
                   </div>
@@ -334,9 +334,9 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                     mat-stroked-button
                     type="button"
                     (click)="activeCategory.set('files')"
-                    class="!rounded-lg !text-xs !font-medium !text-sky-300 !border-sky-500/30 !bg-sky-600/10 shrink-0"
+                    class="!rounded-lg !text-xs !font-medium !text-sky-700 dark:!text-sky-300 !border-sky-300 dark:!border-sky-500/30 !bg-sky-100 dark:!bg-sky-600/10 shrink-0"
                   >
-                    <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-sky-400">upload_file</mat-icon>
+                    <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-sky-600 dark:text-sky-400">upload_file</mat-icon>
                     {{ modalFiles().length === 0 ? 'Nahrát soubory k posouzení' : 'Spravovat / nahrát soubory' }}
                   </button>
                 </div>
@@ -345,12 +345,12 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
               <!-- Custom Title -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="space-y-1.5">
-                  <label class="block text-xs font-semibold text-zinc-300">Interní název projektu / Zakázky</label>
+                  <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">Interní název projektu / Zakázky</label>
                   <input
                     type="text"
                     [(ngModel)]="customTitle"
                     placeholder="např. PBŘ - Polyfunkční dům Nová Waltrovka"
-                    class="w-full px-3.5 py-2 rounded-xl bg-zinc-800/90 border border-zinc-700/80 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+                    class="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/90 border border-zinc-200 dark:border-zinc-700/80 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -359,11 +359,11 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
               @if (activeCategory() === 'files') {
                 <!-- File Attachments Tab -->
                 <div class="space-y-4">
-                  <div class="p-6 rounded-2xl border-2 border-dashed border-zinc-700 bg-zinc-950/40 text-center space-y-3">
-                    <mat-icon class="!text-4xl !w-10 !h-10 text-indigo-400 mx-auto">folder_open</mat-icon>
+                  <div class="p-6 rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-950/40 text-center space-y-3">
+                    <mat-icon class="!text-4xl !w-10 !h-10 text-indigo-500 dark:text-indigo-400 mx-auto">folder_open</mat-icon>
                     <div>
-                      <p class="text-xs font-semibold text-zinc-200">Nahrajte technickou dokumentaci k posouzení</p>
-                      <p class="text-[11px] text-zinc-400 mt-0.5">Podporované formáty: PDF, DWG, DXF, DOCX, PNG, JPG situací stavby</p>
+                      <p class="text-xs font-semibold text-zinc-800 dark:text-zinc-200">Nahrajte technickou dokumentaci k posouzení</p>
+                      <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Podporované formáty: PDF, DWG, DXF, DOCX, PNG, JPG situací stavby</p>
                     </div>
                     <input
                       #fileInput
@@ -388,14 +388,14 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                   <!-- Uploaded Files List -->
                   @if (modalFiles().length > 0) {
                     <div class="space-y-2">
-                      <h4 class="text-xs font-semibold text-zinc-300">Přiložené technické soubory ({{ modalFiles().length }})</h4>
-                      <div class="divide-y divide-zinc-800/80 border border-zinc-800 rounded-xl bg-zinc-950/40 overflow-hidden">
+                      <h4 class="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Přiložené technické soubory ({{ modalFiles().length }})</h4>
+                      <div class="divide-y divide-zinc-200 dark:divide-zinc-800/80 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50/50 dark:bg-zinc-950/40 overflow-hidden">
                         @for (file of modalFiles(); track file.id) {
                           <div class="flex items-center justify-between p-3 text-xs">
                             <div class="flex items-center gap-2.5 min-w-0">
                               <span class="text-base">{{ getFileIcon(file.name) }}</span>
                               <div class="truncate">
-                                <p class="text-zinc-200 font-medium truncate">{{ file.name }}</p>
+                                <p class="text-zinc-900 dark:text-zinc-200 font-medium truncate">{{ file.name }}</p>
                                 <p class="text-[10px] text-zinc-500">{{ formatBytes(file.size) }} • {{ file.uploadedAt | date:'short' }}</p>
                               </div>
                             </div>
@@ -404,7 +404,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                                 mat-icon-button
                                 type="button"
                                 (click)="downloadFile(file)"
-                                class="!text-zinc-400 hover:!text-white"
+                                class="!text-zinc-500 dark:!text-zinc-400 hover:!text-zinc-900 dark:hover:!text-white"
                                 matTooltip="Stáhnout soubor"
                               >
                                 <mat-icon>download</mat-icon>
@@ -413,7 +413,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                                 mat-icon-button
                                 type="button"
                                 (click)="removeFile(file.id)"
-                                class="!text-zinc-500 hover:!text-rose-400"
+                                class="!text-zinc-400 dark:!text-zinc-500 hover:!text-rose-600 dark:hover:!text-rose-400"
                                 matTooltip="Odstranit soubor"
                               >
                                 <mat-icon>delete</mat-icon>
@@ -429,17 +429,17 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                 <!-- Property Fields -->
                 <div class="space-y-4">
                   @for (field of visibleFields(); track field.key) {
-                    <div class="p-4 rounded-xl bg-zinc-950/40 border border-zinc-800/80 space-y-2 hover:border-zinc-700/80 transition-colors relative overflow-hidden">
+                    <div class="p-4 rounded-xl bg-zinc-50/70 dark:bg-zinc-950/40 border border-zinc-200 dark:border-zinc-800/80 space-y-2 hover:border-zinc-300 dark:hover:border-zinc-700/80 transition-colors relative overflow-hidden">
                       @if (generatingField() === field.key || isGeneratingBatch()) {
                         <mat-progress-bar mode="indeterminate" class="!h-1 -mt-4 -mx-4 mb-2"></mat-progress-bar>
                       }
 
                       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div>
-                          <label class="block text-xs font-semibold text-zinc-200">
+                          <label class="block text-xs font-semibold text-zinc-800 dark:text-zinc-200">
                             {{ field.label }}
                           </label>
-                          <span class="text-[10px] font-mono text-indigo-400">{{ field.placeholder }}</span>
+                          <span class="text-[10px] font-mono text-indigo-600 dark:text-indigo-400">{{ field.placeholder }}</span>
                         </div>
 
                         <div class="flex items-center gap-2">
@@ -459,7 +459,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                             type="button"
                             (click)="generateFieldWithAi(field.key)"
                             [disabled]="isGeneratingAi()"
-                            class="!rounded-lg !text-[11px] !font-medium !text-indigo-300 !border-indigo-500/30 !bg-indigo-600/10 disabled:!opacity-60"
+                            class="!rounded-lg !text-[11px] !font-medium !text-indigo-600 dark:!text-indigo-300 !border-indigo-200 dark:!border-indigo-500/30 !bg-indigo-50 dark:!bg-indigo-600/10 disabled:!opacity-60"
                             matTooltip="Vygenerovat obsah pole pomocí AI"
                           >
                             @if (generatingField() === field.key) {
@@ -469,7 +469,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                               </span>
                             } @else {
                               <span class="flex items-center">
-                                <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-amber-400">bolt</mat-icon>
+                                <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-amber-500 dark:text-amber-400">bolt</mat-icon>
                                 <span>AI Vygenerovat</span>
                               </span>
                             }
@@ -478,7 +478,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                       </div>
 
                       @if (field.description) {
-                        <p class="text-[11px] text-zinc-400">{{ field.description }}</p>
+                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400">{{ field.description }}</p>
                       }
 
                       @if (field.type === 'textarea') {
@@ -488,20 +488,20 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                           rows="4"
                           [(ngModel)]="formData[field.key]"
                           [placeholder]="'Zadejte ' + field.label.toLowerCase() + '...'"
-                          class="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700/80 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-sans leading-relaxed resize-none overflow-hidden"
+                          class="w-full px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-sans leading-relaxed resize-none overflow-hidden"
                         ></textarea>
                       } @else if (field.type === 'date') {
                         <input
                           type="date"
                           [(ngModel)]="formData[field.key]"
-                          class="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700/80 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          class="w-full px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-indigo-500"
                         />
                       } @else {
                         <input
                           type="text"
                           [(ngModel)]="formData[field.key]"
                           [placeholder]="'Zadejte ' + field.label.toLowerCase() + '...'"
-                          class="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700/80 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+                          class="w-full px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
                         />
                       }
                     </div>
@@ -511,13 +511,13 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-6 py-4 border-t border-zinc-800 bg-zinc-900/90 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="px-6 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/90 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div class="flex items-center gap-2">
                 <button
                   mat-button
                   type="button"
                   (click)="closeModal()"
-                  class="!rounded-xl !text-zinc-300 !text-xs"
+                  class="!rounded-xl !text-zinc-600 dark:!text-zinc-300 !text-xs"
                 >
                   Zrušit
                 </button>
@@ -527,7 +527,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                   (click)="exportCurrentDocx()"
                   class="!rounded-xl !text-xs !font-medium"
                 >
-                  <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-sky-400">description</mat-icon>
+                  <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-sky-500 dark:text-sky-400">description</mat-icon>
                   Exportovat DOCX
                 </button>
               </div>
@@ -560,21 +560,21 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
 
       <!-- Prompt Preview Modal -->
       @if (inspectingPrompt(); as p) {
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/80 backdrop-blur-sm flex justify-center p-3 sm:p-6 animate-in fade-in">
-          <mat-card class="relative w-full max-w-2xl !bg-zinc-900 !border !border-zinc-800 !rounded-2xl !shadow-2xl !p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center p-3 sm:p-6 animate-in fade-in">
+          <mat-card class="relative w-full max-w-2xl !bg-white dark:!bg-zinc-900 !border !border-zinc-200 dark:!border-zinc-800 !rounded-2xl !shadow-2xl !p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
               <div>
-                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                  <mat-icon class="!text-indigo-400">square_foot</mat-icon>
+                <h3 class="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <mat-icon class="!text-indigo-600 dark:text-indigo-400">square_foot</mat-icon>
                   <span>Prompt šablona:</span>
-                  <span class="text-indigo-400 font-mono">{{ p.propertyName || p.fieldKey }}</span>
+                  <span class="text-indigo-600 dark:text-indigo-400 font-mono">{{ p.propertyName || p.fieldKey }}</span>
                 </h3>
-                <p class="text-xs text-zinc-400">{{ p.placeholderKey }} • {{ p.category }}</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ p.placeholderKey }} • {{ p.category }}</p>
               </div>
               <button
                 type="button"
                 (click)="inspectingPrompt.set(null)"
-                class="p-1.5 rounded-lg text-zinc-400 hover:text-white cursor-pointer"
+                class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
               >
                 ✕
               </button>
@@ -582,26 +582,26 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
 
             <div class="space-y-3 text-xs">
               <div class="space-y-1">
-                <span class="text-zinc-400 font-semibold block">Systémový prompt:</span>
-                <div class="p-3 rounded-xl bg-zinc-950 border border-zinc-800 font-mono text-[11px] text-zinc-300 whitespace-pre-wrap">
+                <span class="text-zinc-700 dark:text-zinc-400 font-semibold block">Systémový prompt:</span>
+                <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-[11px] text-zinc-800 dark:text-zinc-300 whitespace-pre-wrap">
                   {{ p.systemPrompt }}
                 </div>
               </div>
 
               <div class="space-y-1">
-                <span class="text-zinc-400 font-semibold block">Uživatelský prompt:</span>
-                <div class="p-3 rounded-xl bg-zinc-950 border border-zinc-800 font-mono text-[11px] text-zinc-300 whitespace-pre-wrap">
+                <span class="text-zinc-700 dark:text-zinc-400 font-semibold block">Uživatelský prompt:</span>
+                <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-[11px] text-zinc-800 dark:text-zinc-300 whitespace-pre-wrap">
                   {{ p.userPrompt }}
                 </div>
               </div>
 
-              <div class="grid grid-cols-2 gap-2 text-[11px] text-zinc-400 pt-2">
-                <div>Zahrnout soubory: <strong class="text-zinc-200">{{ p.includeFiles ? 'Ano' : 'Ne' }}</strong></div>
-                <div>Teplota modelu: <strong class="text-zinc-200">{{ p.temperature ?? 0.2 }}</strong></div>
+              <div class="grid grid-cols-2 gap-2 text-[11px] text-zinc-500 dark:text-zinc-400 pt-2">
+                <div>Zahrnout soubory: <strong class="text-zinc-800 dark:text-zinc-200">{{ p.includeFiles ? 'Ano' : 'Ne' }}</strong></div>
+                <div>Teplota modelu: <strong class="text-zinc-800 dark:text-zinc-200">{{ p.temperature ?? 0.2 }}</strong></div>
               </div>
             </div>
 
-            <div class="flex justify-end pt-3 border-t border-zinc-800">
+            <div class="flex justify-end pt-3 border-t border-zinc-200 dark:border-zinc-800">
               <button
                 mat-stroked-button
                 type="button"

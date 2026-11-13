@@ -3,6 +3,15 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Marc Platform - Fire Safety Solutions & System Management",
   description: "PBŘ & Fire Safety Solution Management Platform",
+  icons: {
+    icon: [
+      { url: "/assets/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/assets/favicon.ico", sizes: "any" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/assets/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({

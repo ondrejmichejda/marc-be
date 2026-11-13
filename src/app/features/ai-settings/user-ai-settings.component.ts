@@ -13,6 +13,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRippleModule } from '@angular/material/core';
 import { AiSettingsService } from '../../core/services/ai-settings.service';
+import { ThemeService } from '../../core/services/theme.service';
 import {
   UserOpenAiConfigStatus,
   UserOpenAiSettingsInput,
@@ -355,11 +356,11 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            <mat-icon class="!text-amber-400">bolt</mat-icon>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
+            <mat-icon class="!text-amber-500 dark:!text-amber-400">bolt</mat-icon>
             <span>Osobní AI Nastavení</span>
           </h1>
-          <p class="text-xs sm:text-sm text-zinc-400 mt-1">
+          <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
             Konfigurace vlastního OpenAI API klíče, parametrů modelů a uvažování pro generování PBŘ řešení.
           </p>
         </div>
@@ -381,37 +382,37 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
 
       <!-- Messages -->
       @if (successMessage()) {
-        <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-200 text-xs flex items-center justify-between animate-in fade-in">
-          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-emerald-400">check_circle</mat-icon> {{ successMessage() }}</span>
-          <button type="button" (click)="successMessage.set(null)" class="text-emerald-400 hover:text-white">✕</button>
+        <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between animate-in fade-in">
+          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-emerald-600 dark:text-emerald-400">check_circle</mat-icon> {{ successMessage() }}</span>
+          <button type="button" (click)="successMessage.set(null)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-white">✕</button>
         </div>
       }
       @if (errorMessage()) {
-        <div class="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs flex items-center justify-between animate-in fade-in">
-          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-rose-400">error</mat-icon> {{ errorMessage() }}</span>
-          <button type="button" (click)="errorMessage.set(null)" class="text-rose-400 hover:text-white">✕</button>
+        <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs flex items-center justify-between animate-in fade-in">
+          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-rose-600 dark:text-rose-400">error</mat-icon> {{ errorMessage() }}</span>
+          <button type="button" (click)="errorMessage.set(null)" class="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-white">✕</button>
         </div>
       }
 
       @if (isLoading()) {
-        <div class="py-16 text-center text-zinc-400 text-sm flex flex-col items-center justify-center gap-3">
+        <div class="py-16 text-center text-zinc-500 dark:text-zinc-400 text-sm flex flex-col items-center justify-center gap-3">
           <mat-spinner diameter="32"></mat-spinner>
           <span>Načítání konfigurace AI...</span>
         </div>
       } @else {
         <div class="space-y-6">
           <!-- Status Banner -->
-          <mat-card class="!p-5 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg">
+          <mat-card class="!p-5 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div class="flex items-center gap-3.5">
-                <div class="p-3 rounded-xl text-xl flex items-center justify-center" [class]="config()?.apiKeyConfigured ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'">
+                <div class="p-3 rounded-xl text-xl flex items-center justify-center" [class]="config()?.apiKeyConfigured ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20' : 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20'">
                   <mat-icon>{{ config()?.apiKeyConfigured ? 'key' : 'cloud' }}</mat-icon>
                 </div>
                 <div>
-                  <h3 class="text-sm font-semibold text-white">
+                  <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">
                     {{ config()?.apiKeyConfigured ? 'Aktivní osobní OpenAI klíč' : 'Výchozí systémový klíč' }}
                   </h3>
-                  <p class="text-xs text-zinc-400 mt-0.5">
+                  <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                     {{ config()?.apiKeyConfigured ? ('Klíč: ' + (config()?.maskedKey || 'sk-...')) : 'Využíváte centrální serverový OpenAI klíč projektu.' }}
                   </p>
                 </div>
@@ -419,24 +420,24 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
 
               <!-- Top Status Active Model Badge -->
               <div class="flex items-center gap-2">
-                <div class="px-3.5 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-xs flex items-center gap-2">
-                  <mat-icon class="!text-sm !w-4 !h-4 text-indigo-400">{{ selectedModelInfo().isReasoning ? 'psychology' : 'smart_toy' }}</mat-icon>
-                  <span class="text-zinc-400">Aktivní model:</span>
-                  <span class="font-bold text-white">{{ selectedModelInfo().name }}</span>
-                  <code class="px-1.5 py-0.5 rounded bg-zinc-900 text-indigo-400 font-mono text-[10px] border border-zinc-800">{{ selectedModel }}</code>
+                <div class="px-3.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 text-xs flex items-center gap-2">
+                  <mat-icon class="!text-sm !w-4 !h-4 text-indigo-600 dark:text-indigo-400">{{ selectedModelInfo().isReasoning ? 'psychology' : 'smart_toy' }}</mat-icon>
+                  <span class="text-zinc-500 dark:text-zinc-400">Aktivní model:</span>
+                  <span class="font-bold text-zinc-900 dark:text-white">{{ selectedModelInfo().name }}</span>
+                  <code class="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 font-mono text-[10px] border border-zinc-200 dark:border-zinc-800">{{ selectedModel }}</code>
                 </div>
               </div>
             </div>
           </mat-card>
 
           <!-- API Key Form Card -->
-          <mat-card class="!p-6 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-4">
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-4">
             <div>
-              <h2 class="text-sm font-semibold text-white flex items-center gap-1.5">
-                <mat-icon class="!text-sm !w-4 !h-4 text-indigo-400">vpn_key</mat-icon>
+              <h2 class="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                <mat-icon class="!text-sm !w-4 !h-4 text-indigo-600 dark:text-indigo-400">vpn_key</mat-icon>
                 <span>Zadání OpenAI API Klíče</span>
               </h2>
-              <p class="text-xs text-zinc-400 mt-0.5">Zadejte svůj osobní OpenAI token pro přímé účtování na váš OpenAI účet.</p>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Zadejte svůj osobní OpenAI token pro přímé účtování na váš OpenAI účet.</p>
             </div>
 
             <div class="space-y-2">
@@ -446,12 +447,12 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
                     [type]="showKey ? 'text' : 'password'"
                     [(ngModel)]="apiKeyInput"
                     placeholder="sk-proj-..."
-                    class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono"
+                    class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono"
                   />
                   <button
                     type="button"
                     (click)="showKey = !showKey"
-                    class="absolute right-3 top-2.5 text-zinc-400 hover:text-white text-xs cursor-pointer"
+                    class="absolute right-3 top-2.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-white text-xs cursor-pointer"
                   >
                     <mat-icon class="!text-sm !w-4 !h-4">{{ showKey ? 'visibility_off' : 'visibility' }}</mat-icon>
                   </button>
@@ -474,7 +475,7 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
             @if (validationStatus()) {
               <div
                 class="p-3.5 rounded-xl text-xs space-y-1.5 animate-in fade-in"
-                [class]="validationStatus()?.success ? 'bg-emerald-950/40 border border-emerald-500/30 text-emerald-300' : 'bg-rose-950/40 border border-rose-500/30 text-rose-300'"
+                [class]="validationStatus()?.success ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300' : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-300'"
               >
                 <div class="font-semibold flex items-center justify-between">
                   <span>{{ validationStatus()?.success ? '✓ Klíč je platný a komunikace s OpenAI proběhla úspěšně' : '✕ Ověření klíče selhalo' }}</span>
@@ -483,34 +484,34 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
                   }
                 </div>
                 @if (validationStatus()?.completion) {
-                  <p class="text-[11px] text-zinc-400 italic">"{{ validationStatus()?.completion }}"</p>
+                  <p class="text-[11px] text-zinc-600 dark:text-zinc-400 italic">"{{ validationStatus()?.completion }}"</p>
                 }
                 @if (validationStatus()?.error) {
-                  <p class="text-[11px] text-rose-400 font-mono">{{ validationStatus()?.error }}</p>
+                  <p class="text-[11px] text-rose-600 dark:text-rose-400 font-mono">{{ validationStatus()?.error }}</p>
                 }
               </div>
             }
           </mat-card>
 
           <!-- Model Selection Card -->
-          <mat-card class="!p-6 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-6">
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h2 class="text-sm font-semibold text-white flex items-center gap-1.5">
-                  <mat-icon class="!text-sm !w-4 !h-4 text-indigo-400">smart_toy</mat-icon>
+                <h2 class="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                  <mat-icon class="!text-sm !w-4 !h-4 text-indigo-600 dark:text-indigo-400">smart_toy</mat-icon>
                   <span>Výběr Preferovaného Modelu</span>
                 </h2>
-                <p class="text-xs text-zinc-400 mt-0.5">Zvolte výchozí AI model, který se použije pro generování PBŘ posouzení a technických výpočtů.</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Zvolte výchozí AI model, který se použije pro generování PBŘ posouzení a technických výpočtů.</p>
               </div>
 
               <!-- Live API Status & Dynamic Refresh Button -->
               <div class="flex items-center gap-2">
                 <span
                   class="px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center gap-1.5 border"
-                  [class]="modelSource() === 'openai-api' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' : 'bg-zinc-800/80 text-zinc-400 border-zinc-700'"
+                  [class]="modelSource() === 'openai-api' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30' : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'"
                   matTooltip="Zdroj seznamu modelů: https://api.openai.com/v1/models"
                 >
-                  <mat-icon class="!text-xs !w-3.5 !h-3.5" [class]="modelSource() === 'openai-api' ? 'text-emerald-400' : 'text-zinc-400'">
+                  <mat-icon class="!text-xs !w-3.5 !h-3.5" [class]="modelSource() === 'openai-api' ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400'">
                     {{ modelSource() === 'openai-api' ? 'cloud_done' : 'dns' }}
                   </mat-icon>
                   <span>{{ modelSource() === 'openai-api' ? 'API: https://api.openai.com/v1/models' : 'Katalog modelů' }}</span>
@@ -520,7 +521,7 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
                   type="button"
                   (click)="loadDynamicModels(apiKeyInput, organizationInput)"
                   [disabled]="isModelsLoading()"
-                  class="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-xs text-zinc-200 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  class="px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-700 dark:text-zinc-200 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                   matTooltip="Znovu načíst živý seznam modelů z OpenAI API (https://api.openai.com/v1/models)"
                 >
                   <mat-icon class="!text-xs !w-3.5 !h-3.5" [class.animate-spin]="isModelsLoading()">refresh</mat-icon>
@@ -530,34 +531,34 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
             </div>
 
             <!-- SELECTED MODEL SHOWCASE HERO (Show selected one better) -->
-            <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-950/80 via-zinc-900/90 to-purple-950/50 border-2 border-indigo-500 shadow-xl shadow-indigo-950/40 relative overflow-hidden">
+            <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-50 via-white to-purple-50 dark:from-indigo-950/80 dark:via-zinc-900/90 dark:to-purple-950/50 border-2 border-indigo-500 shadow-md dark:shadow-xl shadow-indigo-500/10 dark:shadow-indigo-950/40 relative overflow-hidden">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-start gap-3.5">
-                  <div class="p-3 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/40 shrink-0">
+                  <div class="p-3 rounded-xl bg-indigo-100 dark:bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/40 shrink-0">
                     <mat-icon class="!text-2xl !w-6 !h-6">{{ selectedModelInfo().isReasoning ? 'psychology' : 'auto_awesome' }}</mat-icon>
                   </div>
                   <div class="space-y-1">
                     <div class="flex flex-wrap items-center gap-2">
-                      <span class="px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                      <span class="px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-1">
                         <mat-icon class="!text-[12px] !w-3 !h-3">check_circle</mat-icon>
                         Aktivní volba
                       </span>
-                      <span class="text-sm sm:text-base font-bold text-white">{{ selectedModelInfo().name }}</span>
-                      <code class="px-2 py-0.5 rounded bg-zinc-950 text-indigo-300 font-mono text-xs border border-zinc-800">{{ selectedModel }}</code>
+                      <span class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">{{ selectedModelInfo().name }}</span>
+                      <code class="px-2 py-0.5 rounded bg-white dark:bg-zinc-950 text-indigo-700 dark:text-indigo-300 font-mono text-xs border border-indigo-200 dark:border-zinc-800">{{ selectedModel }}</code>
                     </div>
-                    <p class="text-xs text-zinc-300 leading-relaxed">{{ selectedModelInfo().description }}</p>
+                    <p class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">{{ selectedModelInfo().description }}</p>
                     <div class="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
-                      <span class="px-2 py-0.5 rounded-md bg-zinc-950 text-zinc-300 border border-zinc-800 flex items-center gap-1">
+                      <span class="px-2 py-0.5 rounded-md bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 flex items-center gap-1">
                         <mat-icon class="!text-xs !w-3.5 !h-3.5 text-zinc-400">memory</mat-icon>
-                        <span>Kontextové okno: <strong class="text-white">{{ selectedModelInfo().context }}</strong></span>
+                        <span>Kontextové okno: <strong class="text-zinc-900 dark:text-white">{{ selectedModelInfo().context }}</strong></span>
                       </span>
-                      <span class="px-2 py-0.5 rounded-md bg-zinc-950 text-zinc-300 border border-zinc-800 flex items-center gap-1">
+                      <span class="px-2 py-0.5 rounded-md bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 flex items-center gap-1">
                         <mat-icon class="!text-xs !w-3.5 !h-3.5 text-zinc-400">category</mat-icon>
-                        <span>Kategorie: <strong class="text-zinc-200">{{ selectedModelInfo().categoryLabel }}</strong></span>
+                        <span>Kategorie: <strong class="text-zinc-800 dark:text-zinc-200">{{ selectedModelInfo().categoryLabel }}</strong></span>
                       </span>
                       @if (selectedModelInfo().isReasoning) {
-                        <span class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20 flex items-center gap-1">
-                          <mat-icon class="!text-xs !w-3.5 !h-3.5 text-amber-400">psychology</mat-icon>
+                        <span class="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20 flex items-center gap-1">
+                          <mat-icon class="!text-xs !w-3.5 !h-3.5 text-amber-500 dark:text-amber-400">psychology</mat-icon>
                           <span>Uvažovací model (Aplikuje se Reasoning Effort níže)</span>
                         </span>
                       }
@@ -569,8 +570,8 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
 
             <!-- QUICK-PICK POPULAR MODELS -->
             <div class="space-y-2">
-              <span class="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-                <mat-icon class="!text-sm !w-4 !h-4 text-amber-400">flash_on</mat-icon>
+              <span class="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+                <mat-icon class="!text-sm !w-4 !h-4 text-amber-500 dark:text-amber-400">flash_on</mat-icon>
                 <span>Rychlá volba nejpopulárnějších modelů:</span>
               </span>
               <div class="flex flex-wrap gap-2">
@@ -579,7 +580,7 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
                     type="button"
                     (click)="selectModel(pm.id)"
                     class="px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5"
-                    [class]="selectedModel === pm.id ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400' : 'bg-zinc-950 text-zinc-300 border border-zinc-800 hover:border-zinc-700 hover:text-white'"
+                    [class]="selectedModel === pm.id ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400' : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-white'"
                   >
                     <mat-icon class="!text-xs !w-3.5 !h-3.5" [class]="selectedModel === pm.id ? 'text-white' : 'text-zinc-400'">
                       {{ selectedModel === pm.id ? 'check_circle' : (pm.isReasoning ? 'psychology' : 'smart_toy') }}
@@ -599,7 +600,7 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
                       type="button"
                       (click)="selectedCategory.set(cat.id)"
                       class="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer"
-                      [class]="selectedCategory() === cat.id ? 'bg-zinc-200 text-zinc-900 font-semibold' : 'bg-zinc-950 text-zinc-400 border border-zinc-800 hover:text-zinc-200 hover:bg-zinc-800/60'"
+                      [class]="selectedCategory() === cat.id ? 'bg-indigo-600 text-white shadow-xs font-semibold' : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
                     >
                       {{ cat.label }} ({{ getCategoryCount(cat.id) }})
                     </button>
@@ -612,7 +613,7 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
                     [ngModel]="searchQuery()"
                     (ngModelChange)="searchQuery.set($event)"
                     placeholder="Hledat v modelech..."
-                    class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-700 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+                    class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
                   />
                   <mat-icon class="!text-zinc-400 !text-sm !w-4 !h-4 absolute left-2.5 top-2">search</mat-icon>
                 </div>
@@ -625,47 +626,47 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
                     matRipple
                     (click)="selectModel(m.id)"
                     class="p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between space-y-2 relative overflow-hidden"
-                    [class]="selectedModel === m.id ? 'bg-indigo-950/60 border-indigo-500 shadow-md ring-2 ring-indigo-500/80' : 'bg-zinc-950/70 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900/60'"
+                    [class]="selectedModel === m.id ? 'bg-indigo-50/80 dark:bg-indigo-950/60 border-indigo-500 shadow-sm dark:shadow-md ring-2 ring-indigo-500/80' : 'bg-white dark:bg-zinc-950/70 border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-900/60'"
                   >
                     <div class="flex items-start justify-between gap-2">
                       <div class="flex items-start gap-2 min-w-0">
-                        <mat-icon class="!text-sm !w-4 !h-4 mt-0.5 shrink-0" [class]="selectedModel === m.id ? 'text-indigo-400' : 'text-zinc-500'">
+                        <mat-icon class="!text-sm !w-4 !h-4 mt-0.5 shrink-0" [class]="selectedModel === m.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-400 dark:text-zinc-500'">
                           {{ selectedModel === m.id ? 'radio_button_checked' : 'radio_button_unchecked' }}
                         </mat-icon>
                         <div class="min-w-0">
-                          <span class="text-xs font-bold text-white block truncate">{{ m.name }}</span>
-                          <span class="text-[10px] font-mono text-zinc-400 block truncate">{{ m.id }}</span>
+                          <span class="text-xs font-bold text-zinc-900 dark:text-white block truncate">{{ m.name }}</span>
+                          <span class="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 block truncate">{{ m.id }}</span>
                         </div>
                       </div>
 
                       <div class="flex items-center gap-1 shrink-0">
                         @if (m.isRecommended) {
-                          <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                             Doporučeno
                           </span>
                         }
                         @if (m.isReasoning) {
-                          <span class="px-1.5 py-0.5 rounded text-[9px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20" matTooltip="Uvažovací model">
+                          <span class="px-1.5 py-0.5 rounded text-[9px] font-medium bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20" matTooltip="Uvažovací model">
                             🧠
                           </span>
                         }
-                        <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-zinc-800 text-zinc-400">
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                           {{ m.context }}
                         </span>
                       </div>
                     </div>
 
-                    <p class="text-[11px] text-zinc-400 leading-relaxed line-clamp-2">{{ m.description }}</p>
+                    <p class="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed line-clamp-2">{{ m.description }}</p>
 
-                    <div class="flex items-center justify-between pt-1 border-t border-zinc-800/60 text-[10px]">
+                    <div class="flex items-center justify-between pt-1 border-t border-zinc-100 dark:border-zinc-800/60 text-[10px]">
                       <span class="text-zinc-500">{{ m.categoryLabel }}</span>
                       @if (selectedModel === m.id) {
-                        <span class="font-semibold text-emerald-400 flex items-center gap-1">
+                        <span class="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                           <mat-icon class="!text-[12px] !w-3 !h-3">check</mat-icon>
                           Aktivní výběr
                         </span>
                       } @else {
-                        <span class="text-zinc-500 hover:text-zinc-300">Zvolit model</span>
+                        <span class="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300">Zvolit model</span>
                       }
                     </div>
                   </div>
@@ -673,29 +674,29 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
               </div>
 
               @if (filteredModels().length === 0) {
-                <div class="py-8 text-center text-zinc-400 text-xs">
+                <div class="py-8 text-center text-zinc-500 dark:text-zinc-400 text-xs">
                   Nebyly nalezeny žádné modely odpovídající dotazu "{{ searchQuery() }}".
                 </div>
               }
             </div>
 
             <!-- Custom Model Override -->
-            <div class="pt-4 border-t border-zinc-800 space-y-2">
-              <label class="block text-xs font-semibold text-zinc-300">Vlastní název modelu (Override)</label>
+            <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+              <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">Vlastní název modelu (Override)</label>
               <input
                 type="text"
                 [(ngModel)]="customModelOverride"
                 placeholder="např. ft:gpt-4o:my-org:custom-pbr-01"
-                class="w-full max-w-md px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono"
+                class="w-full max-w-md px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono"
               />
               <p class="text-[11px] text-zinc-500">Můžete zadat libovolný specifický model nebo fine-tuned endpoint.</p>
             </div>
           </mat-card>
 
           <!-- Advanced AI Parameters -->
-          <mat-card class="!p-6 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-5">
-            <h2 class="text-sm font-semibold text-white flex items-center gap-1.5">
-              <mat-icon class="!text-sm !w-4 !h-4 text-indigo-400">tune</mat-icon>
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-5">
+            <h2 class="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-1.5">
+              <mat-icon class="!text-sm !w-4 !h-4 text-indigo-600 dark:text-indigo-400">tune</mat-icon>
               <span>Pokročilé Parametry Generování</span>
             </h2>
 
@@ -703,8 +704,8 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
               <!-- Temperature -->
               <div class="space-y-2">
                 <div class="flex items-center justify-between">
-                  <label class="font-semibold text-zinc-300">Teplota modelu (Kreativita vs Přesnost)</label>
-                  <span class="font-mono text-indigo-400 font-bold">{{ temperature }}</span>
+                  <label class="font-semibold text-zinc-700 dark:text-zinc-300">Teplota modelu (Kreativita vs Přesnost)</label>
+                  <span class="font-mono text-indigo-600 dark:text-indigo-400 font-bold">{{ temperature }}</span>
                 </div>
                 <mat-slider min="0" max="1" step="0.05" class="w-full">
                   <input matSliderThumb [(ngModel)]="temperature" />
@@ -714,14 +715,14 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
 
               <!-- Reasoning Effort (for o1 / o3 models) -->
               <div class="space-y-2">
-                <label class="font-semibold text-zinc-300">Intenzita uvažování (Reasoning Effort)</label>
+                <label class="font-semibold text-zinc-700 dark:text-zinc-300">Intenzita uvažování (Reasoning Effort)</label>
                 <div class="grid grid-cols-3 gap-2">
                   @for (effort of ['low', 'medium', 'high']; track effort) {
                     <button
                       type="button"
                       (click)="reasoningEffort = $any(effort)"
                       class="py-2 rounded-xl font-medium text-xs transition-all cursor-pointer capitalize"
-                      [class]="reasoningEffort === effort ? 'bg-indigo-600 text-white shadow-sm' : 'bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white'"
+                      [class]="reasoningEffort === effort ? 'bg-indigo-600 text-white shadow-xs font-semibold' : 'bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
                     >
                       {{ effort }}
                     </button>
@@ -732,19 +733,19 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
 
               <!-- Organization ID -->
               <div class="space-y-1.5">
-                <label class="font-semibold text-zinc-300">OpenAI Organization ID (Volitelné)</label>
+                <label class="font-semibold text-zinc-700 dark:text-zinc-300">OpenAI Organization ID (Volitelné)</label>
                 <input
                   type="text"
                   [(ngModel)]="organizationInput"
                   placeholder="org-..."
-                  class="w-full px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono"
+                  class="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono"
                 />
               </div>
 
               <!-- Web Search -->
               <div class="space-y-1.5 flex flex-col justify-center">
                 <mat-slide-toggle [(ngModel)]="enableWebSearch" color="primary">
-                  <span class="font-semibold text-zinc-200 text-xs">Povolit vyhledávání na webu (Web Search)</span>
+                  <span class="font-semibold text-zinc-800 dark:text-zinc-200 text-xs">Povolit vyhledávání na webu (Web Search)</span>
                 </mat-slide-toggle>
                 <p class="text-[11px] text-zinc-500">Umožňuje modelu dohledávat aktuální normové vyhlášky a technické listy.</p>
               </div>
@@ -752,72 +753,113 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
           </mat-card>
 
           <!-- Pricing Reference Card -->
-          <mat-card class="!p-6 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-4">
-            <h2 class="text-sm font-semibold text-white flex items-center gap-1.5">
-              <mat-icon class="!text-sm !w-4 !h-4 text-emerald-400">payments</mat-icon>
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-4">
+            <h2 class="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-1.5">
+              <mat-icon class="!text-sm !w-4 !h-4 text-emerald-600 dark:text-emerald-400">payments</mat-icon>
               <span>Orientační Přehled Nákladů (Ceník OpenAI za 1M tokenů)</span>
             </h2>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
                 <thead>
-                  <tr class="border-b border-zinc-800 text-zinc-400">
+                  <tr class="border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400">
                     <th class="py-2">Model</th>
                     <th class="py-2">Vstupní cena / 1M</th>
                     <th class="py-2">Výstupní cena / 1M</th>
                     <th class="py-2">Doporučené použití pro PBŘ</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-zinc-700 dark:text-zinc-300">
                   <tr>
-                    <td class="py-2.5 font-semibold text-white">GPT-6 Luna</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$0.10</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$0.40</td>
-                    <td class="py-2.5 text-zinc-400">Nejrychlejší a nejlevnější model GPT-6 s 1.05M kontextem pro hromadné úlohy</td>
+                    <td class="py-2.5 font-semibold text-zinc-900 dark:text-white">GPT-6 Luna</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$0.10</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$0.40</td>
+                    <td class="py-2.5 text-zinc-500 dark:text-zinc-400">Nejrychlejší a nejlevnější model GPT-6 s 1.05M kontextem pro hromadné úlohy</td>
                   </tr>
                   <tr>
-                    <td class="py-2.5 font-semibold text-white">GPT-4o Mini</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$0.15</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$0.60</td>
-                    <td class="py-2.5 text-zinc-400">Běžná popisná pole, rychlé formulace, nízké náklady</td>
+                    <td class="py-2.5 font-semibold text-zinc-900 dark:text-white">GPT-4o Mini</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$0.15</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$0.60</td>
+                    <td class="py-2.5 text-zinc-500 dark:text-zinc-400">Běžná popisná pole, rychlé formulace, nízké náklady</td>
                   </tr>
                   <tr>
-                    <td class="py-2.5 font-semibold text-white">GPT-6.1 Sol</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$1.00</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$4.00</td>
-                    <td class="py-2.5 text-zinc-400">Vyvážený model GPT-6 pro každodenní technické výpočty a normové posudky</td>
+                    <td class="py-2.5 font-semibold text-zinc-900 dark:text-white">GPT-6.1 Sol</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$1.00</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$4.00</td>
+                    <td class="py-2.5 text-zinc-500 dark:text-zinc-400">Vyvážený model GPT-6 pro každodenní technické výpočty a normové posudky</td>
                   </tr>
                   <tr>
-                    <td class="py-2.5 font-semibold text-white">o3-mini</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$1.10</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$4.40</td>
-                    <td class="py-2.5 text-zinc-400">Inženýrské normové kontroly ČSN, odstupové vzdálenosti, STEM</td>
+                    <td class="py-2.5 font-semibold text-zinc-900 dark:text-white">o3-mini</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$1.10</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$4.40</td>
+                    <td class="py-2.5 text-zinc-500 dark:text-zinc-400">Inženýrské normové kontroly ČSN, odstupové vzdálenosti, STEM</td>
                   </tr>
                   <tr>
-                    <td class="py-2.5 font-semibold text-white">GPT-4o (Omni)</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$2.50</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$10.00</td>
-                    <td class="py-2.5 text-zinc-400">Vlajkový model pro komplexní texty PBŘ a analýzy příloh</td>
+                    <td class="py-2.5 font-semibold text-zinc-900 dark:text-white">GPT-4o (Omni)</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$2.50</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$10.00</td>
+                    <td class="py-2.5 text-zinc-500 dark:text-zinc-400">Vlajkový model pro komplexní texty PBŘ a analýzy příloh</td>
                   </tr>
                   <tr>
-                    <td class="py-2.5 font-semibold text-white">GPT-6 Astra</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$5.00</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$20.00</td>
-                    <td class="py-2.5 text-zinc-400">Špičkový vlajkový reasoning model nové generace s 1.05M oknem</td>
+                    <td class="py-2.5 font-semibold text-zinc-900 dark:text-white">GPT-6 Astra</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$5.00</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$20.00</td>
+                    <td class="py-2.5 text-zinc-500 dark:text-zinc-400">Špičkový vlajkový reasoning model nové generace s 1.05M oknem</td>
                   </tr>
                   <tr>
-                    <td class="py-2.5 font-semibold text-white">o1 (Full Reasoning)</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$15.00</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$60.00</td>
-                    <td class="py-2.5 text-zinc-400">Nejsložitější inženýrské výpočty a atypická stavební řešení</td>
+                    <td class="py-2.5 font-semibold text-zinc-900 dark:text-white">o1 (Full Reasoning)</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$15.00</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$60.00</td>
+                    <td class="py-2.5 text-zinc-500 dark:text-zinc-400">Nejsložitější inženýrské výpočty a atypická stavební řešení</td>
                   </tr>
                   <tr>
-                    <td class="py-2.5 font-semibold text-white">GPT-4.5 Preview</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$75.00</td>
-                    <td class="py-2.5 font-mono text-zinc-400">$150.00</td>
-                    <td class="py-2.5 text-zinc-400">Nejrozsáhlejší znalostní báze pro komplexní stavby</td>
+                    <td class="py-2.5 font-semibold text-zinc-900 dark:text-white">GPT-4.5 Preview</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$75.00</td>
+                    <td class="py-2.5 font-mono text-zinc-500 dark:text-zinc-400">$150.00</td>
+                    <td class="py-2.5 text-zinc-500 dark:text-zinc-400">Nejrozsáhlejší znalostní báze pro komplexní stavby</td>
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </mat-card>
+
+          <!-- Theme & Appearance Card -->
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-4">
+            <div>
+              <h2 class="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                <mat-icon class="!text-sm !w-4 !h-4 text-indigo-600 dark:text-indigo-400">palette</mat-icon>
+                <span>Vzhled a Motiv Systému</span>
+              </h2>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                Vyberte si světlý, tmavý nebo automatický systémový motiv rozhraní platformy Marc.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              @for (opt of themeService.themeOptions; track opt.value) {
+                <button
+                  type="button"
+                  (click)="themeService.setTheme(opt.value)"
+                  class="flex flex-col items-start gap-2 p-4 rounded-xl border text-left transition-all cursor-pointer"
+                  [class]="themeService.themeMode() === opt.value
+                    ? 'bg-indigo-50 dark:bg-indigo-600/15 border-indigo-500 text-indigo-700 dark:text-indigo-200 ring-2 ring-indigo-500/20'
+                    : 'bg-zinc-50 dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700'"
+                >
+                  <div class="flex items-center justify-between w-full">
+                    <div class="flex items-center gap-2">
+                      <mat-icon class="!text-lg !w-5 !h-5" [class]="themeService.themeMode() === opt.value ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-400'">{{ opt.icon }}</mat-icon>
+                      <span class="text-xs font-bold">{{ opt.label }}</span>
+                    </div>
+                    @if (themeService.themeMode() === opt.value) {
+                      <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-100 dark:bg-indigo-500/30 text-indigo-700 dark:text-indigo-300">
+                        Aktivní
+                      </span>
+                    }
+                  </div>
+                  <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                    {{ opt.description }}
+                  </p>
+                </button>
+              }
             </div>
           </mat-card>
 
@@ -842,6 +884,7 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
 })
 export class UserAiSettingsComponent implements OnInit {
   private aiSettingsService = inject(AiSettingsService);
+  readonly themeService = inject(ThemeService);
 
   readonly config = signal<UserOpenAiConfigStatus | null>(null);
   readonly isLoading = signal<boolean>(true);

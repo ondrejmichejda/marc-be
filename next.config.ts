@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/((?!api/|_next/|public/|favicon.ico).*)",
+        source: "/((?!api/|_next/|public/|favicon\\.ico|favicon\\.svg|apple-touch-icon\\.png|.*\\..*).*)",
         destination: "/index.html",
       },
     ];
