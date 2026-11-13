@@ -472,7 +472,8 @@ export class FireSafetySolutionService {
   static async accumulateAiUsage(
     solutionId: string,
     costUsd: number,
-    tokens: number
+    tokens: number,
+    generationCount: number = 1
   ): Promise<FireSafetySolution | null> {
     const existing = await this.getSolutionById(solutionId);
     if (!existing) return null;
@@ -483,10 +484,11 @@ export class FireSafetySolutionService {
 
     const addedCost = Number(costUsd) || 0;
     const addedTokens = Number(tokens) || 0;
+    const addedCount = typeof generationCount === "number" ? generationCount : 1;
 
     const newCost = Number((currentCost + addedCost).toFixed(6));
     const newTokens = currentTokens + addedTokens;
-    const newCount = currentCount + 1;
+    const newCount = currentCount + addedCount;
 
     return this.updateSolution(solutionId, existing.userId, {
       totalCostUsd: newCost,

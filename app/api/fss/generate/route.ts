@@ -107,10 +107,12 @@ export async function POST(req: NextRequest) {
     let generationCount: number | undefined;
 
     if (solutionId && result.success) {
+      const callCount = result.successfulCount > 0 ? result.successfulCount : (result.totalProperties || 1);
       const updatedSolution = await FireSafetySolutionService.accumulateAiUsage(
         solutionId,
         result.estimatedTotalCostUsd || 0,
-        result.totalTokens || result.tokens || 0
+        result.totalTokens || result.tokens || 0,
+        callCount
       );
       if (updatedSolution) {
         accumulatedCostUsd = updatedSolution.totalCostUsd;

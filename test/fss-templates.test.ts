@@ -59,6 +59,10 @@ function createMockDocxBuffer(customMarker: string): Buffer {
 
 test("FSS Template Management: Lifecycle, Overriding, and Active Template usage during FSS Generation", async () => {
   // 0. Reset any templates initially
+  const existingTemplates = await FssTemplateService.listTemplates();
+  for (const t of existingTemplates) {
+    await FssTemplateService.deleteTemplate(t.id);
+  }
   await FssTemplateService.resetToDefault();
 
   const initialActive = await FssTemplateService.getActiveTemplate();

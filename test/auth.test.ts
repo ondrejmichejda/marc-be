@@ -343,6 +343,27 @@ test("Roles Management: Create Roles, Assign Users to Roles, and Map Menu Items 
   await UserService.deleteUser(targetUser.id);
 });
 
+test("Router Protection: Unauthenticated Users Guarded by authGuard", async () => {
+  await import("@angular/compiler");
+  const { routes } = await import("../src/app/app.routes");
+  const { authGuard } = await import("../src/app/core/guards/auth.guard");
+
+  assert.ok(routes, "Routes definition must be exported");
+
+  // Check login route is public
+  const loginRoute = routes.find((r) => r.path === "login");
+  assert.ok(loginRoute, "Login route must exist");
+  assert.equal(loginRoute.canActivate, undefined, "Login route should not have authGuard");
+
+  // Check main protected application route
+  const appRootRoute = routes.find((r) => r.path === "");
+  assert.ok(appRootRoute, "Root layout route must exist");
+  assert.ok(Array.isArray(appRootRoute.canActivate), "Root route must have canActivate guards");
+  assert.ok(appRootRoute.canActivate.includes(authGuard), "Root route canActivate must include authGuard");
+  assert.ok(Array.isArray(appRootRoute.canActivateChild), "Root route must have canActivateChild guards");
+  assert.ok(appRootRoute.canActivateChild.includes(authGuard), "Root route canActivateChild must include authGuard");
+});
+
 test("Session Access Gate: Unauthenticated vs Authenticated User Resolution", async () => {
   const { getCurrentUser } = await import("../lib/auth/session");
 
