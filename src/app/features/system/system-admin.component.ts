@@ -38,11 +38,11 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            <mat-icon class="!text-indigo-400">admin_panel_settings</mat-icon>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
+            <mat-icon class="!text-indigo-600 dark:text-indigo-400">admin_panel_settings</mat-icon>
             <span>Systémová Administrace</span>
           </h1>
-          <p class="text-xs sm:text-sm text-zinc-400 mt-1">
+          <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
             Správa uživatelských rolí, mapování navigačního menu, Telegram bota, OpenAI telemetrie a systémových parametrů.
           </p>
         </div>
@@ -50,26 +50,26 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
 
       <!-- Messages -->
       @if (successMessage()) {
-        <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-200 text-xs flex items-center justify-between animate-in fade-in">
-          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-emerald-400">check_circle</mat-icon> {{ successMessage() }}</span>
-          <button type="button" (click)="successMessage.set(null)" class="text-emerald-400 hover:text-white">✕</button>
+        <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between animate-in fade-in">
+          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-emerald-600 dark:text-emerald-400">check_circle</mat-icon> {{ successMessage() }}</span>
+          <button type="button" (click)="successMessage.set(null)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-white">✕</button>
         </div>
       }
       @if (errorMessage()) {
-        <div class="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs flex items-center justify-between animate-in fade-in">
-          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-rose-400">error</mat-icon> {{ errorMessage() }}</span>
-          <button type="button" (click)="errorMessage.set(null)" class="text-rose-400 hover:text-white">✕</button>
+        <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs flex items-center justify-between animate-in fade-in">
+          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-rose-600 dark:text-rose-400">error</mat-icon> {{ errorMessage() }}</span>
+          <button type="button" (click)="errorMessage.set(null)" class="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-white">✕</button>
         </div>
       }
 
       <!-- Sub Tabs Navigation -->
-      <div class="flex items-center gap-1.5 p-1.5 rounded-2xl bg-zinc-900/80 border border-zinc-800 overflow-x-auto text-xs pb-1 sm:pb-1.5">
+      <div class="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 overflow-x-auto text-xs pb-1 sm:pb-1.5 shadow-xs dark:shadow-none">
         <button
           matRipple
           type="button"
           (click)="activeTab.set('users')"
           class="flex items-center gap-2 px-3.5 py-2 rounded-xl font-medium transition-all cursor-pointer whitespace-nowrap"
-          [class]="activeTab() === 'users' ? 'bg-indigo-600 text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'"
+          [class]="activeTab() === 'users' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
         >
           <mat-icon class="!text-sm !w-4 !h-4">people</mat-icon>
           <span>Správa Uživatelů</span>
@@ -80,7 +80,7 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
           type="button"
           (click)="activeTab.set('roles')"
           class="flex items-center gap-2 px-3.5 py-2 rounded-xl font-medium transition-all cursor-pointer whitespace-nowrap"
-          [class]="activeTab() === 'roles' ? 'bg-indigo-600 text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'"
+          [class]="activeTab() === 'roles' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
         >
           <mat-icon class="!text-sm !w-4 !h-4">security</mat-icon>
           <span>Role &amp; Oprávnění</span>
@@ -91,7 +91,7 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
           type="button"
           (click)="activeTab.set('mappings')"
           class="flex items-center gap-2 px-3.5 py-2 rounded-xl font-medium transition-all cursor-pointer whitespace-nowrap"
-          [class]="activeTab() === 'mappings' ? 'bg-indigo-600 text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'"
+          [class]="activeTab() === 'mappings' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
         >
           <mat-icon class="!text-sm !w-4 !h-4">map</mat-icon>
           <span>Mapování Menu</span>
@@ -102,7 +102,7 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
           type="button"
           (click)="activeTab.set('telegram')"
           class="flex items-center gap-2 px-3.5 py-2 rounded-xl font-medium transition-all cursor-pointer whitespace-nowrap"
-          [class]="activeTab() === 'telegram' ? 'bg-indigo-600 text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'"
+          [class]="activeTab() === 'telegram' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
         >
           <mat-icon class="!text-sm !w-4 !h-4">smart_toy</mat-icon>
           <span>Telegram Bot &amp; Webhook</span>
@@ -113,7 +113,7 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
           type="button"
           (click)="activeTab.set('openai')"
           class="flex items-center gap-2 px-3.5 py-2 rounded-xl font-medium transition-all cursor-pointer whitespace-nowrap"
-          [class]="activeTab() === 'openai' ? 'bg-indigo-600 text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'"
+          [class]="activeTab() === 'openai' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
         >
           <mat-icon class="!text-sm !w-4 !h-4">analytics</mat-icon>
           <span>OpenAI Telemetrie &amp; Test</span>
@@ -123,11 +123,11 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
       <!-- Tab Content: Users Management -->
       @if (activeTab() === 'users') {
         <div class="space-y-4 animate-in fade-in">
-          <mat-card class="!p-6 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-4">
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-4">
             <div class="flex items-center justify-between">
               <div>
-                <h2 class="text-sm font-semibold text-white">Registrovaní Uživatelé Systému</h2>
-                <p class="text-xs text-zinc-400 mt-0.5">Přiřazujte role uživatelům pro řízení přístupových práv v systému.</p>
+                <h2 class="text-sm font-semibold text-zinc-900 dark:text-white">Registrovaní Uživatelé Systému</h2>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Přiřazujte role uživatelům pro řízení přístupových práv v systému.</p>
               </div>
               <button
                 mat-stroked-button
@@ -141,7 +141,7 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
             </div>
 
             @if (isLoadingUsers()) {
-              <div class="py-8 text-center text-zinc-400 text-xs flex items-center justify-center gap-2">
+              <div class="py-8 text-center text-zinc-500 dark:text-zinc-400 text-xs flex items-center justify-center gap-2">
                 <mat-spinner diameter="20"></mat-spinner>
                 <span>Načítání uživatelů...</span>
               </div>
@@ -149,7 +149,7 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
               <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
                   <thead>
-                    <tr class="border-b border-zinc-800 text-zinc-400">
+                    <tr class="border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400">
                       <th class="py-3 px-3">Uživatel</th>
                       <th class="py-3 px-3">E-mail</th>
                       <th class="py-3 px-3">Přiřazená Role</th>
@@ -157,25 +157,25 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
                       <th class="py-3 px-3 text-right">Akce</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
+                  <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-zinc-700 dark:text-zinc-300">
                     @for (u of users(); track u.id) {
-                      <tr class="hover:bg-zinc-800/30">
+                      <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/30">
                         <td class="py-3 px-3 flex items-center gap-2.5">
                           @if (u.picture) {
                             <img [src]="u.picture" class="h-6 w-6 rounded-full" alt="avatar" />
                           } @else {
-                            <div class="h-6 w-6 rounded-full bg-indigo-600/30 text-indigo-300 flex items-center justify-center font-bold text-[10px]">
+                            <div class="h-6 w-6 rounded-full bg-indigo-100 dark:bg-indigo-600/30 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-[10px]">
                               {{ u.name ? u.name.charAt(0) : 'U' }}
                             </div>
                           }
-                          <span class="font-medium text-white">{{ u.name }}</span>
+                          <span class="font-medium text-zinc-900 dark:text-white">{{ u.name }}</span>
                         </td>
-                        <td class="py-3 px-3 font-mono text-zinc-400">{{ u.email }}</td>
+                        <td class="py-3 px-3 font-mono text-zinc-500 dark:text-zinc-400">{{ u.email }}</td>
                         <td class="py-3 px-3">
                           <select
                             [ngModel]="u.role"
                             (ngModelChange)="onUserRoleChange(u.id, $event)"
-                            class="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
+                            class="px-2.5 py-1 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
                           >
                             @for (role of availableRoles(); track role.id) {
                               <option [value]="role.id">{{ role.name }} ({{ role.id }})</option>
@@ -184,7 +184,7 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
                         </td>
                         <td class="py-3 px-3 text-zinc-500">{{ (u.createdAt | date:'shortDate') || '–' }}</td>
                         <td class="py-3 px-3 text-right">
-                          <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                             Aktivní
                           </span>
                         </td>
@@ -201,37 +201,37 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
       <!-- Tab Content: Roles Management -->
       @if (activeTab() === 'roles') {
         <div class="space-y-6 animate-in fade-in">
-          <mat-card class="!p-6 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-5">
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-5">
             <div class="flex items-center justify-between">
               <div>
-                <h2 class="text-sm font-semibold text-white">Definice Systémových a Uživatelských Rolí</h2>
-                <p class="text-xs text-zinc-400 mt-0.5">Přehled existujících rolí a možnost vytváření nových přístupových skupin.</p>
+                <h2 class="text-sm font-semibold text-zinc-900 dark:text-white">Definice Systémových a Uživatelských Rolí</h2>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Přehled existujících rolí a možnost vytváření nových přístupových skupin.</p>
               </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               @for (r of availableRoles(); track r.id) {
-                <div class="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-3 flex flex-col justify-between">
+                <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 space-y-3 flex flex-col justify-between">
                   <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                      <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/30">
+                      <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
                         {{ r.name }}
                       </span>
                       <span class="text-[11px] font-mono text-zinc-500">Úroveň {{ r.level || 1 }}</span>
                     </div>
-                    <p class="text-xs text-zinc-400">{{ r.description }}</p>
+                    <p class="text-xs text-zinc-600 dark:text-zinc-400">{{ r.description }}</p>
                     <span class="text-[10px] font-mono text-zinc-500 block">ID: {{ r.id }}</span>
                   </div>
 
-                  <div class="flex items-center justify-between pt-2 border-t border-zinc-800/80">
-                    <span class="text-[10px]" [class]="r.isSystem ? 'text-zinc-500' : 'text-amber-400'">
+                  <div class="flex items-center justify-between pt-2 border-t border-zinc-200 dark:border-zinc-800/80">
+                    <span class="text-[10px]" [class]="r.isSystem ? 'text-zinc-500' : 'text-amber-600 dark:text-amber-400'">
                       {{ r.isSystem ? 'Systémová role (Chráněno)' : 'Uživatelská role' }}
                     </span>
                     @if (!r.isSystem) {
                       <button
                         type="button"
                         (click)="deleteCustomRole(r.id)"
-                        class="text-rose-400 hover:text-rose-300 text-xs cursor-pointer flex items-center gap-1"
+                        class="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-xs cursor-pointer flex items-center gap-1"
                         title="Smazat roli"
                       >
                         <mat-icon class="!text-xs !w-3.5 !h-3.5">delete</mat-icon>
@@ -244,26 +244,26 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
             </div>
 
             <!-- Create Custom Role Card -->
-            <div class="pt-4 border-t border-zinc-800 space-y-3">
-              <h3 class="text-xs font-bold text-zinc-200">Vytvořit novou roli</h3>
+            <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+              <h3 class="text-xs font-bold text-zinc-800 dark:text-zinc-200">Vytvořit novou roli</h3>
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <input
                   type="text"
                   [(ngModel)]="newRoleForm.id"
                   placeholder="ID role (např. auditor)"
-                  class="px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono"
+                  class="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono"
                 />
                 <input
                   type="text"
                   [(ngModel)]="newRoleForm.name"
                   placeholder="Název role (např. PBŘ Auditor)"
-                  class="px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+                  class="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
                 />
                 <input
                   type="text"
                   [(ngModel)]="newRoleForm.description"
                   placeholder="Popis oprávnění..."
-                  class="px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+                  class="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
               <div class="flex justify-end">
@@ -287,11 +287,11 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
       <!-- Tab Content: Dynamic Menu Mappings Matrix -->
       @if (activeTab() === 'mappings') {
         <div class="space-y-4 animate-in fade-in">
-          <mat-card class="!p-6 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-4">
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h2 class="text-sm font-semibold text-white">Dynamické Mapování Položek Menu k Rolím</h2>
-                <p class="text-xs text-zinc-400 mt-0.5">Zaškrtněte položky menu, ke kterým má mít každá role přístup v levé navigaci.</p>
+                <h2 class="text-sm font-semibold text-zinc-900 dark:text-white">Dynamické Mapování Položek Menu k Rolím</h2>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Zaškrtněte položky menu, ke kterým má mít každá role přístup v levé navigaci.</p>
               </div>
               <button
                 mat-flat-button
@@ -307,34 +307,34 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
             </div>
 
             <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs border border-zinc-800 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
                 <thead>
-                  <tr class="bg-zinc-950 border-b border-zinc-800 text-zinc-300">
+                  <tr class="bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
                     <th class="py-3 px-4">Položka Menu</th>
                     <th class="py-3 px-4">Kategorie</th>
                     @for (r of availableRoles(); track r.id) {
-                      <th class="py-3 px-3 text-center font-semibold font-mono text-indigo-300">{{ r.name }}</th>
+                      <th class="py-3 px-3 text-center font-semibold font-mono text-indigo-700 dark:text-indigo-300">{{ r.name }}</th>
                     }
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-zinc-800/60 bg-zinc-900/50 text-zinc-200">
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800/60 bg-white dark:bg-zinc-900/50 text-zinc-800 dark:text-zinc-200">
                   @for (item of allMenuItems(); track item.id) {
-                    <tr class="hover:bg-zinc-800/40">
-                      <td class="py-3 px-4 flex items-center gap-2">
-                        <span>{{ item.icon }}</span>
+                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
+                      <td class="py-3 px-4 flex items-center gap-2.5">
+                        <mat-icon class="!text-base !w-4 !h-4 text-zinc-400 dark:text-zinc-500 flex-shrink-0">{{ item.icon }}</mat-icon>
                         <div>
-                          <strong class="block text-white">{{ item.label }}</strong>
+                          <strong class="block text-zinc-900 dark:text-white">{{ item.label }}</strong>
                           <span class="text-[10px] text-zinc-500">{{ item.description }}</span>
                         </div>
                       </td>
-                      <td class="py-3 px-4 text-zinc-400">{{ item.category }}</td>
+                      <td class="py-3 px-4 text-zinc-500 dark:text-zinc-400">{{ item.category }}</td>
                       @for (r of availableRoles(); track r.id) {
                         <td class="py-3 px-3 text-center">
                           <input
                             type="checkbox"
                             [checked]="isMenuAllowed(item.id, r.id)"
                             (change)="toggleMenuMapping(item.id, r.id, $event)"
-                            class="rounded bg-zinc-950 border-zinc-700 text-indigo-600 focus:ring-0 h-4 w-4 cursor-pointer"
+                            class="rounded bg-zinc-50 dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 text-indigo-600 focus:ring-0 h-4 w-4 cursor-pointer"
                           />
                         </td>
                       }
@@ -351,11 +351,11 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
       @if (activeTab() === 'telegram') {
         <div class="space-y-6 animate-in fade-in">
           <!-- Bot Profile & Status -->
-          <mat-card class="!p-6 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-5">
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-5">
             <div class="flex items-center justify-between">
               <div>
-                <h2 class="text-sm font-semibold text-white">Stav Telegram Bota &amp; Webhook</h2>
-                <p class="text-xs text-zinc-400 mt-0.5">GrammY integrace, telemetrie webhooku a doručování zpráv.</p>
+                <h2 class="text-sm font-semibold text-zinc-900 dark:text-white">Stav Telegram Bota &amp; Webhook</h2>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">GrammY integrace, telemetrie webhooku a doručování zpráv.</p>
               </div>
               <button
                 mat-stroked-button
@@ -369,41 +369,41 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-              <div class="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800">
+              <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800">
                 <span class="text-zinc-500 block mb-1">Bot Username &amp; Název</span>
-                <span class="text-sm font-semibold text-white">{{ telegramData()?.bot?.username ? ('@' + telegramData()?.bot?.username) : '@MarcPB_bot' }}</span>
+                <span class="text-sm font-semibold text-zinc-900 dark:text-white">{{ telegramData()?.bot?.username ? ('@' + telegramData()?.bot?.username) : '@MarcPB_bot' }}</span>
                 <span class="text-[10px] text-zinc-500 block mt-0.5">{{ telegramData()?.bot?.first_name || 'MARC System Bot' }}</span>
               </div>
 
-              <div class="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800">
+              <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800">
                 <span class="text-zinc-500 block mb-1">Webhook URL</span>
-                <span class="text-xs font-mono text-zinc-200 block truncate">{{ telegramData()?.webhook?.url || 'Nenastaveno' }}</span>
+                <span class="text-xs font-mono text-zinc-700 dark:text-zinc-200 block truncate">{{ telegramData()?.webhook?.url || 'Nenastaveno' }}</span>
                 <span class="text-[10px] text-zinc-500 block mt-0.5">Čekající zprávy: {{ telegramData()?.webhook?.pending_update_count || 0 }}</span>
               </div>
 
-              <div class="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800">
+              <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800">
                 <span class="text-zinc-500 block mb-1">Stav Webhooku</span>
                 <span
                   class="inline-block px-2.5 py-1 rounded text-[10px] font-semibold"
-                  [class]="telegramData()?.webhook?.url ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'"
+                  [class]="telegramData()?.webhook?.url ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20' : 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20'"
                 >
                   {{ telegramData()?.webhook?.url ? '✓ Webhook Aktivní' : 'Nekonfigurováno' }}
                 </span>
                 @if (telegramData()?.webhook?.last_error_message) {
-                  <span class="text-[10px] text-rose-400 block mt-1 truncate">Chyba: {{ telegramData()?.webhook?.last_error_message }}</span>
+                  <span class="text-[10px] text-rose-600 dark:text-rose-400 block mt-1 truncate">Chyba: {{ telegramData()?.webhook?.last_error_message }}</span>
                 }
               </div>
             </div>
 
             <!-- Set Webhook URL -->
-            <div class="space-y-2 pt-2 border-t border-zinc-800">
-              <label class="block text-xs font-semibold text-zinc-300">Nastavit Webhook URL</label>
+            <div class="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+              <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">Nastavit Webhook URL</label>
               <div class="flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   [(ngModel)]="customWebhookUrl"
                   placeholder="https://your-domain.vercel.app/api/telegram/webhook"
-                  class="flex-1 px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono"
+                  class="flex-1 px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono"
                 />
                 <div class="flex items-center gap-2">
                   <button
@@ -420,7 +420,7 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
                     mat-button
                     type="button"
                     (click)="deleteWebhook()"
-                    class="!rounded-xl !text-rose-400 !text-xs whitespace-nowrap"
+                    class="!rounded-xl !text-rose-600 dark:!text-rose-400 !text-xs whitespace-nowrap"
                   >
                     Smazat webhook
                   </button>
@@ -429,11 +429,11 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
             </div>
 
             <!-- Send Broadcast Deployment Notification -->
-            <div class="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-3">
+            <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 space-y-3">
               <div class="flex items-center justify-between">
                 <div>
-                  <p class="text-xs font-semibold text-white">Hromadné Odeslání Deployment Notifikace</p>
-                  <p class="text-[11px] text-zinc-400">Odešle zprávu do Telegramu všem aktivním odběratelům o nasazení nové verze.</p>
+                  <p class="text-xs font-semibold text-zinc-900 dark:text-white">Hromadné Odeslání Deployment Notifikace</p>
+                  <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Odešle zprávu do Telegramu všem aktivním odběratelům o nasazení nové verze.</p>
                 </div>
                 <button
                   mat-flat-button
@@ -453,24 +453,24 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
                   type="text"
                   [(ngModel)]="broadcastForm.version"
                   placeholder="Verze (např. v2.4.0-angular-spa)"
-                  class="px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500"
+                  class="px-3 py-2 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500"
                 />
                 <input
                   type="text"
                   [(ngModel)]="broadcastForm.releaseNotes"
                   placeholder="Release notes / popis změn..."
-                  class="px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500"
+                  class="px-3 py-2 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500"
                 />
               </div>
             </div>
           </mat-card>
 
           <!-- Telegram Message Log History -->
-          <mat-card class="!p-6 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-4">
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h3 class="text-sm font-semibold text-white">Historie Zpráv Telegramu</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Záznam příchozích a odchozích zpráv bota.</p>
+                <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">Historie Zpráv Telegramu</h3>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Záznam příchozích a odchozích zpráv bota.</p>
               </div>
               <button
                 mat-stroked-button
@@ -486,28 +486,28 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
                 <thead>
-                  <tr class="border-b border-zinc-800 text-zinc-400">
+                  <tr class="border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400">
                     <th class="py-2.5 px-3">Směr</th>
                     <th class="py-2.5 px-3">Uživatel / Chat</th>
                     <th class="py-2.5 px-3">Text Zprávy</th>
                     <th class="py-2.5 px-3">Čas</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-zinc-700 dark:text-zinc-300">
                   @for (msg of telegramMessages(); track msg.id) {
-                    <tr class="hover:bg-zinc-800/30">
+                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/30">
                       <td class="py-2.5 px-3">
                         <span
                           class="px-2 py-0.5 rounded text-[10px] font-semibold"
-                          [class]="msg.direction === 'incoming' ? 'bg-sky-500/10 text-sky-400' : 'bg-purple-500/10 text-purple-400'"
+                          [class]="msg.direction === 'incoming' ? 'bg-sky-100 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400' : 'bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400'"
                         >
                           {{ msg.direction === 'incoming' ? 'Příchozí' : 'Odchozí' }}
                         </span>
                       </td>
-                      <td class="py-2.5 px-3 font-mono text-zinc-400">
+                      <td class="py-2.5 px-3 font-mono text-zinc-500 dark:text-zinc-400">
                         {{ msg.firstName || msg.username || msg.chatId }}
                       </td>
-                      <td class="py-2.5 px-3 text-zinc-200 max-w-md truncate">
+                      <td class="py-2.5 px-3 text-zinc-800 dark:text-zinc-200 max-w-md truncate">
                         {{ msg.text || '–' }}
                       </td>
                       <td class="py-2.5 px-3 text-zinc-500">{{ msg.createdAt | date:'short' }}</td>
@@ -524,11 +524,11 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
       @if (activeTab() === 'openai') {
         <div class="space-y-6 animate-in fade-in">
           <!-- Metrics Overview -->
-          <mat-card class="!p-6 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-5">
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-5">
             <div class="flex items-center justify-between">
               <div>
-                <h2 class="text-sm font-semibold text-white">OpenAI Telemetrie &amp; Využití Tokenů</h2>
-                <p class="text-xs text-zinc-400 mt-0.5">Statistiky volání AI API, spotřebovaných tokenů a nákladů.</p>
+                <h2 class="text-sm font-semibold text-zinc-900 dark:text-white">OpenAI Telemetrie &amp; Využití Tokenů</h2>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Statistiky volání AI API, spotřebovaných tokenů a nákladů.</p>
               </div>
               <button
                 mat-stroked-button
@@ -543,39 +543,39 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
 
             @if (openAiUsage(); as usage) {
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                <div class="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800">
+                <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800">
                   <span class="text-zinc-500 block mb-1">Celkem požadavků</span>
-                  <span class="text-lg font-bold text-white">{{ usage.totalRequests }}</span>
+                  <span class="text-lg font-bold text-zinc-900 dark:text-white">{{ usage.totalRequests }}</span>
                 </div>
 
-                <div class="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800">
+                <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800">
                   <span class="text-zinc-500 block mb-1">Spotřebované Tokeny</span>
-                  <span class="text-lg font-bold text-indigo-400">{{ usage.totalTokens }}</span>
+                  <span class="text-lg font-bold text-indigo-600 dark:text-indigo-400">{{ usage.totalTokens }}</span>
                 </div>
 
-                <div class="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800">
+                <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800">
                   <span class="text-zinc-500 block mb-1">Odhadovaná Cena USD</span>
-                  <span class="text-lg font-bold text-emerald-400">&#36;{{ usage.estimatedTotalCostUsd | number:'1.4-4' }}</span>
+                  <span class="text-lg font-bold text-emerald-600 dark:text-emerald-400">&#36;{{ usage.estimatedTotalCostUsd | number:'1.4-4' }}</span>
                 </div>
 
-                <div class="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800">
+                <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800">
                   <span class="text-zinc-500 block mb-1">Průměrná Latence</span>
-                  <span class="text-lg font-bold text-white">{{ usage.averageDurationMs }} ms</span>
+                  <span class="text-lg font-bold text-zinc-900 dark:text-white">{{ usage.averageDurationMs }} ms</span>
                 </div>
               </div>
 
               <!-- Models breakdown -->
               @if (usage.modelsUsed && usage.modelsUsed.length > 0) {
                 <div class="space-y-3 pt-2">
-                  <h3 class="text-xs font-bold text-zinc-200">Využití dle Jednotlivých Modelů</h3>
+                  <h3 class="text-xs font-bold text-zinc-800 dark:text-zinc-200">Využití dle Jednotlivých Modelů</h3>
                   <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     @for (m of usage.modelsUsed; track m.model) {
-                      <div class="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800 text-xs space-y-1">
+                      <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 text-xs space-y-1">
                         <div class="flex items-center justify-between font-semibold">
-                          <span class="text-white">{{ m.model }}</span>
-                          <span class="text-emerald-400 font-mono">&#36;{{ m.estimatedCostUsd | number:'1.4-4' }}</span>
+                          <span class="text-zinc-900 dark:text-white">{{ m.model }}</span>
+                          <span class="text-emerald-600 dark:text-emerald-400 font-mono">&#36;{{ m.estimatedCostUsd | number:'1.4-4' }}</span>
                         </div>
-                        <p class="text-[11px] text-zinc-400">Požadavky: {{ m.requestsCount }} • Tokeny: {{ m.totalTokens }}</p>
+                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Požadavky: {{ m.requestsCount }} • Tokeny: {{ m.totalTokens }}</p>
                       </div>
                     }
                   </div>
@@ -585,29 +585,29 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
           </mat-card>
 
           <!-- Live AI Test Playground -->
-          <mat-card class="!p-6 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-4">
-            <h3 class="text-sm font-semibold text-white flex items-center gap-1.5">
-              <mat-icon class="!text-sm !w-4 !h-4 text-indigo-400">science</mat-icon>
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-4">
+            <h3 class="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-1.5">
+              <mat-icon class="!text-sm !w-4 !h-4 text-indigo-600 dark:text-indigo-400">science</mat-icon>
               <span>OpenAI Testovací Playground</span>
             </h3>
             <div class="space-y-3 text-xs">
               <div class="space-y-1">
-                <label class="font-semibold text-zinc-300">Systémový prompt (Volitelný)</label>
+                <label class="font-semibold text-zinc-700 dark:text-zinc-300">Systémový prompt (Volitelný)</label>
                 <input
                   type="text"
                   [(ngModel)]="playgroundSystemPrompt"
                   placeholder="Jsi zkušený stavební inženýr..."
-                  class="w-full px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500"
+                  class="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500"
                 />
               </div>
 
               <div class="space-y-1">
-                <label class="font-semibold text-zinc-300">Uživatelský prompt pro test</label>
+                <label class="font-semibold text-zinc-700 dark:text-zinc-300">Uživatelský prompt pro test</label>
                 <textarea
                   rows="3"
                   [(ngModel)]="playgroundPrompt"
                   placeholder="Zadejte testovací dotaz..."
-                  class="w-full px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 font-mono"
+                  class="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 font-mono"
                 ></textarea>
               </div>
 
@@ -626,12 +626,12 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
               </div>
 
               @if (playgroundResponse()) {
-                <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2 mt-3">
-                  <span class="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
+                <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2 mt-3">
+                  <span class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                     <mat-icon class="!text-xs !w-3.5 !h-3.5">check_circle</mat-icon>
                     Výstup modelu:
                   </span>
-                  <div class="font-sans text-xs text-zinc-200 whitespace-pre-wrap leading-relaxed">
+                  <div class="font-sans text-xs text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap leading-relaxed">
                     {{ playgroundResponse() }}
                   </div>
                 </div>
@@ -640,18 +640,18 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
           </mat-card>
 
           <!-- Message Logs History -->
-          <mat-card class="!p-6 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-4">
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-4">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="text-sm font-semibold text-white">Historie OpenAI Volání</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Posledních 50 zaznamenaných požadavků na AI modely.</p>
+                <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">Historie OpenAI Volání</h3>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Posledních 50 zaznamenaných požadavků na AI modely.</p>
               </div>
               <div class="flex items-center gap-2">
                 <button
                   mat-button
                   type="button"
                   (click)="clearOpenAiLogs()"
-                  class="!rounded-xl !text-rose-400 !text-xs"
+                  class="!rounded-xl !text-rose-600 dark:!text-rose-400 !text-xs"
                 >
                   Smazat historii
                 </button>
@@ -670,7 +670,7 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
                 <thead>
-                  <tr class="border-b border-zinc-800 text-zinc-400">
+                  <tr class="border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400">
                     <th class="py-2.5 px-3">Model</th>
                     <th class="py-2.5 px-3">Prompt</th>
                     <th class="py-2.5 px-3">Tokeny</th>
@@ -678,17 +678,17 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
                     <th class="py-2.5 px-3 text-right">Stav</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-zinc-700 dark:text-zinc-300">
                   @for (log of openAiLogs(); track log.id) {
-                    <tr class="hover:bg-zinc-800/30">
-                      <td class="py-2.5 px-3 font-semibold text-white">{{ log.model }}</td>
-                      <td class="py-2.5 px-3 text-zinc-300 max-w-sm truncate">{{ log.prompt }}</td>
-                      <td class="py-2.5 px-3 font-mono text-zinc-400">{{ log.totalTokens }}</td>
+                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/30">
+                      <td class="py-2.5 px-3 font-semibold text-zinc-900 dark:text-white">{{ log.model }}</td>
+                      <td class="py-2.5 px-3 text-zinc-700 dark:text-zinc-300 max-w-sm truncate">{{ log.prompt }}</td>
+                      <td class="py-2.5 px-3 font-mono text-zinc-500 dark:text-zinc-400">{{ log.totalTokens }}</td>
                       <td class="py-2.5 px-3 text-zinc-500">{{ log.createdAt | date:'shortTime' }}</td>
                       <td class="py-2.5 px-3 text-right">
                         <span
                           class="px-2 py-0.5 rounded text-[10px] font-semibold"
-                          [class]="log.status === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'"
+                          [class]="log.status === 'success' ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400'"
                         >
                           {{ log.status }}
                         </span>

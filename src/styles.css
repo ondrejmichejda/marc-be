@@ -1,8 +1,21 @@
 @import "@angular/material/prebuilt-themes/azure-blue.css";
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #f8fafc;
+    --color-bg-card: #ffffff;
+    --color-border: #e2e8f0;
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #64748b;
+    --color-accent: #3b82f6;
+  }
+
+  .dark,
+  :root.dark {
     --color-bg-primary: #030712;
     --color-bg-secondary: #111827;
     --color-bg-card: #1f2937;
@@ -20,10 +33,27 @@ html, body {
 body {
   margin: 0;
   padding: 0;
-  background-color: #030712;
-  color: #f3f4f6;
+  background-color: #f8fafc;
+  color: #0f172a;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   overflow: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dark body,
+html.dark body {
+  background-color: #030712;
+  color: #f3f4f6;
+}
+
+/* Material Icons baseline centering */
+.mat-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle;
+  line-height: 1 !important;
+  overflow: visible !important;
 }
 
 app-root,
@@ -33,73 +63,176 @@ app-layout {
   width: 100%;
 }
 
-/* Material dark theme custom utility overrides */
-.mat-mdc-card {
+/* Material theme overrides for Light mode */
+html:not(.dark) .mat-mdc-card {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem !important;
+}
+
+html:not(.dark) .mat-mdc-form-field {
+  width: 100%;
+}
+
+html:not(.dark) .mat-mdc-form-field-appearance-outline .mat-mdc-text-field-wrapper {
+  background-color: #f8fafc !important;
+  border-radius: 0.5rem !important;
+}
+
+html:not(.dark) .mat-mdc-text-field-wrapper .mat-mdc-form-field-input-control {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .mat-mdc-form-field-appearance-outline .mdc-notched-outline__leading,
+html:not(.dark) .mat-mdc-form-field-appearance-outline .mdc-notched-outline__notch,
+html:not(.dark) .mat-mdc-form-field-appearance-outline .mdc-notched-outline__trailing {
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) .mat-mdc-tab-header {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+html:not(.dark) .mat-mdc-tab .mdc-tab__text-label {
+  color: #64748b !important;
+}
+
+html:not(.dark) .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+  color: #2563eb !important;
+  font-weight: 600 !important;
+}
+
+html:not(.dark) .mat-mdc-snack-bar-container .mdc-snackbar__surface {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 0.5rem !important;
+}
+
+html:not(.dark) .mat-mdc-menu-panel {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+}
+
+html:not(.dark) .mat-mdc-menu-item {
+  color: #334155 !important;
+}
+
+html:not(.dark) .mat-mdc-menu-item:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .mat-mdc-unelevated-button:disabled,
+html:not(.dark) .mat-mdc-raised-button:disabled,
+html:not(.dark) .mat-mdc-flat-button:disabled {
+  background-color: #e2e8f0 !important;
+  color: #94a3b8 !important;
+}
+
+/* Material theme overrides for Dark mode */
+.dark .mat-mdc-card {
   background-color: #111827 !important;
   color: #f3f4f6 !important;
   border: 1px solid #1f2937 !important;
   border-radius: 0.75rem !important;
 }
 
-.mat-mdc-form-field {
+.dark .mat-mdc-form-field {
   width: 100%;
 }
 
-.mat-mdc-form-field-appearance-outline .mat-mdc-text-field-wrapper {
+.dark .mat-mdc-form-field-appearance-outline .mat-mdc-text-field-wrapper {
   background-color: #1f2937 !important;
   border-radius: 0.5rem !important;
 }
 
-.mat-mdc-text-field-wrapper .mat-mdc-form-field-input-control {
+.dark .mat-mdc-text-field-wrapper .mat-mdc-form-field-input-control {
   color: #f9fafb !important;
 }
 
-.mat-mdc-form-field-appearance-outline .mdc-notched-outline__leading,
-.mat-mdc-form-field-appearance-outline .mdc-notched-outline__notch,
-.mat-mdc-form-field-appearance-outline .mdc-notched-outline__trailing {
+.dark .mat-mdc-form-field-appearance-outline .mdc-notched-outline__leading,
+.dark .mat-mdc-form-field-appearance-outline .mdc-notched-outline__notch,
+.dark .mat-mdc-form-field-appearance-outline .mdc-notched-outline__trailing {
   border-color: #374151 !important;
 }
 
-.mat-mdc-tab-header {
+.dark .mat-mdc-tab-header {
   background-color: #111827 !important;
   border-bottom: 1px solid #1f2937 !important;
 }
 
-.mat-mdc-tab .mdc-tab__text-label {
+.dark .mat-mdc-tab .mdc-tab__text-label {
   color: #9ca3af !important;
 }
 
-.mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+.dark .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
   color: #60a5fa !important;
   font-weight: 600 !important;
 }
 
-.mat-mdc-snack-bar-container .mdc-snackbar__surface {
+.dark .mat-mdc-snack-bar-container .mdc-snackbar__surface {
   background-color: #1e293b !important;
   color: #f8fafc !important;
   border: 1px solid #334155 !important;
   border-radius: 0.5rem !important;
 }
 
-.mat-mdc-unelevated-button:disabled,
-.mat-mdc-raised-button:disabled,
-.mat-mdc-flat-button:disabled {
+.dark .mat-mdc-menu-panel {
+  background-color: #18181b !important;
+  border: 1px solid #27272a !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .mat-mdc-menu-item {
+  color: #d4d4d8 !important;
+}
+
+.dark .mat-mdc-menu-item:hover {
+  background-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+.dark .mat-mdc-unelevated-button:disabled,
+.dark .mat-mdc-raised-button:disabled,
+.dark .mat-mdc-flat-button:disabled {
   background-color: #374151 !important;
   color: #9ca3af !important;
 }
 
-/* Custom scrollbars */
-::-webkit-scrollbar {
+/* Custom scrollbars - Light */
+html:not(.dark) ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-::-webkit-scrollbar-track {
+html:not(.dark) ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Custom scrollbars - Dark */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.dark ::-webkit-scrollbar-track {
   background: #111827;
 }
-::-webkit-scrollbar-thumb {
+.dark ::-webkit-scrollbar-thumb {
   background: #374151;
   border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover {
+.dark ::-webkit-scrollbar-thumb:hover {
   background: #4b5563;
 }

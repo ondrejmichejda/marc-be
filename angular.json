@@ -28,7 +28,10 @@
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": "assets"
-              }
+              },
+              "src/favicon.ico",
+              "src/favicon.svg",
+              "src/apple-touch-icon.png"
             ],
             "styles": [
               "src/styles.css"

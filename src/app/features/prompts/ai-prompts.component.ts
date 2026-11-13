@@ -75,11 +75,11 @@ const QUICK_PRESETS: QuickPreset[] = [
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            <mat-icon class="!text-indigo-400">schedule</mat-icon>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
+            <mat-icon class="!text-indigo-600 dark:text-indigo-400">schedule</mat-icon>
             <span>Naplánované AI Prompty (Vercel Cron)</span>
           </h1>
-          <p class="text-xs sm:text-sm text-zinc-400 mt-1">
+          <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
             Automatické periodické spouštění AI promptů v pevných slotech (6:00, 9:00, 13:00, 17:00) a odesílání do Telegramu.
           </p>
         </div>
@@ -100,46 +100,46 @@ const QUICK_PRESETS: QuickPreset[] = [
 
       <!-- Messages -->
       @if (successMessage()) {
-        <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-200 text-xs flex items-center justify-between animate-in fade-in">
-          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-emerald-400">check_circle</mat-icon> {{ successMessage() }}</span>
-          <button type="button" (click)="successMessage.set(null)" class="text-emerald-400 hover:text-white">✕</button>
+        <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between animate-in fade-in">
+          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-emerald-600 dark:text-emerald-400">check_circle</mat-icon> {{ successMessage() }}</span>
+          <button type="button" (click)="successMessage.set(null)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-white">✕</button>
         </div>
       }
       @if (errorMessage()) {
-        <div class="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs flex items-center justify-between animate-in fade-in">
-          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-rose-400">error</mat-icon> {{ errorMessage() }}</span>
-          <button type="button" (click)="errorMessage.set(null)" class="text-rose-400 hover:text-white">✕</button>
+        <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs flex items-center justify-between animate-in fade-in">
+          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-rose-600 dark:text-rose-400">error</mat-icon> {{ errorMessage() }}</span>
+          <button type="button" (click)="errorMessage.set(null)" class="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-white">✕</button>
         </div>
       }
 
       <!-- Summary Metrics Cards -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <mat-card class="!p-4 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-sm space-y-1">
-          <span class="text-[11px] font-medium text-zinc-400 block">Celkem promptů</span>
-          <p class="text-xl sm:text-2xl font-bold text-white">{{ summary()?.total || prompts().length }}</p>
+        <mat-card class="!p-4 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm space-y-1">
+          <span class="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 block">Celkem promptů</span>
+          <p class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">{{ summary()?.total || prompts().length }}</p>
         </mat-card>
 
-        <mat-card class="!p-4 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-sm space-y-1">
-          <span class="text-[11px] font-medium text-emerald-400 block">Aktivní v plánovači</span>
-          <p class="text-xl sm:text-2xl font-bold text-emerald-300">{{ summary()?.active || 0 }}</p>
+        <mat-card class="!p-4 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm space-y-1">
+          <span class="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 block">Aktivní v plánovači</span>
+          <p class="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-300">{{ summary()?.active || 0 }}</p>
         </mat-card>
 
-        <mat-card class="!p-4 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-sm space-y-1">
-          <span class="text-[11px] font-medium text-amber-400 block">Pozastavené</span>
-          <p class="text-xl sm:text-2xl font-bold text-amber-300">{{ summary()?.paused || 0 }}</p>
+        <mat-card class="!p-4 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm space-y-1">
+          <span class="text-[11px] font-medium text-amber-600 dark:text-amber-400 block">Pozastavené</span>
+          <p class="text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-300">{{ summary()?.paused || 0 }}</p>
         </mat-card>
 
-        <mat-card class="!p-4 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-sm space-y-1">
-          <span class="text-[11px] font-medium text-indigo-400 block">Časové sloty</span>
-          <p class="text-xl sm:text-2xl font-bold text-indigo-300">4 / den</p>
+        <mat-card class="!p-4 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm space-y-1">
+          <span class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 block">Časové sloty</span>
+          <p class="text-xl sm:text-2xl font-bold text-indigo-600 dark:text-indigo-300">4 / den</p>
         </mat-card>
       </div>
 
       <!-- Quick Preset Templates -->
-      <mat-card class="!p-5 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-3">
+      <mat-card class="!p-5 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:border-zinc-800 !shadow-sm dark:!shadow-lg space-y-3">
         <div class="flex items-center justify-between">
-          <h2 class="text-xs font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-            <mat-icon class="!text-amber-400 !text-sm !w-4 !h-4">auto_awesome</mat-icon>
+          <h2 class="text-xs font-bold text-zinc-700 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-2">
+            <mat-icon class="!text-amber-500 dark:!text-amber-400 !text-sm !w-4 !h-4">auto_awesome</mat-icon>
             <span>Rychlé předvolby &amp; Šablony slotů</span>
           </h2>
           <span class="text-[11px] text-zinc-500">Kliknutím předvyplníte nový prompt</span>
@@ -150,18 +150,18 @@ const QUICK_PRESETS: QuickPreset[] = [
             <div
               matRipple
               (click)="applyPreset(preset)"
-              class="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 hover:border-indigo-500/50 hover:bg-indigo-950/20 transition-all cursor-pointer space-y-2 group overflow-hidden"
+              class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800/80 hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-all cursor-pointer space-y-2 group overflow-hidden"
             >
               <div class="flex items-center justify-between">
                 <span class="text-base">{{ preset.icon }}</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-zinc-800 text-zinc-300 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                   {{ preset.time }}
                 </span>
               </div>
-              <h4 class="text-xs font-semibold text-white group-hover:text-indigo-300 transition-colors line-clamp-1">
+              <h4 class="text-xs font-semibold text-zinc-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors line-clamp-1">
                 {{ preset.title }}
               </h4>
-              <p class="text-[11px] text-zinc-400 line-clamp-2 leading-relaxed">
+              <p class="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">
                 {{ preset.prompt }}
               </p>
             </div>
@@ -170,20 +170,20 @@ const QUICK_PRESETS: QuickPreset[] = [
       </mat-card>
 
       <!-- Vercel Cron Simulation Panel -->
-      <mat-card class="!p-5 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 !shadow-lg space-y-4">
+      <mat-card class="!p-5 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h2 class="text-sm font-semibold text-white flex items-center gap-2">
-              <mat-icon class="!text-indigo-400 !text-sm !w-4 !h-4">play_circle</mat-icon>
+            <h2 class="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+              <mat-icon class="!text-indigo-600 dark:text-indigo-400 !text-sm !w-4 !h-4">play_circle</mat-icon>
               <span>Testovací Spuštění Vercel Cron Běhu</span>
             </h2>
-            <p class="text-xs text-zinc-400 mt-0.5">
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
               Simulujte zavolání cron webhooku pro jednotlivé časové sloty nebo všechny sloty najednou.
             </p>
           </div>
 
           @if (isTriggeringCron()) {
-            <span class="text-xs font-medium text-indigo-400 flex items-center gap-2">
+            <span class="text-xs font-medium text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
               <mat-spinner diameter="16"></mat-spinner>
               <span>Vykonávám cron dávku...</span>
             </span>
@@ -241,25 +241,25 @@ const QUICK_PRESETS: QuickPreset[] = [
         </div>
 
         @if (cronSummary(); as cs) {
-          <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-xs space-y-2 animate-in fade-in">
+          <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs space-y-2 animate-in fade-in">
             <div class="flex items-center justify-between font-semibold">
-              <span class="text-white">Výsledek dávkového běhu ({{ cs.targetTime }}):</span>
-              <span class="text-zinc-400">Nalezeno: {{ cs.totalFound }} • Úspěšně: {{ cs.successful }} • Selhalo: {{ cs.failed }}</span>
+              <span class="text-zinc-900 dark:text-white">Výsledek dávkového běhu ({{ cs.targetTime }}):</span>
+              <span class="text-zinc-500 dark:text-zinc-400">Nalezeno: {{ cs.totalFound }} • Úspěšně: {{ cs.successful }} • Selhalo: {{ cs.failed }}</span>
             </div>
             @if (cs.results && cs.results.length > 0) {
-              <div class="divide-y divide-zinc-800/60 max-h-48 overflow-y-auto pr-1">
+              <div class="divide-y divide-zinc-200 dark:divide-zinc-800/60 max-h-48 overflow-y-auto pr-1">
                 @for (r of cs.results; track r.promptId) {
                   <div class="py-2 flex items-center justify-between gap-2">
                     <div class="truncate">
-                      <span class="font-medium text-zinc-200">{{ r.title }}</span>
+                      <span class="font-medium text-zinc-900 dark:text-zinc-200">{{ r.title }}</span>
                       <span class="text-[10px] text-zinc-500 ml-2">({{ r.durationMs }} ms)</span>
                       @if (r.telegramDelivery?.sent) {
-                        <span class="text-[10px] text-emerald-400 ml-2">✓ Telegram odeslán</span>
+                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 ml-2">✓ Telegram odeslán</span>
                       }
                     </div>
                     <span
                       class="px-2 py-0.5 rounded text-[10px] font-semibold"
-                      [class]="r.success ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'"
+                      [class]="r.success ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400'"
                     >
                       {{ r.success ? 'OK' : 'Chyba' }}
                     </span>
@@ -272,16 +272,16 @@ const QUICK_PRESETS: QuickPreset[] = [
       </mat-card>
 
       <!-- Search & Slot Filter Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 shadow-xs dark:shadow-none">
         <div class="relative flex-1 max-w-md">
           <input
             type="text"
             [ngModel]="searchQuery()"
             (ngModelChange)="searchQuery.set($event)"
             placeholder="Hledat v názvech a textech promptů..."
-            class="w-full pl-9 pr-4 py-2 rounded-xl bg-zinc-800/80 border border-zinc-700/60 text-xs text-white placeholder-zinc-400 focus:outline-none focus:border-indigo-500"
+            class="w-full pl-9 pr-4 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
           />
-          <mat-icon class="!text-zinc-400 !text-sm !w-4 !h-4 absolute left-3 top-2.5">search</mat-icon>
+          <mat-icon class="!text-zinc-400 dark:!text-zinc-500 !text-sm !w-4 !h-4 absolute left-3 top-2.5">search</mat-icon>
         </div>
 
         <div class="flex items-center gap-1.5 overflow-x-auto text-xs">
@@ -289,7 +289,7 @@ const QUICK_PRESETS: QuickPreset[] = [
             type="button"
             (click)="selectedTimeFilter.set('all')"
             class="px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === 'all' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'"
+            [class]="selectedTimeFilter() === 'all' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
           >
             Všechny časy
           </button>
@@ -297,7 +297,7 @@ const QUICK_PRESETS: QuickPreset[] = [
             type="button"
             (click)="selectedTimeFilter.set('6am')"
             class="px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === '6am' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'"
+            [class]="selectedTimeFilter() === '6am' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
           >
             🌄 6:00 AM
           </button>
@@ -305,7 +305,7 @@ const QUICK_PRESETS: QuickPreset[] = [
             type="button"
             (click)="selectedTimeFilter.set('9am')"
             class="px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === '9am' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'"
+            [class]="selectedTimeFilter() === '9am' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
           >
             🌅 9:00 AM
           </button>
@@ -313,7 +313,7 @@ const QUICK_PRESETS: QuickPreset[] = [
             type="button"
             (click)="selectedTimeFilter.set('1pm')"
             class="px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === '1pm' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'"
+            [class]="selectedTimeFilter() === '1pm' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
           >
             ☀️ 13:00 PM
           </button>
@@ -321,7 +321,7 @@ const QUICK_PRESETS: QuickPreset[] = [
             type="button"
             (click)="selectedTimeFilter.set('5pm')"
             class="px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === '5pm' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'"
+            [class]="selectedTimeFilter() === '5pm' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
           >
             🌇 17:00 PM
           </button>
@@ -330,24 +330,24 @@ const QUICK_PRESETS: QuickPreset[] = [
 
       <!-- Prompts List Grid -->
       @if (isLoading()) {
-        <div class="py-16 text-center text-zinc-400 text-sm flex flex-col items-center justify-center gap-3">
+        <div class="py-16 text-center text-zinc-500 dark:text-zinc-400 text-sm flex flex-col items-center justify-center gap-3">
           <mat-spinner diameter="32"></mat-spinner>
           <span>Načítání naplánovaných promptů...</span>
         </div>
       } @else if (filteredPrompts().length === 0) {
-        <div class="py-16 text-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/30 text-zinc-400 space-y-3">
-          <mat-icon class="!text-4xl !w-10 !h-10 text-zinc-500 mx-auto">schedule</mat-icon>
-          <p class="text-sm font-medium text-zinc-300">Žádné naplánované prompty pro zvolený filtr</p>
-          <p class="text-xs text-zinc-500 max-w-sm mx-auto">Vytvořte naplánovaný prompt nebo použijte jednu z rychlých šablon výše.</p>
+        <div class="py-16 text-center rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/30 text-zinc-500 dark:text-zinc-400 space-y-3 shadow-xs dark:shadow-none">
+          <mat-icon class="!text-4xl !w-10 !h-10 text-zinc-400 dark:text-zinc-500 mx-auto">schedule</mat-icon>
+          <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-300">Žádné naplánované prompty pro zvolený filtr</p>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">Vytvořte naplánovaný prompt nebo použijte jednu z rychlých šablon výše.</p>
         </div>
       } @else {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           @for (p of filteredPrompts(); track p.id) {
-            <mat-card class="flex flex-col justify-between !p-5 !rounded-2xl !bg-zinc-900/80 !border !border-zinc-800 hover:!border-zinc-700 transition-all space-y-4 !shadow-lg group">
+            <mat-card class="flex flex-col justify-between !p-5 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 hover:!border-zinc-300 dark:hover:!border-zinc-700 transition-all space-y-4 !shadow-sm dark:!shadow-lg group">
               <div class="space-y-3">
                 <div class="flex items-start justify-between gap-3">
                   <div>
-                    <h3 class="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors">
+                    <h3 class="text-sm font-bold text-zinc-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
                       {{ p.title }}
                     </h3>
                     <div class="flex items-center gap-2 mt-1">
@@ -364,25 +364,25 @@ const QUICK_PRESETS: QuickPreset[] = [
                     color="primary"
                     [matTooltip]="p.isActive ? 'Kliknutím pozastavíte' : 'Kliknutím aktivujete'"
                   >
-                    <span class="text-[10px] font-semibold" [class.text-emerald-400]="p.isActive" [class.text-zinc-500]="!p.isActive">
+                    <span class="text-[10px] font-semibold" [class.text-emerald-600]="p.isActive" [class.dark:text-emerald-400]="p.isActive" [class.text-zinc-400]="!p.isActive">
                       {{ p.isActive ? 'Aktivní' : 'Vypnuto' }}
                     </span>
                   </mat-slide-toggle>
                 </div>
 
-                <div class="p-3 rounded-xl bg-zinc-950/70 border border-zinc-800 text-xs font-mono text-zinc-300 line-clamp-3 leading-relaxed">
+                <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/70 border border-zinc-200 dark:border-zinc-800 text-xs font-mono text-zinc-800 dark:text-zinc-300 line-clamp-3 leading-relaxed">
                   {{ p.prompt }}
                 </div>
 
                 @if (p.lastRunResult) {
-                  <div class="p-2.5 rounded-xl bg-zinc-950 border border-zinc-800/80 text-[11px] space-y-1">
+                  <div class="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 text-[11px] space-y-1">
                     <span class="text-zinc-500 block text-[10px]">Poslední běh ({{ p.lastRunAt | date:'short' }}):</span>
-                    <p class="text-zinc-300 line-clamp-2 italic">"{{ p.lastRunResult }}"</p>
+                    <p class="text-zinc-700 dark:text-zinc-300 line-clamp-2 italic">"{{ p.lastRunResult }}"</p>
                   </div>
                 }
               </div>
 
-              <div class="flex items-center justify-between pt-3 border-t border-zinc-800/80">
+              <div class="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
                 <button
                   mat-stroked-button
                   type="button"
@@ -390,7 +390,7 @@ const QUICK_PRESETS: QuickPreset[] = [
                   [disabled]="runningId() === p.id"
                   class="!rounded-lg !text-xs !font-medium"
                 >
-                  <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-amber-400">bolt</mat-icon>
+                  <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-amber-500 dark:text-amber-400">bolt</mat-icon>
                   <span>{{ runningId() === p.id ? 'Spouštím...' : 'Spustit ihned' }}</span>
                 </button>
 
@@ -399,7 +399,7 @@ const QUICK_PRESETS: QuickPreset[] = [
                     mat-icon-button
                     type="button"
                     (click)="openEditModal(p)"
-                    class="!text-zinc-300 hover:!text-white"
+                    class="!text-zinc-500 dark:!text-zinc-300 hover:!text-zinc-900 dark:hover:!text-white"
                     matTooltip="Upravit prompt"
                   >
                     <mat-icon>edit</mat-icon>
@@ -408,7 +408,7 @@ const QUICK_PRESETS: QuickPreset[] = [
                     mat-icon-button
                     type="button"
                     (click)="deletePrompt(p.id)"
-                    class="!text-zinc-500 hover:!text-rose-400"
+                    class="!text-zinc-400 dark:!text-zinc-500 hover:!text-rose-600 dark:hover:!text-rose-400"
                     matTooltip="Smazat prompt"
                   >
                     <mat-icon>delete</mat-icon>
@@ -422,19 +422,19 @@ const QUICK_PRESETS: QuickPreset[] = [
 
       <!-- Modal: Create / Edit Prompt -->
       @if (isModalOpen()) {
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/80 backdrop-blur-sm flex justify-center p-3 sm:p-6 animate-in fade-in">
-          <div class="relative w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 space-y-5">
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center p-3 sm:p-6 animate-in fade-in">
+          <div class="relative w-full max-w-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
               <div>
-                <h2 class="text-base font-bold text-white">
+                <h2 class="text-base font-bold text-zinc-900 dark:text-white">
                   {{ editingId() ? 'Upravit naplánovaný prompt' : 'Nový naplánovaný prompt' }}
                 </h2>
-                <p class="text-xs text-zinc-400">Zadejte text promptu a vyberte denní čas spuštění.</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">Zadejte text promptu a vyberte denní čas spuštění.</p>
               </div>
               <button
                 type="button"
                 (click)="closeModal()"
-                class="p-1.5 rounded-lg text-zinc-400 hover:text-white cursor-pointer"
+                class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
               >
                 ✕
               </button>
@@ -442,23 +442,23 @@ const QUICK_PRESETS: QuickPreset[] = [
 
             <div class="space-y-4 text-xs">
               <div class="space-y-1.5">
-                <label class="block font-semibold text-zinc-300">Název / Cíl promptu</label>
+                <label class="block font-semibold text-zinc-700 dark:text-zinc-300">Název / Cíl promptu</label>
                 <input
                   type="text"
                   [(ngModel)]="formTitle"
                   placeholder="např. Ranní motivační zpráva & BJJ tip"
-                  class="w-full px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+                  class="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div class="space-y-1.5">
-                <label class="block font-semibold text-zinc-300">Časový slot spuštění</label>
+                <label class="block font-semibold text-zinc-700 dark:text-zinc-300">Časový slot spuštění</label>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     type="button"
                     (click)="formScheduledTime = '6am'"
                     class="py-2 px-3 rounded-xl font-medium border text-center transition-all cursor-pointer"
-                    [class]="formScheduledTime === '6am' ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white'"
+                    [class]="formScheduledTime === '6am' ? 'bg-indigo-600 border-indigo-500 text-white shadow-xs' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
                   >
                     🌄 6:00 AM
                   </button>
@@ -466,7 +466,7 @@ const QUICK_PRESETS: QuickPreset[] = [
                     type="button"
                     (click)="formScheduledTime = '9am'"
                     class="py-2 px-3 rounded-xl font-medium border text-center transition-all cursor-pointer"
-                    [class]="formScheduledTime === '9am' ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white'"
+                    [class]="formScheduledTime === '9am' ? 'bg-indigo-600 border-indigo-500 text-white shadow-xs' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
                   >
                     🌅 9:00 AM
                   </button>
@@ -474,7 +474,7 @@ const QUICK_PRESETS: QuickPreset[] = [
                     type="button"
                     (click)="formScheduledTime = '1pm'"
                     class="py-2 px-3 rounded-xl font-medium border text-center transition-all cursor-pointer"
-                    [class]="formScheduledTime === '1pm' ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white'"
+                    [class]="formScheduledTime === '1pm' ? 'bg-indigo-600 border-indigo-500 text-white shadow-xs' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
                   >
                     ☀️ 13:00 PM
                   </button>
@@ -482,7 +482,7 @@ const QUICK_PRESETS: QuickPreset[] = [
                     type="button"
                     (click)="formScheduledTime = '5pm'"
                     class="py-2 px-3 rounded-xl font-medium border text-center transition-all cursor-pointer"
-                    [class]="formScheduledTime === '5pm' ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white'"
+                    [class]="formScheduledTime === '5pm' ? 'bg-indigo-600 border-indigo-500 text-white shadow-xs' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
                   >
                     🌇 17:00 PM
                   </button>
@@ -490,34 +490,34 @@ const QUICK_PRESETS: QuickPreset[] = [
               </div>
 
               <div class="space-y-1.5">
-                <label class="block font-semibold text-zinc-300">Text AI promptu</label>
+                <label class="block font-semibold text-zinc-700 dark:text-zinc-300">Text AI promptu</label>
                 <textarea
                   autoResize
                   [autoResize]="formPrompt"
                   rows="5"
                   [(ngModel)]="formPrompt"
                   placeholder="Zadejte podrobné instrukce pro model..."
-                  class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono leading-relaxed resize-none overflow-hidden"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono leading-relaxed resize-none overflow-hidden"
                 ></textarea>
               </div>
 
               <div class="flex items-center gap-2 pt-2">
-                <label class="flex items-center gap-2 cursor-pointer text-zinc-200">
+                <label class="flex items-center gap-2 cursor-pointer text-zinc-800 dark:text-zinc-200">
                   <input
                     type="checkbox"
                     [(ngModel)]="formIsActive"
-                    class="rounded bg-zinc-950 border-zinc-700 text-indigo-600 focus:ring-0 h-4 w-4"
+                    class="rounded bg-zinc-100 dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 text-indigo-600 focus:ring-0 h-4 w-4"
                   />
                   <span>Aktivní v plánovači úloh (Cron)</span>
                 </label>
               </div>
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800">
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
               <button
                 type="button"
                 (click)="closeModal()"
-                class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium cursor-pointer"
+                class="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-medium cursor-pointer"
               >
                 Zrušit
               </button>
@@ -525,7 +525,7 @@ const QUICK_PRESETS: QuickPreset[] = [
                 type="button"
                 (click)="savePrompt()"
                 [disabled]="isSaving() || !formPrompt"
-                class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer shadow-md"
+                class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer shadow-md disabled:opacity-50"
               >
                 {{ isSaving() ? 'Ukládání...' : (editingId() ? 'Uložit změny' : 'Vytvořit prompt') }}
               </button>
@@ -536,35 +536,35 @@ const QUICK_PRESETS: QuickPreset[] = [
 
       <!-- Modal: Run Result Inspection -->
       @if (lastRunResponse(); as run) {
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/80 backdrop-blur-sm flex justify-center p-3 sm:p-6 animate-in fade-in">
-          <div class="relative w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center p-3 sm:p-6 animate-in fade-in">
+          <div class="relative w-full max-w-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
               <div>
-                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <h3 class="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                   <span>⚡ Výsledek spuštění promptu</span>
                 </h3>
-                <p class="text-xs text-zinc-400">Výstup byl vygenerován modelem a zpracován.</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">Výstup byl vygenerován modelem a zpracován.</p>
               </div>
               <button
                 type="button"
                 (click)="lastRunResponse.set(null)"
-                class="p-1.5 rounded-lg text-zinc-400 hover:text-white cursor-pointer"
+                class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             <div class="space-y-3 text-xs">
-              <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-200 whitespace-pre-wrap leading-relaxed font-sans max-h-96 overflow-y-auto">
+              <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap leading-relaxed font-sans max-h-96 overflow-y-auto">
                 {{ run.completion || run.execution?.completionPreview || 'Žádný textový výstup' }}
               </div>
 
               @if (run.execution?.telegramDelivery; as tg) {
-                <div class="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800 flex items-center justify-between">
-                  <span class="text-zinc-400">Doručení do Telegramu:</span>
+                <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/80 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                  <span class="text-zinc-600 dark:text-zinc-400">Doručení do Telegramu:</span>
                   <span
                     class="px-2 py-0.5 rounded text-[10px] font-semibold"
-                    [class]="tg.sent ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'"
+                    [class]="tg.sent ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400'"
                   >
                     {{ tg.sent ? '✓ Odesláno odběrateli' : (tg.error || 'Nebylo odesláno') }}
                   </span>
@@ -572,11 +572,11 @@ const QUICK_PRESETS: QuickPreset[] = [
               }
             </div>
 
-            <div class="flex justify-end pt-3 border-t border-zinc-800">
+            <div class="flex justify-end pt-3 border-t border-zinc-200 dark:border-zinc-800">
               <button
                 type="button"
                 (click)="lastRunResponse.set(null)"
-                class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-medium cursor-pointer"
+                class="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-white text-xs font-medium cursor-pointer"
               >
                 Zavřít
               </button>
