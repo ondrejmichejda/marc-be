@@ -46,3 +46,10 @@ yarn-error.log*
 next-env.d.ts
 /.angular/cache
 /dist
+# Angular build artifacts in public
+/public/chunk-*.js
+/public/main-*.js
+/public/polyfills-*.js
+/public/styles-*.css
+/public/3rdpartylicenses.txt
+/public/index.html

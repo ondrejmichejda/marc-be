@@ -263,7 +263,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                   mat-flat-button
                   type="button"
                   (click)="triggerBatchGeneration()"
-                  [disabled]="isGeneratingBatch() || !!generatingField()"
+                  [disabled]="isGeneratingAi()"
                   class="!rounded-xl !text-xs !font-semibold !bg-indigo-600 hover:!bg-indigo-500 !text-white disabled:!opacity-60 disabled:!bg-indigo-600 disabled:!text-white shadow-md cursor-pointer shrink-0"
                 >
                   @if (isGeneratingBatch()) {
@@ -458,7 +458,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                             mat-stroked-button
                             type="button"
                             (click)="generateFieldWithAi(field.key)"
-                            [disabled]="generatingField() === field.key || isGeneratingBatch()"
+                            [disabled]="isGeneratingAi()"
                             class="!rounded-lg !text-[11px] !font-medium !text-indigo-300 !border-indigo-500/30 !bg-indigo-600/10 disabled:!opacity-60"
                             matTooltip="Vygenerovat obsah pole pomocí AI"
                           >
@@ -537,7 +537,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                   mat-flat-button
                   type="button"
                   (click)="saveSolution()"
-                  [disabled]="isSaving() || isGeneratingBatch()"
+                  [disabled]="isSaving() || isGeneratingAi()"
                   class="!rounded-xl !text-xs !font-semibold !bg-indigo-600 hover:!bg-indigo-500 !text-white disabled:!opacity-60 disabled:!bg-indigo-600 disabled:!text-white shadow-md cursor-pointer"
                 >
                   @if (isSaving()) {
