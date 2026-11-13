@@ -1,4 +1,10 @@
 export type OpenAiModel =
+  | "gpt-6-astra"
+  | "gpt-6.1-sol"
+  | "gpt-6-sol"
+  | "gpt-6-luna"
+  | "gpt-6-instant"
+  | "gpt-6-cyber"
   | "gpt-4o-mini"
   | "gpt-4o"
   | "gpt-4-turbo"
@@ -162,6 +168,9 @@ export interface OpenAiModelInfo {
 }
 
 export const POPULAR_OPENAI_MODELS = [
+  "gpt-6-astra",
+  "gpt-6.1-sol",
+  "gpt-6-luna",
   "gpt-4o",
   "gpt-4o-mini",
   "o3-mini",
@@ -172,6 +181,13 @@ export const POPULAR_OPENAI_MODELS = [
 ];
 
 export const ALL_KNOWN_OPENAI_MODELS: string[] = [
+  // GPT-6 Generation
+  "gpt-6-astra",
+  "gpt-6.1-sol",
+  "gpt-6-sol",
+  "gpt-6-luna",
+  "gpt-6-instant",
+  "gpt-6-cyber",
   // Flagship & Universal
   "gpt-4o",
   "gpt-4o-2024-11-20",
@@ -208,6 +224,57 @@ export const ALL_KNOWN_OPENAI_MODELS: string[] = [
 ];
 
 export const KNOWN_OPENAI_MODEL_DETAILS: Record<string, Partial<OpenAiModelInfo>> = {
+  "gpt-6-astra": {
+    name: "GPT-6 Astra",
+    category: "flagship",
+    categoryLabel: "GPT-6 Vlajkový",
+    isReasoning: true,
+    description: "Špičkový vlajkový model nové generace GPT-6 s 1.05M kontextem pro náročné inženýrské výpočty a PBŘ posouzení.",
+    isRecommended: true,
+    contextWindow: "1.05M",
+  },
+  "gpt-6.1-sol": {
+    name: "GPT-6.1 Sol",
+    category: "flagship",
+    categoryLabel: "GPT-6 Vyvážený",
+    isReasoning: false,
+    description: "Výkonný a vyvážený model řady GPT-6 s 1.05M kontextem pro každodenní technické zprávy.",
+    isRecommended: true,
+    contextWindow: "1.05M",
+  },
+  "gpt-6-sol": {
+    name: "GPT-6 Sol",
+    category: "flagship",
+    categoryLabel: "GPT-6 Vyvážený",
+    isReasoning: false,
+    description: "Stabilní pracovní model řady GPT-6 s 1.05M kontextovým oknem.",
+    contextWindow: "1.05M",
+  },
+  "gpt-6-luna": {
+    name: "GPT-6 Luna",
+    category: "fast",
+    categoryLabel: "GPT-6 Bleskový & Úsporný",
+    isReasoning: false,
+    description: "Bleskurychlý a cenově nejefektivnější model generace GPT-6 s 1.05M kontextem pro hromadné operace.",
+    isRecommended: true,
+    contextWindow: "1.05M",
+  },
+  "gpt-6-instant": {
+    name: "GPT-6 Instant",
+    category: "fast",
+    categoryLabel: "GPT-6 Interaktivní",
+    isReasoning: false,
+    description: "Interaktivní model optimalizovaný pro nízkou latenci a okamžité dynamické generování.",
+    contextWindow: "1.05M",
+  },
+  "gpt-6-cyber": {
+    name: "GPT-6 Cyber",
+    category: "reasoning",
+    categoryLabel: "GPT-6 Bezpečnostní",
+    isReasoning: true,
+    description: "Specializovaný model pro hloubkovou analýzu bezpečnostních standardů a zranitelností.",
+    contextWindow: "1.05M",
+  },
   "gpt-4o": {
     name: "GPT-4o (Omni)",
     category: "flagship",

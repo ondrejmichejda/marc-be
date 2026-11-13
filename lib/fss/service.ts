@@ -508,11 +508,20 @@ export class FireSafetySolutionService {
     if (isDbConfigured()) {
       try {
         const sql = await ensureDb();
-        const deletedRows = (await sql`
-          DELETE FROM fire_safety_solutions
-          WHERE id = ${id}${userId && !isSystemUser ? ` AND user_id = ${userId}` : ``}
-          RETURNING id;
-        `) as Record<string, unknown>[];
+        let deletedRows: Record<string, unknown>[];
+        if (userId && !isSystemUser) {
+          deletedRows = (await sql`
+            DELETE FROM fire_safety_solutions
+            WHERE id = ${id} AND user_id = ${userId}
+            RETURNING id;
+          `) as Record<string, unknown>[];
+        } else {
+          deletedRows = (await sql`
+            DELETE FROM fire_safety_solutions
+            WHERE id = ${id}
+            RETURNING id;
+          `) as Record<string, unknown>[];
+        }
         if (deletedRows && deletedRows.length > 0) {
           dbDeleted = true;
         }
@@ -635,7 +644,19 @@ export class FireSafetySolutionService {
     }
 
     const { generateDocxExport } = await import("./docxExport");
-    const { buffer, filename } = generateDocxExport(targetSolution);
+    const { FssTemplateService } = await import("./templateService");
+    
+    let templateBuf: Buffer | undefined;
+    try {
+      const activeTpl = await FssTemplateService.getActiveTemplateBuffer();
+      if (activeTpl?.buffer) {
+        templateBuf = activeTpl.buffer;
+      }
+    } catch {
+      // Fallback handled inside generateDocxExport
+    }
+
+    const { buffer, filename } = generateDocxExport(targetSolution, templateBuf);
 
     return {
       buffer,

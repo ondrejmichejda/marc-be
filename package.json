@@ -4,14 +4,25 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "dev:ng": "ng serve",
+    "build:ng": "ng build --configuration=production && cp -r dist/browser/* public/",
+    "build": "npm run build:ng && next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "npx tsx --test test/auth.test.ts test/fire-safety.test.ts test/openai.test.ts test/prompts.test.ts test/prompts-cron.test.ts test/telegram-user-matching.test.ts test/user-ai-settings.test.ts",
+    "test": "npx tsx --test test/auth.test.ts test/fire-safety.test.ts test/fss-templates.test.ts test/openai.test.ts test/prompts.test.ts test/prompts-cron.test.ts test/telegram-user-matching.test.ts test/user-ai-settings.test.ts",
     "tunnel": "ngrok http 3000",
     "tunnel:localtunnel": "npx localtunnel --port 3000"
   },
   "dependencies": {
+    "@angular/animations": "^22.2.6",
+    "@angular/cdk": "^22.2.7",
+    "@angular/common": "^22.2.6",
+    "@angular/compiler": "^22.2.6",
+    "@angular/core": "^22.2.6",
+    "@angular/forms": "^22.2.6",
+    "@angular/material": "^22.2.7",
+    "@angular/platform-browser": "^22.2.6",
+    "@angular/router": "^22.2.6",
     "@neondatabase/serverless": "^1.2.0",
     "@vercel/blob": "^2.9.0",
     "docxtemplater": "^3.71.1",
@@ -20,16 +31,23 @@
     "openai": "^7.43.0",
     "pizzip": "^3.3.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "rxjs": "^7.8.2",
+    "zone.js": "^0.15.1"
   },
   "devDependencies": {
+    "@angular/build": "^22.2.6",
+    "@angular/cli": "^22.2.6",
+    "@angular/compiler-cli": "^22.2.6",
+    "@tailwindcss/postcss": "^4.3.5",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
+    "postcss": "^8.5.32",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "~6.0.0"
   }
 }
