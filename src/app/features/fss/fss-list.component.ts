@@ -263,7 +263,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                   mat-flat-button
                   type="button"
                   (click)="triggerBatchGeneration()"
-                  [disabled]="isGeneratingBatch()"
+                  [disabled]="isGeneratingAi()"
                   class="!rounded-xl !text-xs !font-semibold !bg-indigo-600 hover:!bg-indigo-500 !text-white disabled:!opacity-60 disabled:!bg-indigo-600 disabled:!text-white shadow-md cursor-pointer shrink-0"
                 >
                   @if (isGeneratingBatch()) {
@@ -288,6 +288,10 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
               </div>
             </div>
 
+            <!-- AI Generation Progress Bar -->
+            @if (isGeneratingAi()) {
+              <mat-progress-bar mode="indeterminate" class="!h-1"></mat-progress-bar>
+            }
 
             <!-- Category Tabs -->
             <div class="flex items-center gap-1 px-6 py-2.5 bg-zinc-950/60 border-b border-zinc-800 overflow-x-auto text-xs">
@@ -425,7 +429,11 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                 <!-- Property Fields -->
                 <div class="space-y-4">
                   @for (field of visibleFields(); track field.key) {
-                    <div class="p-4 rounded-xl bg-zinc-950/40 border border-zinc-800/80 space-y-2 hover:border-zinc-700/80 transition-colors">
+                    <div class="p-4 rounded-xl bg-zinc-950/40 border border-zinc-800/80 space-y-2 hover:border-zinc-700/80 transition-colors relative overflow-hidden">
+                      @if (generatingField() === field.key || isGeneratingBatch()) {
+                        <mat-progress-bar mode="indeterminate" class="!h-1 -mt-4 -mx-4 mb-2"></mat-progress-bar>
+                      }
+
                       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div>
                           <label class="block text-xs font-semibold text-zinc-200">
@@ -450,12 +458,21 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                             mat-stroked-button
                             type="button"
                             (click)="generateFieldWithAi(field.key)"
-                            [disabled]="generatingField() === field.key"
-                            class="!rounded-lg !text-[11px] !font-medium !text-indigo-300 !border-indigo-500/30 !bg-indigo-600/10"
+                            [disabled]="isGeneratingAi()"
+                            class="!rounded-lg !text-[11px] !font-medium !text-indigo-300 !border-indigo-500/30 !bg-indigo-600/10 disabled:!opacity-60"
                             matTooltip="Vygenerovat obsah pole pomocí AI"
                           >
-                            <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-amber-400">bolt</mat-icon>
-                            <span>{{ generatingField() === field.key ? 'Generuji...' : 'AI Vygenerovat' }}</span>
+                            @if (generatingField() === field.key) {
+                              <span class="flex items-center gap-1.5">
+                                <mat-spinner diameter="12"></mat-spinner>
+                                <span>Generuji...</span>
+                              </span>
+                            } @else {
+                              <span class="flex items-center">
+                                <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-amber-400">bolt</mat-icon>
+                                <span>AI Vygenerovat</span>
+                              </span>
+                            }
                           </button>
                         </div>
                       </div>
@@ -520,7 +537,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                   mat-flat-button
                   type="button"
                   (click)="saveSolution()"
-                  [disabled]="isSaving()"
+                  [disabled]="isSaving() || isGeneratingAi()"
                   class="!rounded-xl !text-xs !font-semibold !bg-indigo-600 hover:!bg-indigo-500 !text-white disabled:!opacity-60 disabled:!bg-indigo-600 disabled:!text-white shadow-md cursor-pointer"
                 >
                   @if (isSaving()) {
@@ -617,6 +634,7 @@ export class FssListComponent implements OnInit {
   readonly isExporting = signal<string | null>(null);
   readonly generatingField = signal<string | null>(null);
   readonly isGeneratingBatch = signal<boolean>(false);
+  readonly isGeneratingAi = computed(() => this.isGeneratingBatch() || !!this.generatingField());
   readonly isUploadingFiles = signal<boolean>(false);
 
   readonly activeCategory = signal<string>('all');

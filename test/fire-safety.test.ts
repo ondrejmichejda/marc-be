@@ -909,8 +909,8 @@ test("Fire Safety Solutions: Per-FSS Accumulated Cost and Token Tracking", async
   assert.equal(retrievedAfterSingle.totalTokens, genSingleData.accumulatedTokens);
   assert.equal(retrievedAfterSingle.generationCount, 3);
 
-  // 5. API generation with fssId accumulating cost for all properties
-  const genAllReq = new NextRequest("http://localhost:3000/api/fss/generate", {
+  // 5. API generation with fssId accumulating cost for multiple specified properties (2 prompts)
+  const genBatchReq = new NextRequest("http://localhost:3000/api/fss/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -919,19 +919,45 @@ test("Fire Safety Solutions: Per-FSS Accumulated Cost and Token Tracking", async
       userId: costUserId,
     }),
   });
+  const genBatchRes = await generateFssApi(genBatchReq);
+  assert.equal(genBatchRes.status, 200);
+  const genBatchData = await genBatchRes.json();
+  assert.equal(genBatchData.success, true);
+  assert.equal(genBatchData.fssId, testFss.id);
+  assert.ok(genBatchData.accumulatedCostUsd > genSingleData.accumulatedCostUsd);
+  assert.ok(genBatchData.accumulatedTokens > genSingleData.accumulatedTokens);
+  assert.equal(genBatchData.generationCount, 5, "Generation count must increment by 2 for 2 fields (3 -> 5)");
+
+  // Check on retrieved FSS after batch
+  const retrievedAfterBatch = await FireSafetySolutionService.getSolutionById(testFss.id);
+  assert.ok(retrievedAfterBatch);
+  assert.equal(retrievedAfterBatch.totalCostUsd, genBatchData.accumulatedCostUsd);
+  assert.equal(retrievedAfterBatch.totalTokens, genBatchData.accumulatedTokens);
+  assert.equal(retrievedAfterBatch.generationCount, 5);
+
+  // 6. API generation with fssId accumulating cost for all 18 properties
+  const genAllReq = new NextRequest("http://localhost:3000/api/fss/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fssId: testFss.id,
+      userId: costUserId,
+    }),
+  });
   const genAllRes = await generateFssApi(genAllReq);
   assert.equal(genAllRes.status, 200);
   const genAllData = await genAllRes.json();
   assert.equal(genAllData.success, true);
   assert.equal(genAllData.fssId, testFss.id);
-  assert.ok(genAllData.accumulatedCostUsd > genSingleData.accumulatedCostUsd);
-  assert.ok(genAllData.accumulatedTokens > genSingleData.accumulatedTokens);
-  assert.equal(genAllData.generationCount, 4);
+  assert.equal(genAllData.successfulCount, 18);
+  assert.ok(genAllData.accumulatedCostUsd > genBatchData.accumulatedCostUsd);
+  assert.ok(genAllData.accumulatedTokens > genBatchData.accumulatedTokens);
+  assert.equal(genAllData.generationCount, 23, "Generation count must increment by 18 for all 18 fields (5 -> 23)");
 
   // Final check on retrieved FSS
   const finalRetrieved = await FireSafetySolutionService.getSolutionById(testFss.id);
   assert.ok(finalRetrieved);
   assert.equal(finalRetrieved.totalCostUsd, genAllData.accumulatedCostUsd);
   assert.equal(finalRetrieved.totalTokens, genAllData.accumulatedTokens);
-  assert.equal(finalRetrieved.generationCount, 4);
+  assert.equal(finalRetrieved.generationCount, 23);
 });
