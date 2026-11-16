@@ -90,13 +90,13 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
       @if (successMessage()) {
         <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between animate-in fade-in">
           <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-emerald-600 dark:text-emerald-400">check_circle</mat-icon> {{ successMessage() }}</span>
-          <button type="button" (click)="successMessage.set(null)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-white">✕</button>
+          <button type="button" (click)="successMessage.set(null)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-white cursor-pointer"><mat-icon class="!text-sm !w-4 !h-4">close</mat-icon></button>
         </div>
       }
       @if (errorMessage()) {
         <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs flex items-center justify-between animate-in fade-in">
           <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-rose-600 dark:text-rose-400">error</mat-icon> {{ errorMessage() }}</span>
-          <button type="button" (click)="errorMessage.set(null)" class="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-white">✕</button>
+          <button type="button" (click)="errorMessage.set(null)" class="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-white cursor-pointer"><mat-icon class="!text-sm !w-4 !h-4">close</mat-icon></button>
         </div>
       }
 
@@ -163,11 +163,17 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                       <span class="text-zinc-500 dark:text-zinc-400 block text-[10px]">Přílohy</span>
                       <mat-icon class="!text-[12px] !w-3 !h-3 text-zinc-400 dark:text-zinc-500 group-hover/files:text-sky-500 dark:group-hover/files:text-sky-400 transition-colors">open_in_new</mat-icon>
                     </div>
-                    <span class="text-zinc-800 dark:text-zinc-200 font-medium group-hover/files:text-sky-600 dark:group-hover/files:text-sky-300 transition-colors">📁 {{ s.files?.length || 0 }} souborů</span>
+                    <span class="text-zinc-800 dark:text-zinc-200 font-medium group-hover/files:text-sky-600 dark:group-hover/files:text-sky-300 transition-colors flex items-center gap-1">
+                      <mat-icon class="!text-xs !w-3.5 !h-3.5">folder</mat-icon>
+                      <span>{{ s.files?.length || 0 }} souborů</span>
+                    </span>
                   </div>
                   <div>
                     <span class="text-zinc-500 dark:text-zinc-400 block text-[10px]">AI Generování</span>
-                    <span class="text-zinc-800 dark:text-zinc-200 font-medium">⚡ {{ s.generationCount || 0 }}x ({{ s.totalTokens || 0 }} tok. • {{ formatCost(s.totalCostUsd) }})</span>
+                    <span class="text-zinc-800 dark:text-zinc-200 font-medium flex items-center gap-1">
+                      <mat-icon class="!text-xs !w-3.5 !h-3.5 text-amber-500 dark:text-amber-400">bolt</mat-icon>
+                      <span>{{ s.generationCount || 0 }}x ({{ s.totalTokens || 0 }} tok. • {{ formatCost(s.totalCostUsd) }})</span>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -283,7 +289,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                   (click)="closeModal()"
                   class="p-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
                 >
-                  ✕
+                  <mat-icon class="!text-base !w-4 !h-4">close</mat-icon>
                 </button>
               </div>
             </div>
@@ -303,6 +309,9 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                   class="px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all cursor-pointer flex items-center gap-1.5"
                   [class]="activeCategory() === cat.id ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60'"
                 >
+                  @if (cat.icon) {
+                    <mat-icon class="!text-xs !w-3.5 !h-3.5">{{ cat.icon }}</mat-icon>
+                  }
                   <span>{{ cat.label }}</span>
                   @if (cat.id === 'files' && modalFiles().length > 0) {
                     <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-100 dark:bg-indigo-400/20 text-indigo-700 dark:text-indigo-200 font-bold">
@@ -393,7 +402,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                         @for (file of modalFiles(); track file.id) {
                           <div class="flex items-center justify-between p-3 text-xs">
                             <div class="flex items-center gap-2.5 min-w-0">
-                              <span class="text-base">{{ getFileIcon(file.name) }}</span>
+                              <mat-icon class="text-zinc-500 dark:text-zinc-400 !text-lg !w-5 !h-5">{{ getFileIcon(file.name) }}</mat-icon>
                               <div class="truncate">
                                 <p class="text-zinc-900 dark:text-zinc-200 font-medium truncate">{{ file.name }}</p>
                                 <p class="text-[10px] text-zinc-500">{{ formatBytes(file.size) }} • {{ file.uploadedAt | date:'short' }}</p>
@@ -576,7 +585,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                 (click)="inspectingPrompt.set(null)"
                 class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
               >
-                ✕
+                <mat-icon class="!text-base !w-4 !h-4">close</mat-icon>
               </button>
             </div>
 
@@ -645,13 +654,13 @@ export class FssListComponent implements OnInit {
   formData: FireSafetySolutionProperties = { ...INITIAL_FORM_DATA };
 
   readonly formCategories = [
-    { id: 'all', label: 'Všechna pole (18)' },
-    { id: 'identification', label: '1. Identifikace & Údaje' },
-    { id: 'documents', label: '2. Podklady & Úvod' },
-    { id: 'assessment', label: '3. Posouzení PBŘ' },
-    { id: 'evacuation', label: '4. Únikové cesty & Odstupy' },
-    { id: 'extinguishing', label: '5. Zabezpečení & Hašení' },
-    { id: 'files', label: '📁 Přílohy dokumentace' },
+    { id: 'all', label: 'Všechna pole (18)', icon: '' },
+    { id: 'identification', label: '1. Identifikace & Údaje', icon: '' },
+    { id: 'documents', label: '2. Podklady & Úvod', icon: '' },
+    { id: 'assessment', label: '3. Posouzení PBŘ', icon: '' },
+    { id: 'evacuation', label: '4. Únikové cesty & Odstupy', icon: '' },
+    { id: 'extinguishing', label: '5. Zabezpečení & Hašení', icon: '' },
+    { id: 'files', label: 'Přílohy dokumentace', icon: 'folder' },
   ];
 
   readonly filteredSolutions = computed(() => {
@@ -1025,15 +1034,15 @@ export class FssListComponent implements OnInit {
   getFileIcon(filename: string): string {
     const ext = filename.split('.').pop()?.toLowerCase();
     switch (ext) {
-      case 'pdf': return '📕';
+      case 'pdf': return 'picture_as_pdf';
       case 'dwg':
-      case 'dxf': return '📐';
+      case 'dxf': return 'architecture';
       case 'doc':
-      case 'docx': return '📘';
+      case 'docx': return 'description';
       case 'png':
       case 'jpg':
-      case 'jpeg': return '🖼️';
-      default: return '📄';
+      case 'jpeg': return 'image';
+      default: return 'insert_drive_file';
     }
   }
 }

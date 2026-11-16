@@ -449,8 +449,10 @@ export class ScheduledPromptService {
       user = await UserService.getUserByEmail(promptRecord.userEmail);
     }
 
-    // Deliver AI response to Telegram using Johan Bot integration to user matched by name and surname
+    // Deliver AI response to Telegram using Johan Bot integration to user using configured Telegram ID or name lookup
+    const effectiveUserId = promptRecord.userId || userId || user?.id;
     const telegramResult = await TelegramService.sendAiPromptResponse({
+      userId: effectiveUserId,
       userIdentifier: promptRecord.userEmail || promptRecord.userId,
       userName: user?.name,
       userEmail: user?.email || promptRecord.userEmail,

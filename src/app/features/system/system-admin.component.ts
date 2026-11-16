@@ -52,13 +52,13 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
       @if (successMessage()) {
         <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between animate-in fade-in">
           <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-emerald-600 dark:text-emerald-400">check_circle</mat-icon> {{ successMessage() }}</span>
-          <button type="button" (click)="successMessage.set(null)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-white">✕</button>
+          <button type="button" (click)="successMessage.set(null)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-white cursor-pointer"><mat-icon class="!text-sm !w-4 !h-4">close</mat-icon></button>
         </div>
       }
       @if (errorMessage()) {
         <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs flex items-center justify-between animate-in fade-in">
           <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-rose-600 dark:text-rose-400">error</mat-icon> {{ errorMessage() }}</span>
-          <button type="button" (click)="errorMessage.set(null)" class="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-white">✕</button>
+          <button type="button" (click)="errorMessage.set(null)" class="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-white cursor-pointer"><mat-icon class="!text-sm !w-4 !h-4">close</mat-icon></button>
         </div>
       }
 
@@ -384,10 +384,11 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
               <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800">
                 <span class="text-zinc-500 block mb-1">Stav Webhooku</span>
                 <span
-                  class="inline-block px-2.5 py-1 rounded text-[10px] font-semibold"
+                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-semibold"
                   [class]="telegramData()?.webhook?.url ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20' : 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20'"
                 >
-                  {{ telegramData()?.webhook?.url ? '✓ Webhook Aktivní' : 'Nekonfigurováno' }}
+                  <mat-icon class="!text-[12px] !w-3 !h-3">{{ telegramData()?.webhook?.url ? 'check_circle' : 'help_outline' }}</mat-icon>
+                  <span>{{ telegramData()?.webhook?.url ? 'Webhook Aktivní' : 'Nekonfigurováno' }}</span>
                 </span>
                 @if (telegramData()?.webhook?.last_error_message) {
                   <span class="text-[10px] text-rose-600 dark:text-rose-400 block mt-1 truncate">Chyba: {{ telegramData()?.webhook?.last_error_message }}</span>

@@ -291,6 +291,49 @@ export async function initDatabase(): Promise<void> {
         ADD COLUMN IF NOT EXISTS custom_model TEXT;
       `;
 
+      // Create user_telegram_settings table for personal Telegram configuration & Johan bot communication
+      await sql`
+        CREATE TABLE IF NOT EXISTS user_telegram_settings (
+          user_id TEXT PRIMARY KEY,
+          telegram_id TEXT,
+          telegram_username TEXT,
+          notifications_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      // Create trackers table for duration tracking
+      await sql`
+        CREATE TABLE IF NOT EXISTS trackers (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          duration_days INT NOT NULL DEFAULT 0,
+          duration_hours INT NOT NULL DEFAULT 0,
+          duration_minutes INT NOT NULL DEFAULT 0,
+          total_duration_seconds BIGINT NOT NULL DEFAULT 0,
+          notify_telegram BOOLEAN NOT NULL DEFAULT FALSE,
+          last_reset_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          notification_sent_at TIMESTAMPTZ,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
+      // Create tracker_reset_logs table for audit logging of resets
+      await sql`
+        CREATE TABLE IF NOT EXISTS tracker_reset_logs (
+          id TEXT PRIMARY KEY,
+          tracker_id TEXT NOT NULL REFERENCES trackers(id) ON DELETE CASCADE,
+          user_id TEXT NOT NULL,
+          reset_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          elapsed_seconds BIGINT NOT NULL DEFAULT 0,
+          note TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
       // Create roles table for dynamic role management
       await sql`
         CREATE TABLE IF NOT EXISTS roles (
@@ -338,9 +381,15 @@ export async function initDatabase(): Promise<void> {
             ('openai_settings', 'admin'),
             ('openai_settings', 'operator'),
             ('openai_settings', 'user'),
+            ('telegram_settings', 'admin'),
+            ('telegram_settings', 'operator'),
+            ('telegram_settings', 'user'),
             ('ai_prompts', 'admin'),
             ('ai_prompts', 'operator'),
             ('ai_prompts', 'user'),
+            ('tracking', 'admin'),
+            ('tracking', 'operator'),
+            ('tracking', 'user'),
             ('system', 'admin')
           ON CONFLICT DO NOTHING;
         `;
@@ -362,6 +411,11 @@ export async function initDatabase(): Promise<void> {
       await sql`CREATE INDEX IF NOT EXISTS idx_scheduled_prompts_user_id ON scheduled_ai_prompts(user_id);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_scheduled_prompts_time ON scheduled_ai_prompts(scheduled_time);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_scheduled_prompts_created_at ON scheduled_ai_prompts(created_at DESC);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_trackers_user_id ON trackers(user_id);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_trackers_created_at ON trackers(created_at DESC);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_tracker_resets_tracker_id ON tracker_reset_logs(tracker_id);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_tracker_resets_user_id ON tracker_reset_logs(user_id);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_tracker_resets_reset_at ON tracker_reset_logs(reset_at DESC);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);`;

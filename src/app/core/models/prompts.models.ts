@@ -28,7 +28,7 @@ export const SCHEDULED_TIME_DETAILS: Record<PromptScheduledTime, ScheduledTimeIn
     timeLabel: "6:00 AM",
     displayTime: "06:00",
     period: "Morning",
-    icon: "🌄",
+    icon: "wb_twilight",
     description: "Early morning prompt execution at 6:00 AM",
     colorClass: {
       bg: "bg-emerald-500/10",
@@ -42,7 +42,7 @@ export const SCHEDULED_TIME_DETAILS: Record<PromptScheduledTime, ScheduledTimeIn
     timeLabel: "9:00 AM",
     displayTime: "09:00",
     period: "Morning",
-    icon: "🌅",
+    icon: "wb_sunny",
     description: "Morning prompt execution at 9:00 AM",
     colorClass: {
       bg: "bg-amber-500/10",
@@ -56,7 +56,7 @@ export const SCHEDULED_TIME_DETAILS: Record<PromptScheduledTime, ScheduledTimeIn
     timeLabel: "1:00 PM",
     displayTime: "13:00",
     period: "Afternoon",
-    icon: "☀️",
+    icon: "light_mode",
     description: "Afternoon prompt execution at 1:00 PM",
     colorClass: {
       bg: "bg-sky-500/10",
@@ -70,7 +70,7 @@ export const SCHEDULED_TIME_DETAILS: Record<PromptScheduledTime, ScheduledTimeIn
     timeLabel: "5:00 PM",
     displayTime: "17:00",
     period: "Evening",
-    icon: "🌇",
+    icon: "nights_stay",
     description: "Evening prompt execution at 5:00 PM",
     colorClass: {
       bg: "bg-purple-500/10",

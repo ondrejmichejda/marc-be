@@ -34,8 +34,36 @@ export const routes: Routes = [
         loadComponent: () => import('./features/ai-settings/user-ai-settings.component').then(m => m.UserAiSettingsComponent),
       },
       {
+        path: 'telegram-settings',
+        loadComponent: () => import('./features/telegram-settings/user-telegram-settings.component').then(m => m.UserTelegramSettingsComponent),
+      },
+      {
+        path: 'telegram_settings',
+        redirectTo: 'telegram-settings',
+      },
+      {
+        path: 'telegram',
+        redirectTo: 'telegram-settings',
+      },
+      {
+        path: 'telegram/settings',
+        redirectTo: 'telegram-settings',
+      },
+      {
+        path: 'settings/telegram',
+        redirectTo: 'telegram-settings',
+      },
+      {
+        path: 'user/telegram-settings',
+        redirectTo: 'telegram-settings',
+      },
+      {
         path: 'prompts',
         loadComponent: () => import('./features/prompts/ai-prompts.component').then(m => m.AiPromptsComponent),
+      },
+      {
+        path: 'tracking',
+        loadComponent: () => import('./features/tracking/tracking.component').then(m => m.TrackingComponent),
       },
       {
         path: 'system',
