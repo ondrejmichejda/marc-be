@@ -55,9 +55,7 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
-            <div class="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-              <mat-icon class="!w-6 !h-6 !text-2xl">timer</mat-icon>
-            </div>
+            <mat-icon class="!text-emerald-500">timer</mat-icon>
             <span>Tracking</span>
           </h1>
           <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
@@ -65,7 +63,7 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
           </p>
         </div>
 
-        <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-2.5 sm:gap-3">
           <button
             mat-stroked-button
             type="button"
@@ -105,45 +103,45 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
 
       <!-- Stats Overview Cards -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div class="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
+        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-xs dark:shadow-none">
           <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400 text-xs">
             <span>Total Trackers</span>
             <mat-icon class="!text-base !w-4 !h-4 text-zinc-400">inventory_2</mat-icon>
           </div>
-          <div class="text-2xl font-bold text-zinc-900 dark:text-white mt-1">
+          <div class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white mt-1">
             {{ summary()?.total ?? trackers().length }}
           </div>
           <div class="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">Personal isolated items</div>
         </div>
 
-        <div class="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
+        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-xs dark:shadow-none">
           <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400 text-xs">
             <span>In Progress</span>
             <mat-icon class="!text-base !w-4 !h-4 text-amber-500">timelapse</mat-icon>
           </div>
-          <div class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
+          <div class="text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
             {{ summary()?.active ?? 0 }}
           </div>
           <div class="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">Passing duration</div>
         </div>
 
-        <div class="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
+        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-xs dark:shadow-none">
           <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400 text-xs">
             <span>Completed</span>
             <mat-icon class="!text-base !w-4 !h-4 text-emerald-500">task_alt</mat-icon>
           </div>
-          <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+          <div class="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
             {{ summary()?.completed ?? 0 }}
           </div>
           <div class="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">Reached target time</div>
         </div>
 
-        <div class="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
+        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-xs dark:shadow-none">
           <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400 text-xs">
             <span>Total Resets</span>
             <mat-icon class="!text-base !w-4 !h-4 text-indigo-500">history</mat-icon>
           </div>
-          <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
+          <div class="text-xl sm:text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
             {{ summary()?.totalResets ?? 0 }}
           </div>
           <div class="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">Logged reset actions</div>
@@ -151,108 +149,86 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
       </div>
 
       <!-- Filters & Search Toolbar -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
-        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          <button
-            type="button"
-            (click)="setStatusFilter('all')"
-            class="px-3 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer"
-            [class.bg-zinc-900]="selectedStatus() === 'all'"
-            [class.text-white]="selectedStatus() === 'all'"
-            [class.dark:bg-white]="selectedStatus() === 'all'"
-            [class.dark:text-zinc-900]="selectedStatus() === 'all'"
-            [class.text-zinc-600]="selectedStatus() !== 'all'"
-            [class.dark:text-zinc-400]="selectedStatus() !== 'all'"
-            [class.hover:bg-zinc-100]="selectedStatus() !== 'all'"
-            [class.dark:hover:bg-zinc-800]="selectedStatus() !== 'all'"
-          >
-            All ({{ trackers().length }})
-          </button>
-          <button
-            type="button"
-            (click)="setStatusFilter('active')"
-            class="px-3 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5"
-            [class.bg-amber-500/10]="selectedStatus() === 'active'"
-            [class.text-amber-600]="selectedStatus() === 'active'"
-            [class.dark:text-amber-400]="selectedStatus() === 'active'"
-            [class.border]="selectedStatus() === 'active'"
-            [class.border-amber-500/30]="selectedStatus() === 'active'"
-            [class.text-zinc-600]="selectedStatus() !== 'active'"
-            [class.dark:text-zinc-400]="selectedStatus() !== 'active'"
-            [class.hover:bg-zinc-100]="selectedStatus() !== 'active'"
-            [class.dark:hover:bg-zinc-800]="selectedStatus() !== 'active'"
-          >
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-            In Progress
-          </button>
-          <button
-            type="button"
-            (click)="setStatusFilter('completed')"
-            class="px-3 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5"
-            [class.bg-emerald-500/10]="selectedStatus() === 'completed'"
-            [class.text-emerald-600]="selectedStatus() === 'completed'"
-            [class.dark:text-emerald-400]="selectedStatus() === 'completed'"
-            [class.border]="selectedStatus() === 'completed'"
-            [class.border-emerald-500/30]="selectedStatus() === 'completed'"
-            [class.text-zinc-600]="selectedStatus() !== 'completed'"
-            [class.dark:text-zinc-400]="selectedStatus() !== 'completed'"
-            [class.hover:bg-zinc-100]="selectedStatus() !== 'completed'"
-            [class.dark:hover:bg-zinc-800]="selectedStatus() !== 'completed'"
-          >
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            Completed
-          </button>
-        </div>
-
-        <div class="relative w-full sm:w-64">
-          <mat-icon class="absolute left-3 top-2.5 !text-zinc-400 !w-4 !h-4 !text-base">search</mat-icon>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 shadow-xs dark:shadow-none">
+        <div class="relative flex-1 max-w-md">
           <input
             type="text"
             [(ngModel)]="searchQuery"
             (ngModelChange)="onSearchChange()"
-            placeholder="Search tracked items..."
-            class="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
+            placeholder="Search trackers by title or description..."
+            class="w-full pl-9 pr-4 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
           />
+          <mat-icon class="!text-zinc-400 dark:!text-zinc-500 !text-sm !w-4 !h-4 absolute left-3 top-2.5">search</mat-icon>
+        </div>
+
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <button
+            matRipple
+            type="button"
+            (click)="setStatusFilter('all')"
+            class="px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer whitespace-nowrap"
+            [class]="selectedStatus() === 'all' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
+          >
+            All ({{ trackers().length }})
+          </button>
+          <button
+            matRipple
+            type="button"
+            (click)="setStatusFilter('active')"
+            class="px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer whitespace-nowrap"
+            [class]="selectedStatus() === 'active' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
+          >
+            In Progress ({{ summary()?.active ?? 0 }})
+          </button>
+          <button
+            matRipple
+            type="button"
+            (click)="setStatusFilter('completed')"
+            class="px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer whitespace-nowrap"
+            [class]="selectedStatus() === 'completed' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
+          >
+            Completed ({{ summary()?.completed ?? 0 }})
+          </button>
         </div>
       </div>
 
       <!-- Loading State -->
       @if (loading() && trackers().length === 0) {
-        <div class="py-16 flex flex-col items-center justify-center text-zinc-400">
-          <mat-spinner diameter="36"></mat-spinner>
-          <p class="text-xs mt-3">Loading trackers...</p>
+        <div class="py-16 text-center text-zinc-500 dark:text-zinc-400 text-sm flex flex-col items-center justify-center gap-3">
+          <mat-spinner diameter="32"></mat-spinner>
+          <span>Loading trackers...</span>
         </div>
       }
 
       <!-- Empty State -->
       @if (!loading() && filteredTrackers().length === 0) {
-        <div class="py-16 text-center rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs p-8">
-          <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center">
-            <mat-icon class="!text-3xl !w-8 !h-8">timer</mat-icon>
-          </div>
-          <h3 class="text-base font-semibold text-zinc-900 dark:text-white">
+        <div class="py-16 text-center rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/30 text-zinc-500 dark:text-zinc-400 space-y-3 shadow-xs dark:shadow-none">
+          <mat-icon class="!text-4xl !w-10 !h-10 text-emerald-500 mx-auto">timer</mat-icon>
+          <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-300">
             @if (searchQuery) { No trackers match your search } @else { No tracked items yet }
-          </h3>
-          <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto mt-1 mb-5">
+          </p>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
             @if (searchQuery) { Try adjusting your search term or clear the filter. } @else { Create your first duration tracker with customizable days, hours, minutes, solid progress bar, and dynamic status color visualization. }
           </p>
-          <button
-            mat-flat-button
-            color="primary"
-            type="button"
-            (click)="openCreateModal()"
-            class="!rounded-xl !text-xs !font-medium"
-          >
-            <mat-icon class="!text-sm !w-4 !h-4 !mr-1">add</mat-icon>
-            <span>Create Tracked Item</span>
-          </button>
+          @if (!searchQuery) {
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              (click)="openCreateModal()"
+              class="!rounded-xl !text-xs !font-semibold"
+            >
+              <mat-icon class="!text-sm !w-4 !h-4 !mr-1">add</mat-icon>
+              <span>Create Tracked Item</span>
+            </button>
+          }
         </div>
       }
 
       <!-- Trackers Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         @for (item of filteredTrackers(); track item.id) {
-          <div class="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all flex flex-col justify-between">
+          <mat-card class="flex flex-col justify-between !p-5 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 hover:!border-zinc-300 dark:hover:!border-zinc-700 transition-all !shadow-sm dark:!shadow-lg space-y-4 group">
             <div>
               <!-- Top Row: Name, Badges, Options -->
               <div class="flex items-start justify-between gap-3 mb-3">
@@ -406,126 +382,140 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
                 </button>
               </div>
             </div>
-          </div>
+          </mat-card>
         }
       </div>
 
       <!-- Create / Edit Modal -->
       @if (showFormModal()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-xs animate-in fade-in">
-          <div class="w-full max-w-lg rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl p-6 space-y-5 animate-in zoom-in-95">
-            <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
-              <div class="flex items-center gap-2">
-                <div class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                  <mat-icon class="!text-lg !w-5 !h-5">{{ isEditing() ? 'edit' : 'add_task' }}</mat-icon>
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 md:p-6 animate-in fade-in">
+          <mat-card
+            class="relative w-full max-w-lg !bg-white dark:!bg-zinc-900 !border !border-zinc-200 dark:border-zinc-800 !rounded-t-3xl sm:!rounded-2xl !shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[92vh] !p-0"
+            (click)="$event.stopPropagation()"
+          >
+            <!-- Modal Header -->
+            <div class="px-4 py-3.5 sm:px-6 sm:py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-zinc-50/80 dark:bg-zinc-900/90 shrink-0">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 text-lg flex items-center justify-center border border-emerald-100 dark:border-emerald-500/20 shrink-0">
+                  <mat-icon class="!text-emerald-500">{{ isEditing() ? 'edit' : 'add_task' }}</mat-icon>
                 </div>
-                <h3 class="text-base font-bold text-zinc-900 dark:text-white">
-                  {{ isEditing() ? 'Edit Tracked Item' : 'New Tracked Item' }}
-                </h3>
+                <div class="min-w-0">
+                  <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white truncate">
+                    {{ isEditing() ? 'Edit Tracked Item' : 'New Tracked Item' }}
+                  </h2>
+                  <p class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate hidden xs:block">Duration settings and alert configuration</p>
+                </div>
               </div>
-              <button type="button" (click)="closeFormModal()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer">
-                <mat-icon class="!text-lg !w-5 !h-5">close</mat-icon>
+              <button
+                type="button"
+                (click)="closeFormModal()"
+                class="p-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer shrink-0"
+              >
+                <mat-icon class="!text-base !w-4 !h-4">close</mat-icon>
               </button>
             </div>
 
-            <form (ngSubmit)="saveTracker()" class="space-y-4">
-              <!-- Name Input -->
-              <div>
-                <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                  Tracker Name <span class="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  [(ngModel)]="formData.name"
-                  name="trackerName"
-                  required
-                  placeholder="e.g., HVAC Filter Replacement, BJJ Belt Streak, Plant Watering..."
-                  class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
-                />
-              </div>
-
-              <!-- Duration Configuration (Days, Hours, Minutes) -->
-              <div class="space-y-2">
-                <div class="flex items-center justify-between">
+            <form (ngSubmit)="saveTracker()" class="flex flex-col flex-1 overflow-hidden m-0">
+              <!-- Modal Body / Form -->
+              <div class="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                <!-- Name Input -->
+                <div class="space-y-1.5">
                   <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                    Duration Setting <span class="text-rose-500">*</span>
+                    Tracker Name <span class="text-rose-500">*</span>
                   </label>
-                  <span class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                    Total: {{ formatDuration(formData.durationDays, formData.durationHours, formData.durationMinutes) }}
-                  </span>
+                  <input
+                    type="text"
+                    [(ngModel)]="formData.name"
+                    name="trackerName"
+                    required
+                    placeholder="e.g., HVAC Filter Replacement, BJJ Belt Streak, Plant Watering..."
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+                  />
                 </div>
 
-                <div class="grid grid-cols-3 gap-3">
-                  <div>
-                    <label class="block text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">Days</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="365"
-                      [(ngModel)]="formData.durationDays"
-                      name="durationDays"
-                      class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
-                    />
+                <!-- Duration Configuration (Days, Hours, Minutes) -->
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                      Duration Setting <span class="text-rose-500">*</span>
+                    </label>
+                    <span class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                      Total: {{ formatDuration(formData.durationDays, formData.durationHours, formData.durationMinutes) }}
+                    </span>
                   </div>
 
-                  <div>
-                    <label class="block text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">Hours</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="23"
-                      [(ngModel)]="formData.durationHours"
-                      name="durationHours"
-                      class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
-                    />
+                  <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                    <div>
+                      <label class="block text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">Days</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="365"
+                        [(ngModel)]="formData.durationDays"
+                        name="durationDays"
+                        class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="block text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">Hours</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="23"
+                        [(ngModel)]="formData.durationHours"
+                        name="durationHours"
+                        class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="block text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">Minutes</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        [(ngModel)]="formData.durationMinutes"
+                        name="durationMinutes"
+                        class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label class="block text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">Minutes</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="59"
-                      [(ngModel)]="formData.durationMinutes"
-                      name="durationMinutes"
-                      class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
-                    />
+                  <!-- Quick Presets -->
+                  <div class="pt-1">
+                    <div class="text-[11px] text-zinc-400 dark:text-zinc-500 mb-1.5">Quick Presets:</div>
+                    <div class="flex flex-wrap gap-1.5">
+                      @for (preset of presets; track preset.label) {
+                        <button
+                          type="button"
+                          (click)="applyPreset(preset)"
+                          class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors cursor-pointer"
+                        >
+                          {{ preset.label }}
+                        </button>
+                      }
+                    </div>
                   </div>
                 </div>
 
-                <!-- Quick Presets -->
-                <div class="pt-1">
-                  <div class="text-[11px] text-zinc-400 dark:text-zinc-500 mb-1.5">Quick Presets:</div>
-                  <div class="flex flex-wrap gap-1.5">
-                    @for (preset of presets; track preset.label) {
-                      <button
-                        type="button"
-                        (click)="applyPreset(preset)"
-                        class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors cursor-pointer"
-                      >
-                        {{ preset.label }}
-                      </button>
-                    }
+                <!-- Telegram Notification Option -->
+                <div class="p-3.5 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/40 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <mat-icon class="!text-base !w-4 !h-4 text-sky-500">send</mat-icon>
+                      <span class="text-xs font-semibold text-zinc-900 dark:text-white">Notify over Telegram</span>
+                    </div>
+                    <mat-slide-toggle [(ngModel)]="formData.notifyTelegram" name="notifyTelegram" color="primary"></mat-slide-toggle>
                   </div>
+                  <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    Receive Johan Bot Telegram alert via hourly scheduled check when this tracker completes its target duration.
+                  </p>
                 </div>
-              </div>
-
-              <!-- Telegram Notification Option -->
-              <div class="p-3.5 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/40 space-y-2">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <mat-icon class="!text-base !w-4 !h-4 text-sky-500">send</mat-icon>
-                    <span class="text-xs font-semibold text-zinc-900 dark:text-white">Notify over Telegram</span>
-                  </div>
-                  <mat-slide-toggle [(ngModel)]="formData.notifyTelegram" name="notifyTelegram" color="primary"></mat-slide-toggle>
-                </div>
-                <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
-                  Receive Johan Bot Telegram alert via hourly scheduled check when this tracker completes its target duration.
-                </p>
               </div>
 
               <!-- Modal Footer -->
-              <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+              <div class="px-4 py-3 sm:px-6 sm:py-3.5 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/90 flex items-center justify-end gap-2.5 shrink-0">
                 <button
                   mat-stroked-button
                   type="button"
@@ -542,74 +532,91 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
                   class="!rounded-xl !text-xs !font-semibold"
                 >
                   @if (submitting()) {
-                    <mat-spinner diameter="14" class="!mr-1.5 inline-block"></mat-spinner>
-                    <span>Saving...</span>
+                    <span class="flex items-center gap-1.5">
+                      <mat-spinner diameter="14"></mat-spinner>
+                      <span>Saving...</span>
+                    </span>
                   } @else {
                     <span>{{ isEditing() ? 'Save Changes' : 'Create Tracker' }}</span>
                   }
                 </button>
               </div>
             </form>
-          </div>
+          </mat-card>
         </div>
       }
 
       <!-- Reset Confirmation Modal -->
       @if (resetConfirmItem()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-xs animate-in fade-in">
-          <div class="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl p-6 space-y-4 animate-in zoom-in-95">
-            <div class="flex items-center gap-3">
-              <div class="p-2.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                <mat-icon class="!w-6 !h-6 !text-2xl">restart_alt</mat-icon>
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 md:p-6 animate-in fade-in">
+          <mat-card
+            class="relative w-full max-w-md !bg-white dark:!bg-zinc-900 !border !border-zinc-200 dark:!border-zinc-800 !rounded-t-3xl sm:!rounded-2xl !shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[92vh] !p-0"
+            (click)="$event.stopPropagation()"
+          >
+            <!-- Modal Header -->
+            <div class="px-4 py-3.5 sm:px-6 sm:py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-zinc-50/80 dark:bg-zinc-900/90 shrink-0">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="p-2 rounded-xl bg-amber-50 dark:bg-amber-600/20 text-amber-600 dark:text-amber-400 text-lg flex items-center justify-center border border-amber-100 dark:border-amber-500/20 shrink-0">
+                  <mat-icon class="!text-amber-500">restart_alt</mat-icon>
+                </div>
+                <div class="min-w-0">
+                  <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white truncate">Reset Tracker Duration?</h2>
+                  <p class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate hidden xs:block">{{ resetConfirmItem()?.name }}</p>
+                </div>
               </div>
-              <div>
-                <h3 class="text-base font-bold text-zinc-900 dark:text-white">Reset Tracker Duration?</h3>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                  Item: <span class="font-semibold text-zinc-800 dark:text-zinc-200">{{ resetConfirmItem()?.name }}</span>
+              <button
+                type="button"
+                (click)="resetConfirmItem.set(null)"
+                class="p-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer shrink-0"
+              >
+                <mat-icon class="!text-base !w-4 !h-4">close</mat-icon>
+              </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+              <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200/80 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-300 space-y-1.5">
+                <div class="flex justify-between">
+                  <span>Time overflow:</span>
+                  <strong class="text-zinc-900 dark:text-white">
+                    @if (getTrackerMetrics(resetConfirmItem()!).overflowSeconds > 0) {
+                      <span class="text-rose-600 dark:text-rose-400 font-semibold">+{{ getOverflowFormatted(resetConfirmItem()!) }}</span>
+                    } @else {
+                      <span class="text-zinc-500 dark:text-zinc-400">0s (within target duration)</span>
+                    }
+                  </strong>
+                </div>
+                <div class="flex justify-between">
+                  <span>Current progress:</span>
+                  <strong class="text-zinc-900 dark:text-white">{{ getTrackerMetrics(resetConfirmItem()!).progressPercentage }}%</strong>
+                </div>
+                <div class="flex justify-between">
+                  <span>Status:</span>
+                  <span class="font-semibold flex items-center gap-1" [style.color]="getStatusColor(getTrackerMetrics(resetConfirmItem()!).progressPercentage)">
+                    <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="getStatusColor(getTrackerMetrics(resetConfirmItem()!).progressPercentage)"></span>
+                    {{ getStatusLabel(getTrackerMetrics(resetConfirmItem()!).progressPercentage) }}
+                  </span>
+                </div>
+                <p class="text-[11px] text-zinc-400 dark:text-zinc-500 pt-1.5 border-t border-zinc-200/50 dark:border-zinc-800">
+                  Resetting will reset the duration and overflow back to 0 and record an immutable entry in the reset history log.
                 </p>
               </div>
+
+              <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                  Optional Reset Note / Reason
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="resetNote"
+                  placeholder="e.g., Routine maintenance performed, Filter replaced, Watered..."
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
             </div>
 
-            <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/60 dark:border-zinc-700/60 text-xs text-zinc-600 dark:text-zinc-300 space-y-1">
-              <div class="flex justify-between">
-                <span>Time overflow:</span>
-                <strong class="text-zinc-900 dark:text-white">
-                  @if (getTrackerMetrics(resetConfirmItem()!).overflowSeconds > 0) {
-                    <span class="text-rose-600 dark:text-rose-400 font-semibold">+{{ getOverflowFormatted(resetConfirmItem()!) }}</span>
-                  } @else {
-                    <span class="text-zinc-500 dark:text-zinc-400">0s (within target duration)</span>
-                  }
-                </strong>
-              </div>
-              <div class="flex justify-between">
-                <span>Current progress:</span>
-                <strong class="text-zinc-900 dark:text-white">{{ getTrackerMetrics(resetConfirmItem()!).progressPercentage }}%</strong>
-              </div>
-              <div class="flex justify-between">
-                <span>Status:</span>
-                <span class="font-semibold flex items-center gap-1" [style.color]="getStatusColor(getTrackerMetrics(resetConfirmItem()!).progressPercentage)">
-                  <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="getStatusColor(getTrackerMetrics(resetConfirmItem()!).progressPercentage)"></span>
-                  {{ getStatusLabel(getTrackerMetrics(resetConfirmItem()!).progressPercentage) }}
-                </span>
-              </div>
-              <p class="text-[11px] text-zinc-400 dark:text-zinc-500 pt-1 border-t border-zinc-200/50 dark:border-zinc-700/50">
-                Resetting will reset the duration and overflow back to 0 and record an immutable entry in the reset history log.
-              </p>
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                Optional Reset Note / Reason
-              </label>
-              <input
-                type="text"
-                [(ngModel)]="resetNote"
-                placeholder="e.g., Routine maintenance performed, Filter replaced, Watered..."
-                class="w-full px-3 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all"
-              />
-            </div>
-
-            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+            <!-- Modal Footer -->
+            <div class="px-4 py-3 sm:px-6 sm:py-3.5 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/90 flex items-center justify-end gap-2.5 shrink-0">
               <button
                 mat-stroked-button
                 type="button"
@@ -627,39 +634,43 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
                 class="!rounded-xl !text-xs !font-semibold !bg-amber-600 hover:!bg-amber-700 text-white cursor-pointer"
               >
                 @if (resettingId() !== null) {
-                  <mat-spinner diameter="14" class="!mr-1.5 inline-block"></mat-spinner>
-                  <span>Resetting...</span>
+                  <span class="flex items-center gap-1.5">
+                    <mat-spinner diameter="14"></mat-spinner>
+                    <span>Resetting...</span>
+                  </span>
                 } @else {
                   <span>Confirm Reset</span>
                 }
               </button>
             </div>
-          </div>
+          </mat-card>
         </div>
       }
 
       <!-- Delete Confirmation Modal -->
       @if (deleteConfirmItem()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-xs animate-in fade-in">
-          <div class="w-full max-w-sm rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl p-6 space-y-4 animate-in zoom-in-95">
-            <div class="flex items-center gap-3">
-              <div class="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20">
-                <mat-icon class="!w-6 !h-6 !text-2xl">delete_forever</mat-icon>
-              </div>
-              <div>
-                <h3 class="text-base font-bold text-zinc-900 dark:text-white">Delete Tracked Item?</h3>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                  This will permanently delete <span class="font-semibold text-zinc-800 dark:text-zinc-200">{{ deleteConfirmItem()?.name }}</span> and all its reset logs.
-                </p>
-              </div>
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center items-center p-4 animate-in fade-in">
+          <mat-card
+            class="relative w-full max-w-sm !bg-white dark:!bg-zinc-900 !border !border-zinc-200 dark:!border-zinc-800 !rounded-2xl !shadow-2xl overflow-hidden !p-6 space-y-4"
+            (click)="$event.stopPropagation()"
+          >
+            <div class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto border border-rose-500/20">
+              <mat-icon class="!text-2xl !w-6 !h-6">delete_forever</mat-icon>
             </div>
 
-            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+            <div class="text-center space-y-1">
+              <h3 class="text-sm font-bold text-zinc-900 dark:text-white">Delete Tracked Item?</h3>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                This will permanently delete <span class="font-semibold text-zinc-800 dark:text-zinc-200">{{ deleteConfirmItem()?.name }}</span> and all its reset logs.
+              </p>
+            </div>
+
+            <div class="flex items-center justify-center gap-2.5 pt-2">
               <button
                 mat-stroked-button
                 type="button"
                 (click)="deleteConfirmItem.set(null)"
-                class="!rounded-xl !text-xs"
+                class="!rounded-xl !text-xs flex-1"
               >
                 Cancel
               </button>
@@ -669,43 +680,51 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
                 type="button"
                 (click)="executeDelete()"
                 [disabled]="deletingId() !== null"
-                class="!rounded-xl !text-xs !font-semibold"
+                class="!rounded-xl !text-xs !font-semibold flex-1 !bg-rose-600 hover:!bg-rose-700 text-white"
               >
                 @if (deletingId() !== null) {
-                  <mat-spinner diameter="14" class="!mr-1.5 inline-block"></mat-spinner>
-                  <span>Deleting...</span>
+                  <span class="flex items-center justify-center gap-1.5">
+                    <mat-spinner diameter="14"></mat-spinner>
+                    <span>Deleting...</span>
+                  </span>
                 } @else {
                   <span>Delete Tracker</span>
                 }
               </button>
             </div>
-          </div>
+          </mat-card>
         </div>
       }
 
       <!-- Reset Logs Modal -->
       @if (viewResetsItem()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-xs animate-in fade-in">
-          <div class="w-full max-w-xl rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl p-6 space-y-4 max-h-[85vh] flex flex-col animate-in zoom-in-95">
-            <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
-              <div class="flex items-center gap-2">
-                <div class="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-500">
-                  <mat-icon class="!text-lg !w-5 !h-5">history</mat-icon>
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 md:p-6 animate-in fade-in">
+          <mat-card
+            class="relative w-full max-w-xl !bg-white dark:!bg-zinc-900 !border !border-zinc-200 dark:!border-zinc-800 !rounded-t-3xl sm:!rounded-2xl !shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[85vh] !p-0"
+            (click)="$event.stopPropagation()"
+          >
+            <!-- Modal Header -->
+            <div class="px-4 py-3.5 sm:px-6 sm:py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-zinc-50/80 dark:bg-zinc-900/90 shrink-0">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 text-lg flex items-center justify-center border border-indigo-100 dark:border-indigo-500/20 shrink-0">
+                  <mat-icon class="!text-indigo-500">history</mat-icon>
                 </div>
-                <div>
-                  <h3 class="text-base font-bold text-zinc-900 dark:text-white">Reset History Logs</h3>
-                  <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                    Tracker: <span class="font-semibold text-zinc-800 dark:text-zinc-200">{{ viewResetsItem()?.name }}</span>
-                  </p>
+                <div class="min-w-0">
+                  <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white truncate">Reset History Logs</h2>
+                  <p class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate hidden xs:block">{{ viewResetsItem()?.name }}</p>
                 </div>
               </div>
-              <button type="button" (click)="viewResetsItem.set(null)" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer">
-                <mat-icon class="!text-lg !w-5 !h-5">close</mat-icon>
+              <button
+                type="button"
+                (click)="viewResetsItem.set(null)"
+                class="p-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer shrink-0"
+              >
+                <mat-icon class="!text-base !w-4 !h-4">close</mat-icon>
               </button>
             </div>
 
             <!-- Resets List Content -->
-            <div class="flex-1 overflow-y-auto space-y-2.5 pr-1">
+            <div class="p-4 sm:p-6 flex-1 overflow-y-auto space-y-2.5">
               @if (loadingResets()) {
                 <div class="py-8 flex flex-col items-center justify-center text-zinc-400">
                   <mat-spinner diameter="24"></mat-spinner>
@@ -719,7 +738,7 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
                 </div>
               } @else {
                 @for (log of resetLogs(); track log.id; let idx = $index) {
-                  <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/60 dark:border-zinc-700/60 flex items-start justify-between gap-3 text-xs">
+                  <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200/60 dark:border-zinc-800/80 flex items-start justify-between gap-3 text-xs">
                     <div class="space-y-1">
                       <div class="flex items-center gap-2">
                         <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
@@ -733,7 +752,7 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
                         Running duration before reset: <strong class="text-zinc-700 dark:text-zinc-300">{{ formatSeconds(log.elapsedSeconds) }}</strong>
                       </div>
                       @if (log.note) {
-                        <div class="text-[11px] text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 p-2 rounded-lg border border-zinc-200/40 dark:border-zinc-700/40 italic">
+                        <div class="text-[11px] text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-900 p-2 rounded-lg border border-zinc-200/60 dark:border-zinc-800 italic">
                           "{{ log.note }}"
                         </div>
                       }
@@ -746,8 +765,8 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
               }
             </div>
 
-            <div class="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800 shrink-0 text-xs text-zinc-400">
-              <span>Total recorded resets: <strong>{{ resetLogs().length }}</strong></span>
+            <div class="px-4 py-3 sm:px-6 sm:py-3.5 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/90 flex items-center justify-between shrink-0 text-xs text-zinc-500 dark:text-zinc-400">
+              <span>Total recorded resets: <strong class="text-zinc-900 dark:text-white">{{ resetLogs().length }}</strong></span>
               <button
                 mat-stroked-button
                 type="button"
@@ -757,7 +776,7 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
                 Close
               </button>
             </div>
-          </div>
+          </mat-card>
         </div>
       }
     </div>

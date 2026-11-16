@@ -265,3 +265,35 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover {
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #4b5563;
 }
+
+/* Mobile App & Touch Optimizations */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Safe area insets */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.mb-safe {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mobile modal sheet transitions and responsiveness */
+@media (max-width: 640px) {
+  .mat-mdc-dialog-container .mdc-dialog__surface {
+    border-radius: 1.25rem 1.25rem 0 0 !important;
+    max-height: 92dvh !important;
+  }
+}

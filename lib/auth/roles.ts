@@ -136,6 +136,15 @@ export const BASE_MENU_ITEMS: MenuItem[] = [
     allowedRoles: ["admin", "operator", "user"],
   },
   {
+    id: "wish_list",
+    label: "Wish List",
+    icon: "card_giftcard",
+    badge: "Wish",
+    description: "Manage wishes with waiting periods, created date metadata, and target counters",
+    category: "General",
+    allowedRoles: ["admin", "operator", "user"],
+  },
+  {
     id: "system",
     label: "System Admin",
     icon: "admin_panel_settings",
@@ -155,6 +164,7 @@ export const DEFAULT_MENU_MAPPINGS: Record<string, string[]> = {
   telegram_settings: ["admin", "operator", "user"],
   ai_prompts: ["admin", "operator", "user"],
   tracking: ["admin", "operator", "user"],
+  wish_list: ["admin", "operator", "user"],
   system: ["admin"],
 };
 

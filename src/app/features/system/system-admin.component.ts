@@ -63,7 +63,7 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
       }
 
       <!-- Sub Tabs Navigation -->
-      <div class="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 overflow-x-auto text-xs pb-1 sm:pb-1.5 shadow-xs dark:shadow-none">
+      <div class="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 overflow-x-auto no-scrollbar text-xs pb-1 sm:pb-1.5 shadow-xs dark:shadow-none">
         <button
           matRipple
           type="button"

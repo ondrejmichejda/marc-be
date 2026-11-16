@@ -334,6 +334,21 @@ export async function initDatabase(): Promise<void> {
         );
       `;
 
+      // Create wishes table for wish list items
+      await sql`
+        CREATE TABLE IF NOT EXISTS wishes (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT NOT NULL DEFAULT '',
+          waiting_period TEXT NOT NULL DEFAULT '1week',
+          counter INT NOT NULL DEFAULT 0,
+          max_counter INT NOT NULL DEFAULT 5,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `;
+
       // Create roles table for dynamic role management
       await sql`
         CREATE TABLE IF NOT EXISTS roles (
@@ -390,6 +405,9 @@ export async function initDatabase(): Promise<void> {
             ('tracking', 'admin'),
             ('tracking', 'operator'),
             ('tracking', 'user'),
+            ('wish_list', 'admin'),
+            ('wish_list', 'operator'),
+            ('wish_list', 'user'),
             ('system', 'admin')
           ON CONFLICT DO NOTHING;
         `;
@@ -416,6 +434,8 @@ export async function initDatabase(): Promise<void> {
       await sql`CREATE INDEX IF NOT EXISTS idx_tracker_resets_tracker_id ON tracker_reset_logs(tracker_id);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_tracker_resets_user_id ON tracker_reset_logs(user_id);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_tracker_resets_reset_at ON tracker_reset_logs(reset_at DESC);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_wishes_user_id ON wishes(user_id);`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_wishes_created_at ON wishes(created_at DESC);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);`;
       await sql`CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);`;

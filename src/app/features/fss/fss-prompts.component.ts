@@ -64,7 +64,7 @@ export type FssPromptsTab = 'prompts' | 'template';
       }
 
       <!-- Main Navigation Tabs -->
-      <div class="flex items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-xs dark:shadow-none">
+      <div class="flex items-center gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-xs dark:shadow-none overflow-x-auto no-scrollbar">
         <button
           matRipple
           type="button"
@@ -538,11 +538,11 @@ export type FssPromptsTab = 'prompts' | 'template';
 
       <!-- Edit Modal (Prompts) -->
       @if (editingPrompt()) {
-        <div class="fixed inset-0 z-50 bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <mat-card class="w-full max-w-2xl !p-6 !rounded-2xl !bg-white dark:!bg-zinc-900 !border !border-zinc-200 dark:!border-zinc-800 space-y-5 !shadow-2xl animate-in zoom-in-95">
-            <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+        <div class="fixed inset-0 z-50 bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <mat-card class="w-full max-w-2xl !p-4 sm:!p-6 !rounded-t-3xl sm:!rounded-2xl !bg-white dark:!bg-zinc-900 !border !border-zinc-200 dark:!border-zinc-800 space-y-4 sm:space-y-5 !shadow-2xl animate-in zoom-in-95 max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto flex flex-col">
+            <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
               <div class="space-y-0.5">
-                <h2 class="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                   <mat-icon class="!text-indigo-600 dark:text-indigo-400">edit_note</mat-icon>
                   <span>Upravit prompt: {{ editingPrompt()?.propertyName || editingPrompt()?.fieldKey }}</span>
                 </h2>
@@ -559,7 +559,7 @@ export type FssPromptsTab = 'prompts' | 'template';
               </button>
             </div>
 
-            <div class="space-y-4">
+            <div class="space-y-4 flex-1">
               <div class="space-y-1.5">
                 <label class="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Popis pole</label>
                 <input
