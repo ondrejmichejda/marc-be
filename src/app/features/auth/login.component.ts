@@ -104,7 +104,7 @@ import { ThemeService } from '../../core/services/theme.service';
                 (click)="errorDismissed.set(true)"
                 class="opacity-70 hover:opacity-100 p-0.5 cursor-pointer"
               >
-                ✕
+                <mat-icon class="!text-sm !w-4 !h-4">close</mat-icon>
               </button>
             </div>
             <p class="opacity-90">{{ authErrorMessage() }}</p>
@@ -112,7 +112,7 @@ import { ThemeService } from '../../core/services/theme.service';
         }
 
         <!-- Card -->
-        <mat-card class="!p-8 !rounded-2xl !bg-white/90 dark:!bg-zinc-900/90 !border !border-zinc-200 dark:!border-zinc-800 !shadow-xl dark:!shadow-2xl backdrop-blur-xl">
+        <mat-card class="!p-8 !rounded-2xl !bg-white/90 dark:!bg-zinc-900/90 !border !border-zinc-200 dark:border-zinc-800 !shadow-xl dark:!shadow-2xl backdrop-blur-xl">
           <div class="space-y-4">
             <app-google-signin-button
               label="Sign in with Google"
@@ -123,7 +123,10 @@ import { ThemeService } from '../../core/services/theme.service';
 
             @if (!authService.isConfigured()) {
               <div class="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 text-xs text-amber-800 dark:text-amber-300/90 leading-relaxed">
-                <span class="font-semibold block mb-0.5">⚠️ Setup Required:</span>
+                <span class="font-semibold flex items-center gap-1 mb-0.5">
+                  <mat-icon class="!text-sm !w-4 !h-4 text-amber-600 dark:text-amber-400">warning</mat-icon>
+                  <span>Setup Required:</span>
+                </span>
                 Set <code class="font-mono text-amber-900 dark:text-amber-200">GOOGLE_CLIENT_ID</code> and
                 <code class="font-mono text-amber-900 dark:text-amber-200">GOOGLE_CLIENT_SECRET</code> in
                 <code class="font-mono text-amber-900 dark:text-amber-200">.env.local</code> to enable Google OAuth.
@@ -135,15 +138,15 @@ import { ThemeService } from '../../core/services/theme.service';
 
           <div class="space-y-2.5 text-xs text-zinc-500 dark:text-zinc-400">
             <div class="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
-              <span class="text-emerald-500 dark:text-emerald-400 font-bold">✓</span>
+              <mat-icon class="!text-sm !w-4 !h-4 text-emerald-500 dark:text-emerald-400">check_circle</mat-icon>
               <span>Single sign-on with verified Google Account</span>
             </div>
             <div class="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
-              <span class="text-emerald-500 dark:text-emerald-400 font-bold">✓</span>
+              <mat-icon class="!text-sm !w-4 !h-4 text-emerald-500 dark:text-emerald-400">check_circle</mat-icon>
               <span>Automatic user account provisioning</span>
             </div>
             <div class="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
-              <span class="text-emerald-500 dark:text-emerald-400 font-bold">✓</span>
+              <mat-icon class="!text-sm !w-4 !h-4 text-emerald-500 dark:text-emerald-400">check_circle</mat-icon>
               <span>Secure JWT session token management</span>
             </div>
           </div>

@@ -384,13 +384,13 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
       @if (successMessage()) {
         <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between animate-in fade-in">
           <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-emerald-600 dark:text-emerald-400">check_circle</mat-icon> {{ successMessage() }}</span>
-          <button type="button" (click)="successMessage.set(null)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-white">✕</button>
+          <button type="button" (click)="successMessage.set(null)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-white cursor-pointer"><mat-icon class="!text-sm !w-4 !h-4">close</mat-icon></button>
         </div>
       }
       @if (errorMessage()) {
         <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs flex items-center justify-between animate-in fade-in">
           <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-rose-600 dark:text-rose-400">error</mat-icon> {{ errorMessage() }}</span>
-          <button type="button" (click)="errorMessage.set(null)" class="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-white">✕</button>
+          <button type="button" (click)="errorMessage.set(null)" class="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-white cursor-pointer"><mat-icon class="!text-sm !w-4 !h-4">close</mat-icon></button>
         </div>
       }
 
@@ -478,7 +478,10 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
                 [class]="validationStatus()?.success ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300' : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-300'"
               >
                 <div class="font-semibold flex items-center justify-between">
-                  <span>{{ validationStatus()?.success ? '✓ Klíč je platný a komunikace s OpenAI proběhla úspěšně' : '✕ Ověření klíče selhalo' }}</span>
+                  <span class="flex items-center gap-1.5">
+                    <mat-icon class="!text-sm !w-4 !h-4">{{ validationStatus()?.success ? 'check_circle' : 'error' }}</mat-icon>
+                    <span>{{ validationStatus()?.success ? 'Klíč je platný a komunikace s OpenAI proběhla úspěšně' : 'Ověření klíče selhalo' }}</span>
+                  </span>
                   @if (validationLatencyMs > 0) {
                     <span class="text-[11px] opacity-80">{{ validationLatencyMs }} ms</span>
                   }
@@ -599,10 +602,13 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
                     <button
                       type="button"
                       (click)="selectedCategory.set(cat.id)"
-                      class="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer"
+                      class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer"
                       [class]="selectedCategory() === cat.id ? 'bg-indigo-600 text-white shadow-xs font-semibold' : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
                     >
-                      {{ cat.label }} ({{ getCategoryCount(cat.id) }})
+                      @if (cat.icon) {
+                        <mat-icon class="!text-xs !w-3.5 !h-3.5">{{ cat.icon }}</mat-icon>
+                      }
+                      <span>{{ cat.label }} ({{ getCategoryCount(cat.id) }})</span>
                     </button>
                   }
                 </div>
@@ -646,8 +652,8 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
                           </span>
                         }
                         @if (m.isReasoning) {
-                          <span class="px-1.5 py-0.5 rounded text-[9px] font-medium bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20" matTooltip="Uvažovací model">
-                            🧠
+                          <span class="px-1.5 py-0.5 rounded text-[9px] font-medium bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 flex items-center justify-center" matTooltip="Uvažovací model">
+                            <mat-icon class="!text-[12px] !w-3 !h-3">psychology</mat-icon>
                           </span>
                         }
                         <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
@@ -917,11 +923,11 @@ export class UserAiSettingsComponent implements OnInit {
   });
 
   readonly filterCategories = [
-    { id: 'all', label: 'Všechny modely' },
-    { id: 'flagship', label: '🌟 Vlajkové' },
-    { id: 'fast', label: '⚡ Rychlé & Úsporné' },
-    { id: 'reasoning', label: '🧠 Reasoning' },
-    { id: 'legacy', label: '📦 Předchozí & Snapshoty' },
+    { id: 'all', label: 'Všechny modely', icon: '' },
+    { id: 'flagship', label: 'Vlajkové', icon: 'star' },
+    { id: 'fast', label: 'Rychlé & Úsporné', icon: 'bolt' },
+    { id: 'reasoning', label: 'Reasoning', icon: 'psychology' },
+    { id: 'legacy', label: 'Předchozí & Snapshoty', icon: 'inventory_2' },
   ];
 
   readonly selectedCategory = signal<string>('all');

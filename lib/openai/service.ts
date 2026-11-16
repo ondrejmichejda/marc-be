@@ -703,7 +703,7 @@ export async function generateFunnyInsult(
 
 /**
  * Generates an AI completion and responds in Telegram using Johan bot integration
- * to the user matched by name and surname.
+ * Prioritizes user's configured personal Telegram ID over name lookup.
  */
 export async function respondToTelegramUserByName(params: {
   name?: string;
@@ -711,6 +711,7 @@ export async function respondToTelegramUserByName(params: {
   fullName?: string;
   userEmail?: string;
   userId?: string;
+  telegramId?: string | number;
   prompt: string;
   promptTitle?: string;
   scheduledTime?: string;
@@ -746,8 +747,10 @@ export async function respondToTelegramUserByName(params: {
     webSearch: params.webSearch,
   });
 
-  // 2. Deliver via Johan Bot integration to user matched by name and surname
+  // 2. Deliver via Johan Bot integration using configured Telegram ID or name lookup
   const telegramResult = await TelegramService.sendAiPromptResponse({
+    userId: params.userId,
+    telegramId: params.telegramId,
     userIdentifier,
     userName: targetName,
     userSurname: params.surname,
@@ -776,3 +779,5 @@ export async function respondToTelegramUserByName(params: {
     },
   };
 }
+
+export const respondToTelegramUser = respondToTelegramUserByName;

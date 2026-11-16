@@ -3,6 +3,8 @@ import { isTelegramConfigured } from "./config";
 import { formatTaskSummary, createTaskKeyboard } from "./handlers/taskHandler";
 import { MessageService } from "./messages";
 import { SubscriberService, parseFullName } from "./subscribers";
+import { UserTelegramSettingsService } from "./userSettings";
+import { UserService } from "../auth/userService";
 import {
   BroadcastResult,
   DeploymentNotificationOptions,
@@ -241,75 +243,68 @@ export class TelegramService {
   }
 
   /**
-   * Finds an active Telegram subscriber by name and surname and sends them a message via Johan bot.
+   * Sends a message to a user directly using their configured Telegram ID or user ID.
    */
-  static async sendResponseToUserByName(params: {
-    name?: string;
-    surname?: string;
-    fullName?: string;
+  static async sendResponseToUserById(params: {
+    userId?: string;
+    telegramId?: string | number;
     text: string;
     parseMode?: "Markdown" | "HTML";
   }): Promise<{
     success: boolean;
+    chatId?: number | string;
     subscriber?: Subscriber;
     messageId?: number;
     error?: string;
   }> {
-    const targetName = params.name || params.fullName;
-    const targetSurname = params.surname;
+    let targetTelegramId = params.telegramId !== undefined && params.telegramId !== null
+      ? String(params.telegramId).trim()
+      : undefined;
+    const userId = params.userId;
 
-    if (!targetName && !targetSurname) {
-      return { success: false, error: "Missing name or surname parameter for user lookup." };
+    if (!targetTelegramId && userId) {
+      const settings = await UserTelegramSettingsService.getSettings(userId);
+      if (settings?.telegramId && settings.notificationsEnabled) {
+        targetTelegramId = settings.telegramId;
+      }
     }
 
-    const subscriber = await SubscriberService.findSubscriberByNameAndSurname(
-      targetName || "",
-      targetSurname
-    );
-
-    if (!subscriber) {
-      const formattedLookup = [targetName, targetSurname].filter(Boolean).join(" ");
+    if (!targetTelegramId) {
       return {
         success: false,
-        error: `No active Telegram subscriber found matching '${formattedLookup}'.`,
+        error: `No configured Telegram ID found for user '${userId || "unknown"}'.`,
       };
     }
 
+    const numericChatId = parseInt(targetTelegramId, 10);
+    const effectiveChatId = Number.isNaN(numericChatId) ? targetTelegramId : numericChatId;
+
     try {
       if (!isTelegramConfigured()) {
-        // Simulation mode for tests / offline dev
         await MessageService.logMessage({
-          chatId: subscriber.chatId,
-          userId: subscriber.userId,
-          username: subscriber.username,
-          firstName: subscriber.firstName,
-          lastName: subscriber.lastName,
-          chatType: subscriber.chatType || "private",
+          chatId: typeof effectiveChatId === "number" ? effectiveChatId : 0,
+          userId: typeof effectiveChatId === "number" ? effectiveChatId : undefined,
           text: params.text,
           direction: "outgoing",
           messageType: "simulated_user_response",
-          rawPayload: { simulated: true, recipient: subscriber },
+          rawPayload: { simulated: true, telegramId: targetTelegramId, userId },
         });
 
         return {
           success: true,
-          subscriber,
+          chatId: effectiveChatId,
         };
       }
 
       const bot = getTelegramBot();
-      const sent = await bot.api.sendMessage(subscriber.chatId, params.text, {
+      const sent = await bot.api.sendMessage(effectiveChatId, params.text, {
         parse_mode: params.parseMode || "Markdown",
       });
 
       await MessageService.logMessage({
         messageId: sent?.message_id,
-        chatId: subscriber.chatId,
-        userId: subscriber.userId,
-        username: subscriber.username,
-        firstName: subscriber.firstName,
-        lastName: subscriber.lastName,
-        chatType: subscriber.chatType || "private",
+        chatId: typeof effectiveChatId === "number" ? effectiveChatId : 0,
+        userId: typeof effectiveChatId === "number" ? effectiveChatId : undefined,
         text: params.text,
         direction: "outgoing",
         messageType: "user_response",
@@ -318,39 +313,88 @@ export class TelegramService {
 
       return {
         success: true,
-        subscriber,
+        chatId: effectiveChatId,
         messageId: sent?.message_id,
       };
     } catch (err) {
       const errorMessage = (err as Error).message || String(err);
-      console.error("[TelegramService] Error sending response to matched user:", errorMessage);
+      console.error("[TelegramService] Error sending response to user by ID:", errorMessage);
 
-      // Still log message as outgoing failed attempt
       await MessageService.logMessage({
-        chatId: subscriber.chatId,
-        userId: subscriber.userId,
-        username: subscriber.username,
-        firstName: subscriber.firstName,
-        lastName: subscriber.lastName,
-        chatType: subscriber.chatType || "private",
+        chatId: typeof effectiveChatId === "number" ? effectiveChatId : 0,
+        userId: typeof effectiveChatId === "number" ? effectiveChatId : undefined,
         text: params.text,
         direction: "outgoing",
         messageType: "user_response_failed",
-        rawPayload: { error: errorMessage },
+        rawPayload: { error: errorMessage, telegramId: targetTelegramId, userId },
       });
 
       return {
         success: false,
-        subscriber,
+        chatId: effectiveChatId,
         error: errorMessage,
       };
     }
   }
 
   /**
-   * Formats and delivers an AI prompt response to a user matched by name and surname using Johan bot integration.
+   * Universal method to send response to user via Johan bot.
+   * Requires configured personal Telegram ID or explicit Telegram ID.
+   * Does NOT map user by name/surname.
+   */
+  static async sendResponseToUser(params: {
+    userId?: string;
+    telegramId?: string | number;
+    name?: string;
+    surname?: string;
+    fullName?: string;
+    text: string;
+    parseMode?: "Markdown" | "HTML";
+  }): Promise<{
+    success: boolean;
+    subscriber?: Subscriber;
+    chatId?: number | string;
+    messageId?: number;
+    error?: string;
+  }> {
+    return this.sendResponseToUserById({
+      userId: params.userId,
+      telegramId: params.telegramId,
+      text: params.text,
+      parseMode: params.parseMode,
+    });
+  }
+
+  /**
+   * Refactored helper: sends response to user over Johan bot.
+   * Prioritizes personal Telegram configuration / ID over name matching.
+   */
+  static async sendResponseToUserByName(params: {
+    userId?: string;
+    telegramId?: string | number;
+    name?: string;
+    surname?: string;
+    fullName?: string;
+    text: string;
+    parseMode?: "Markdown" | "HTML";
+  }): Promise<{
+    success: boolean;
+    subscriber?: Subscriber;
+    chatId?: number | string;
+    messageId?: number;
+    error?: string;
+  }> {
+    return this.sendResponseToUser(params);
+  }
+
+  /**
+   * Formats and delivers an AI prompt response to a user using Johan bot integration.
+   * Strictly requires user's configured personal Telegram ID or explicit Telegram ID.
+   * Does NOT map user by name/surname.
    */
   static async sendAiPromptResponse(params: {
+    userId?: string;
+    telegramId?: string | number;
     userIdentifier?: string;
     userName?: string;
     userSurname?: string;
@@ -362,53 +406,103 @@ export class TelegramService {
   }): Promise<{
     success: boolean;
     subscriber?: Subscriber;
+    chatId?: number | string;
     formattedMessage: string;
     error?: string;
   }> {
-    // Determine lookup names
-    let firstName = params.userName;
-    let lastName = params.userSurname;
-
-    if (params.userName && !params.userSurname) {
-      const parsed = parseFullName(params.userName);
-      firstName = parsed.firstName;
-      lastName = parsed.lastName;
-    }
-
-    // Lookup subscriber
-    let subscriber = await SubscriberService.findSubscriberByNameAndSurname(
-      firstName || "",
-      lastName
-    );
-
-    if (!subscriber && params.userEmail) {
-      subscriber = await SubscriberService.matchSubscriberForUser({
-        name: params.userName,
-        email: params.userEmail,
-      });
-    }
-
     const formattedMessage = params.completion?.trim() || "";
 
-    if (!subscriber) {
-      const queryStr = [firstName, lastName].filter(Boolean).join(" ") || params.userEmail || "user";
+    // 1. Direct Telegram ID
+    if (params.telegramId) {
+      const res = await this.sendMessageToChat(params.telegramId, formattedMessage, {
+        messageType: "ai_prompt_response",
+      });
       return {
-        success: false,
+        success: res.success,
+        chatId: params.telegramId,
         formattedMessage,
-        error: `Nebyl nalezen aktivní Telegram odběratel pro uživatele '${queryStr}'.`,
+        error: res.error,
       };
     }
 
-    const sendRes = await this.sendMessageToChat(subscriber.chatId, formattedMessage, {
-      subscriber,
-      messageType: "ai_prompt_response",
+    // 2. Configured user Telegram ID lookup by userId or userIdentifier
+    const directUserId = params.userId || (params.userIdentifier?.startsWith("usr_") ? params.userIdentifier : undefined);
+    if (directUserId) {
+      const userTgId = await UserTelegramSettingsService.getTelegramIdForUser(directUserId);
+      if (userTgId) {
+        const res = await this.sendMessageToChat(userTgId, formattedMessage, {
+          messageType: "ai_prompt_response",
+        });
+        return {
+          success: res.success,
+          chatId: userTgId,
+          formattedMessage,
+          error: res.error,
+        };
+      }
+    }
+
+    // 3. User lookup by email if available to find configured Telegram ID
+    if (params.userEmail) {
+      const user = await UserService.getUserByEmail(params.userEmail);
+      if (user) {
+        const userTgId = await UserTelegramSettingsService.getTelegramIdForUser(user.id);
+        if (userTgId) {
+          const res = await this.sendMessageToChat(userTgId, formattedMessage, {
+            messageType: "ai_prompt_response",
+          });
+          return {
+            success: res.success,
+            chatId: userTgId,
+            formattedMessage,
+            error: res.error,
+          };
+        }
+      }
+    }
+
+    // 4. No configured Telegram ID found -> fail (do not map user by name and surname)
+    const target = params.userId || params.userEmail || params.userIdentifier || "user";
+    return {
+      success: false,
+      formattedMessage,
+      error: `Nebyl nalezen aktivní Telegram odběratel ani nakonfigurované Telegram ID pro uživatele '${target}'. Prosím nastavte si personální Telegram ID v nastavení.`,
+    };
+  }
+
+  /**
+   * Tests personal Telegram notification for a user.
+   */
+  static async testPersonalNotification(
+    userId: string,
+    customMessage?: string
+  ): Promise<{ success: boolean; chatId?: number | string; error?: string }> {
+    const settings = await UserTelegramSettingsService.getSettings(userId);
+    if (!settings?.telegramId) {
+      return {
+        success: false,
+        error: "Telegram ID is not configured in your personal settings.",
+      };
+    }
+
+    const message =
+      customMessage ||
+      `🤖 *Johan Bot Test Notification*\n\n` +
+      `✅ Vaše personální Telegram konfigurace je aktivní a funkční!\n` +
+      `• Uživatel: \`${userId}\`\n` +
+      `• Telegram ID: \`${settings.telegramId}\`\n` +
+      `• Čas: \`${new Date().toLocaleString("cs-CZ")}\``;
+
+    const res = await this.sendResponseToUserById({
+      userId,
+      telegramId: settings.telegramId,
+      text: message,
     });
 
     return {
-      success: sendRes.success,
-      subscriber,
-      formattedMessage,
-      error: sendRes.error,
+      success: res.success,
+      chatId: res.chatId,
+      error: res.error,
     };
   }
 
@@ -416,14 +510,18 @@ export class TelegramService {
    * Helper to send a message to a specific chat with fallback and logging.
    */
   private static async sendMessageToChat(
-    chatId: number,
+    chatId: number | string,
     text: string,
     meta?: { subscriber?: Subscriber; messageType?: string }
   ): Promise<{ success: boolean; error?: string }> {
+    const numericChatId = typeof chatId === "number" ? chatId : parseInt(chatId, 10);
+    const effectiveChatId = Number.isNaN(numericChatId) ? chatId : numericChatId;
+    const logChatId = typeof effectiveChatId === "number" ? effectiveChatId : 0;
+
     try {
       if (!isTelegramConfigured()) {
         await MessageService.logMessage({
-          chatId,
+          chatId: logChatId,
           userId: meta?.subscriber?.userId,
           username: meta?.subscriber?.username,
           firstName: meta?.subscriber?.firstName,
@@ -432,19 +530,19 @@ export class TelegramService {
           text,
           direction: "outgoing",
           messageType: meta?.messageType || "message",
-          rawPayload: { simulated: true },
+          rawPayload: { simulated: true, chatId: effectiveChatId },
         });
         return { success: true };
       }
 
       const bot = getTelegramBot();
-      const sent = await bot.api.sendMessage(chatId, text, {
+      const sent = await bot.api.sendMessage(effectiveChatId, text, {
         parse_mode: "Markdown",
       });
 
       await MessageService.logMessage({
         messageId: sent?.message_id,
-        chatId,
+        chatId: logChatId,
         userId: meta?.subscriber?.userId,
         username: meta?.subscriber?.username,
         firstName: meta?.subscriber?.firstName,
@@ -462,7 +560,7 @@ export class TelegramService {
       console.warn(`[TelegramService] Warning: Could not send message to chat ${chatId}:`, msg);
 
       await MessageService.logMessage({
-        chatId,
+        chatId: logChatId,
         userId: meta?.subscriber?.userId,
         username: meta?.subscriber?.username,
         firstName: meta?.subscriber?.firstName,
@@ -471,7 +569,7 @@ export class TelegramService {
         text,
         direction: "outgoing",
         messageType: `${meta?.messageType || "message"}_failed`,
-        rawPayload: { error: msg },
+        rawPayload: { error: msg, chatId: effectiveChatId },
       });
 
       return { success: false, error: msg };

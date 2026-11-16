@@ -72,3 +72,27 @@ export interface BroadcastResult {
   deactivated: number;
   errors?: Array<{ chatId: number; error: string }>;
 }
+
+export interface UserTelegramSettings {
+  userId: string;
+  telegramId?: string;
+  telegramUsername?: string;
+  notificationsEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserTelegramSettingsInput {
+  telegramId?: string | number;
+  telegramUsername?: string;
+  notificationsEnabled?: boolean;
+}
+
+export interface UserTelegramConfigStatus {
+  userId: string;
+  isConfigured: boolean;
+  telegramId?: string;
+  telegramUsername?: string;
+  notificationsEnabled: boolean;
+  botUsername?: string;
+}

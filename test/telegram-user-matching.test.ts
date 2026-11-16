@@ -10,6 +10,7 @@ import { TelegramService } from "../lib/telegram/service";
 import { UserService } from "../lib/auth/userService";
 import { ScheduledPromptService } from "../lib/prompts";
 import { respondToTelegramUserByName } from "../lib/openai/service";
+import { UserTelegramSettingsService } from "../lib/telegram/userSettings";
 
 test("Telegram User Matching: normalizeNameForMatch & parseFullName", () => {
   // Whitespace and case normalization
@@ -130,7 +131,7 @@ test("SubscriberService: Register subscribers and match by name and surname", as
   assert.equal(noMatch, null);
 });
 
-test("TelegramService: sendResponseToUserByName and sendAiPromptResponse using Johan Bot", async () => {
+test("TelegramService: sendResponseToUserByName and sendAiPromptResponse require configured Telegram ID", async () => {
   await SubscriberService.clearAll();
 
   await SubscriberService.registerChat({
@@ -140,17 +141,26 @@ test("TelegramService: sendResponseToUserByName and sendAiPromptResponse using J
     username: "johan_b",
   });
 
-  // 1. sendResponseToUserByName
+  // 1. sendResponseToUserByName without configured Telegram ID must fail (no name/surname mapping)
   const res1 = await TelegramService.sendResponseToUserByName({
     name: "Johan",
     surname: "Botter",
     text: "Ahoj Johane, testovací zpráva z backendu.",
   });
-  assert.equal(res1.success, true);
-  assert.ok(res1.subscriber);
-  assert.equal(res1.subscriber.chatId, 2001);
+  assert.equal(res1.success, false);
+  assert.ok(res1.error);
 
-  // 2. sendAiPromptResponse
+  // 2. sendResponseToUserByName with direct telegramId succeeds
+  const resWithTgId = await TelegramService.sendResponseToUserByName({
+    telegramId: 2001,
+    name: "Johan",
+    surname: "Botter",
+    text: "Ahoj Johane, testovací zpráva s přímým ID.",
+  });
+  assert.equal(resWithTgId.success, true);
+  assert.equal(String(resWithTgId.chatId), "2001");
+
+  // 3. sendAiPromptResponse without configured Telegram ID must fail (no name/surname mapping)
   const aiPromptRes = await TelegramService.sendAiPromptResponse({
     userName: "Johan Botter",
     promptTitle: "Ranní BJJ plán",
@@ -158,36 +168,43 @@ test("TelegramService: sendResponseToUserByName and sendAiPromptResponse using J
     completion: "1. Technika guard pass\n2. Strečink kyčlí\n3. Hydratace",
     scheduledTime: "9am",
   });
-  assert.equal(aiPromptRes.success, true);
-  assert.ok(aiPromptRes.subscriber);
-  assert.equal(aiPromptRes.subscriber.chatId, 2001);
-  assert.equal(
-    aiPromptRes.formattedMessage,
-    "1. Technika guard pass\n2. Strečink kyčlí\n3. Hydratace"
-  );
-  assert.ok(!aiPromptRes.formattedMessage.includes("Johan Bot AI Odpověď"));
+  assert.equal(aiPromptRes.success, false);
+  assert.equal(aiPromptRes.subscriber, undefined);
+  assert.ok(aiPromptRes.error?.includes("Nebyl nalezen aktivní Telegram odběratel"));
 
-  // 3. Unmatched user returns success: false with clear error message
-  const unmatchedRes = await TelegramService.sendAiPromptResponse({
-    userName: "Neznámý Člověk",
-    completion: "Odpověď pro neznámého",
+  // 4. sendAiPromptResponse with configured user Telegram ID succeeds
+  const testUserId = `usr_tg_match_test_${Date.now()}`;
+  await UserTelegramSettingsService.saveSettings(testUserId, {
+    telegramId: "2001",
+    notificationsEnabled: true,
   });
-  assert.equal(unmatchedRes.success, false);
-  assert.equal(unmatchedRes.subscriber, undefined);
-  assert.ok(unmatchedRes.error?.includes("Nebyl nalezen aktivní Telegram odběratel"));
+
+  const configuredRes = await TelegramService.sendAiPromptResponse({
+    userId: testUserId,
+    userName: "Johan Botter",
+    completion: "1. Technika guard pass\n2. Strečink kyčlí\n3. Hydratace",
+  });
+  assert.equal(configuredRes.success, true);
+  assert.equal(String(configuredRes.chatId), "2001");
 });
 
-test("OpenAI respondToTelegramUserByName integration", async () => {
+test("OpenAI respondToTelegramUserByName integration with Telegram ID", async () => {
   await SubscriberService.clearAll();
 
-  await SubscriberService.registerChat({
-    chatId: 3001,
-    firstName: "Johan",
-    lastName: "Tester",
-    username: "johan_test",
+  // 1. Without configured Telegram ID -> delivery fails
+  const unconfiguredResponse = await respondToTelegramUserByName({
+    name: "Johan",
+    surname: "Tester",
+    prompt: "Vymysli rychlou motivaci pro trénink.",
+    scheduledTime: "1pm",
+    promptTitle: "Odpolední motivace",
   });
+  assert.ok(unconfiguredResponse.completion);
+  assert.equal(unconfiguredResponse.telegramDelivery.sent, false);
 
-  const response = await respondToTelegramUserByName({
+  // 2. With direct telegramId -> delivery succeeds
+  const configuredResponse = await respondToTelegramUserByName({
+    telegramId: 3001,
     name: "Johan",
     surname: "Tester",
     prompt: "Vymysli rychlou motivaci pro trénink.",
@@ -195,34 +212,22 @@ test("OpenAI respondToTelegramUserByName integration", async () => {
     promptTitle: "Odpolední motivace",
   });
 
-  assert.ok(response.completion);
-  assert.equal(response.telegramDelivery.sent, true);
-  assert.ok(response.telegramDelivery.subscriber);
-  assert.equal(response.telegramDelivery.subscriber.chatId, 3001);
-  assert.equal(response.telegramDelivery.subscriber.firstName, "Johan");
-  assert.equal(response.telegramDelivery.subscriber.lastName, "Tester");
+  assert.ok(configuredResponse.completion);
+  assert.equal(configuredResponse.telegramDelivery.sent, true);
 });
 
-test("ScheduledPromptService executePromptNow delivers response in Telegram to matched user", async () => {
+test("ScheduledPromptService executePromptNow requires configured Telegram ID", async () => {
   await SubscriberService.clearAll();
   await ScheduledPromptService.clearAll();
 
   // Create a user in UserService
   const authRes = await UserService.registerOrLoginGoogleUser({
-    id: "google_johan_123",
-    email: "johan.match@marc.dev",
+    id: `google_johan_${Date.now()}`,
+    email: `johan.match.${Date.now()}@marc.dev`,
     name: "Johan MatchedUser",
     emailVerified: true,
   });
   const createdUser = authRes.user;
-
-  // Register matching Telegram subscriber
-  await SubscriberService.registerChat({
-    chatId: 4001,
-    firstName: "Johan",
-    lastName: "MatchedUser",
-    username: "johan_matched",
-  });
 
   // Create scheduled prompt for this user
   const prompt = await ScheduledPromptService.createPrompt({
@@ -233,14 +238,22 @@ test("ScheduledPromptService executePromptNow delivers response in Telegram to m
     title: "Večerní regenerace",
   });
 
-  // Execute prompt immediately
-  const execResult = await ScheduledPromptService.executePromptNow(prompt.id, createdUser.id);
+  // 1. Execute prompt immediately WITHOUT configured Telegram ID -> must NOT send
+  const execResultUnconfigured = await ScheduledPromptService.executePromptNow(prompt.id, createdUser.id);
+  assert.ok(execResultUnconfigured.completion);
+  assert.ok(execResultUnconfigured.telegramDelivery);
+  assert.equal(execResultUnconfigured.telegramDelivery.sent, false);
+  assert.ok(execResultUnconfigured.telegramDelivery.error?.includes("Telegram ID"));
 
-  assert.ok(execResult.completion);
-  assert.ok(execResult.telegramDelivery);
-  assert.equal(execResult.telegramDelivery.sent, true);
-  assert.ok(execResult.telegramDelivery.subscriber);
-  assert.equal(execResult.telegramDelivery.subscriber.chatId, 4001);
-  assert.equal(execResult.telegramDelivery.subscriber.firstName, "Johan");
-  assert.equal(execResult.telegramDelivery.subscriber.lastName, "MatchedUser");
+  // 2. Configure personal Telegram ID for this user
+  await UserTelegramSettingsService.saveSettings(createdUser.id, {
+    telegramId: "4001",
+    notificationsEnabled: true,
+  });
+
+  // 3. Execute prompt WITH configured Telegram ID -> sends to configured Telegram ID
+  const execResultConfigured = await ScheduledPromptService.executePromptNow(prompt.id, createdUser.id);
+  assert.ok(execResultConfigured.completion);
+  assert.ok(execResultConfigured.telegramDelivery);
+  assert.equal(execResultConfigured.telegramDelivery.sent, true);
 });
