@@ -98,8 +98,7 @@ export async function POST(req: NextRequest) {
     if (!scheduledTimeRaw) {
       return NextResponse.json(
         {
-          error:
-            "Field 'scheduledTime' is required. Allowed options are any hour of the day (e.g. 6am, 9am, 1pm, 5pm, 13:00, 08:00).",
+          error: "Field 'scheduledTime' is required. Allowed options are: 6am, 9am, 1pm, 5pm.",
           allowedOptions: SCHEDULED_TIME_OPTIONS,
         },
         { status: 400 }
@@ -112,7 +111,7 @@ export async function POST(req: NextRequest) {
     } catch {
       return NextResponse.json(
         {
-          error: `Invalid scheduledTime '${scheduledTimeRaw}'. Allowed options are any hour of the day (e.g. 6am, 9am, 1pm, 5pm, 13:00, 08:00).`,
+          error: `Invalid scheduledTime '${scheduledTimeRaw}'. Allowed options are: 6am, 9am, 1pm, 5pm.`,
           allowedOptions: SCHEDULED_TIME_OPTIONS,
         },
         { status: 400 }

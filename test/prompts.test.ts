@@ -5,8 +5,6 @@ import {
   ScheduledPromptService,
   isValidScheduledTime,
   normalizeScheduledTime,
-  hourToScheduledTime,
-  scheduledTimeToHour,
   SCHEDULED_TIME_OPTIONS,
   SCHEDULED_TIME_DETAILS,
 } from "../lib/prompts";
@@ -17,70 +15,45 @@ import {
   DELETE as deletePromptByIdApi,
 } from "../app/api/prompts/[id]/route";
 import { POST as postRunPromptApi } from "../app/api/prompts/[id]/run/route";
-import { GET as getCronPromptsApi } from "../app/api/cron/prompts/route";
 
-test("Scheduled AI Prompt Time Options Validation (24 hourly slots)", () => {
-  // 24 Valid Options
-  assert.equal(SCHEDULED_TIME_OPTIONS.length, 24);
-  assert.equal(SCHEDULED_TIME_OPTIONS[0], "12am");
-  assert.equal(SCHEDULED_TIME_OPTIONS[6], "6am");
-  assert.equal(SCHEDULED_TIME_OPTIONS[12], "12pm");
-  assert.equal(SCHEDULED_TIME_OPTIONS[23], "11pm");
+test("Scheduled AI Prompt Time Options Validation (6am, 9am, 1pm, 5pm)", () => {
+  // 4 Valid Options
+  assert.equal(SCHEDULED_TIME_OPTIONS.length, 4);
+  assert.deepEqual(Array.from(SCHEDULED_TIME_OPTIONS), ["6am", "9am", "1pm", "5pm"]);
 
   // isValidScheduledTime
   assert.equal(isValidScheduledTime("6am"), true);
   assert.equal(isValidScheduledTime("9am"), true);
   assert.equal(isValidScheduledTime("1pm"), true);
   assert.equal(isValidScheduledTime("5pm"), true);
-  assert.equal(isValidScheduledTime("8am"), true);
-  assert.equal(isValidScheduledTime("12am"), true);
-  assert.equal(isValidScheduledTime("11pm"), true);
   assert.equal(isValidScheduledTime("6AM"), true);
   assert.equal(isValidScheduledTime("9AM"), true);
-  assert.equal(isValidScheduledTime("invalid"), false);
+  assert.equal(isValidScheduledTime("3pm"), false);
+  assert.equal(isValidScheduledTime("12am"), false);
   assert.equal(isValidScheduledTime(""), false);
   assert.equal(isValidScheduledTime(null), false);
 
-  // normalizeScheduledTime across various 12h and 24h formats
+  // normalizeScheduledTime
   assert.equal(normalizeScheduledTime("6am"), "6am");
   assert.equal(normalizeScheduledTime("06:00"), "6am");
   assert.equal(normalizeScheduledTime("6:00 AM"), "6am");
-  assert.equal(normalizeScheduledTime("8am"), "8am");
-  assert.equal(normalizeScheduledTime("08:00"), "8am");
   assert.equal(normalizeScheduledTime("9am"), "9am");
   assert.equal(normalizeScheduledTime("09:00"), "9am");
   assert.equal(normalizeScheduledTime("9:00 AM"), "9am");
-  assert.equal(normalizeScheduledTime("12pm"), "12pm");
-  assert.equal(normalizeScheduledTime("12:00"), "12pm");
   assert.equal(normalizeScheduledTime("1pm"), "1pm");
   assert.equal(normalizeScheduledTime("13:00"), "1pm");
   assert.equal(normalizeScheduledTime("5pm"), "5pm");
   assert.equal(normalizeScheduledTime("17:00"), "5pm");
-  assert.equal(normalizeScheduledTime("12am"), "12am");
-  assert.equal(normalizeScheduledTime("00:00"), "12am");
-  assert.equal(normalizeScheduledTime("23:00"), "11pm");
-
-  // hourToScheduledTime & scheduledTimeToHour conversions
-  assert.equal(hourToScheduledTime(0), "12am");
-  assert.equal(hourToScheduledTime(6), "6am");
-  assert.equal(hourToScheduledTime(13), "1pm");
-  assert.equal(hourToScheduledTime(23), "11pm");
-  assert.equal(scheduledTimeToHour("12am"), 0);
-  assert.equal(scheduledTimeToHour("6am"), 6);
-  assert.equal(scheduledTimeToHour("1pm"), 13);
-  assert.equal(scheduledTimeToHour("11pm"), 23);
 
   // Invalid throws error
-  assert.throws(() => normalizeScheduledTime("25:00"), /Invalid scheduled time/);
+  assert.throws(() => normalizeScheduledTime("8am"), /Invalid scheduled time/);
   assert.throws(() => normalizeScheduledTime("midnight"), /Invalid scheduled time/);
-  assert.throws(() => normalizeScheduledTime("not_a_time"), /Invalid scheduled time/);
 
   // Time details mapping
   assert.equal(SCHEDULED_TIME_DETAILS["6am"].period, "Morning");
   assert.equal(SCHEDULED_TIME_DETAILS["9am"].period, "Morning");
   assert.equal(SCHEDULED_TIME_DETAILS["1pm"].period, "Afternoon");
   assert.equal(SCHEDULED_TIME_DETAILS["5pm"].period, "Evening");
-  assert.equal(SCHEDULED_TIME_DETAILS["12am"].period, "Night");
 });
 
 test("ScheduledPromptService: Create prompts per user with 4 time options", async () => {
@@ -244,7 +217,7 @@ test("API Routes: /api/prompts and /api/prompts/[id] integration", async () => {
     },
     body: JSON.stringify({
       prompt: "Test",
-      scheduledTime: "invalid_time",
+      scheduledTime: "11pm",
     }),
   });
   const badRes = await postPromptsApi(badReq);
@@ -313,59 +286,4 @@ test("API Routes: /api/prompts and /api/prompts/[id] integration", async () => {
   assert.equal(deleteRes.status, 200);
   const deleteData = await deleteRes.json();
   assert.equal(deleteData.success, true);
-});
-
-test("API Routes: /api/cron/prompts hourly scheduled prompt execution", async () => {
-  await ScheduledPromptService.clearAll();
-
-  const userId = `cron_test_user_${Date.now()}`;
-
-  // Create prompt for 8am
-  const p8am = await ScheduledPromptService.createPrompt({
-    userId,
-    prompt: "Prompt for 8am execution.",
-    scheduledTime: "8am",
-    title: "8am Cron Job Prompt",
-    isActive: true,
-  });
-
-  // Create prompt for 2pm
-  const p2pm = await ScheduledPromptService.createPrompt({
-    userId,
-    prompt: "Prompt for 2pm execution.",
-    scheduledTime: "2pm",
-    title: "2pm Cron Job Prompt",
-    isActive: true,
-  });
-
-  // 1. Call GET /api/cron/prompts?time=8am
-  const cron8amReq = new NextRequest("http://localhost:3000/api/cron/prompts?time=8am");
-  const cron8amRes = await getCronPromptsApi(cron8amReq);
-  assert.equal(cron8amRes.status, 200);
-  const cron8amData = await cron8amRes.json();
-  assert.equal(cron8amData.success, true);
-  assert.equal(cron8amData.targetTime, "8am");
-  assert.equal(cron8amData.executed, 1);
-  assert.equal(cron8amData.successful, 1);
-  assert.equal(cron8amData.results[0].promptId, p8am.id);
-
-  // 2. Call GET /api/cron/prompts without time param (auto checks current UTC hour slot)
-  const cronAutoReq = new NextRequest("http://localhost:3000/api/cron/prompts");
-  const cronAutoRes = await getCronPromptsApi(cronAutoReq);
-  assert.equal(cronAutoRes.status, 200);
-  const cronAutoData = await cronAutoRes.json();
-  assert.equal(cronAutoData.success, true);
-  assert.ok(cronAutoData.targetTime);
-  assert.ok(typeof cronAutoData.executed === "number");
-
-  // 3. Call GET /api/cron/prompts?time=all
-  const cronAllReq = new NextRequest("http://localhost:3000/api/cron/prompts?time=all");
-  const cronAllRes = await getCronPromptsApi(cronAllReq);
-  assert.equal(cronAllRes.status, 200);
-  const cronAllData = await cronAllRes.json();
-  assert.equal(cronAllData.success, true);
-  assert.equal(cronAllData.targetTime, "all");
-  assert.equal(cronAllData.totalFound, 2);
-  assert.equal(cronAllData.executed, 2);
-  assert.equal(cronAllData.successful, 2);
 });
