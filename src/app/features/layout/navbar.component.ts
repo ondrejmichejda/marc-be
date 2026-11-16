@@ -132,12 +132,12 @@ import { ThemeService, ThemeMode } from '../../core/services/theme.service';
 
                 <a mat-menu-item routerLink="/ai-settings" class="!text-xs !text-zinc-700 dark:!text-zinc-300 hover:!text-zinc-900 dark:hover:!text-white">
                   <mat-icon class="!text-amber-500 dark:!text-amber-400 !text-sm !w-4 !h-4 !mr-2">bolt</mat-icon>
-                  <span>Personal AI Settings</span>
+                  <span>AI Settings</span>
                 </a>
 
-                <a mat-menu-item routerLink="/system" class="!text-xs !text-zinc-700 dark:!text-zinc-300 hover:!text-zinc-900 dark:hover:!text-white">
-                  <mat-icon class="!text-indigo-600 dark:!text-indigo-400 !text-sm !w-4 !h-4 !mr-2">settings</mat-icon>
-                  <span>System Administration</span>
+                <a mat-menu-item routerLink="/telegram-settings" class="!text-xs !text-zinc-700 dark:!text-zinc-300 hover:!text-zinc-900 dark:hover:!text-white">
+                  <mat-icon class="!text-sky-500 dark:!text-sky-400 !text-sm !w-4 !h-4 !mr-2">send</mat-icon>
+                  <span>Telegram Settings</span>
                 </a>
 
                 <div class="border-t border-zinc-200 dark:border-zinc-800/80 my-1"></div>
