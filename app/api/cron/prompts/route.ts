@@ -3,6 +3,7 @@ import {
   ScheduledPromptService,
   PromptScheduledTime,
   normalizeScheduledTime,
+  hourToScheduledTime,
 } from "@/lib/prompts";
 import { getCurrentUser } from "@/lib/auth/session";
 
@@ -65,14 +66,10 @@ async function isAuthorizedCronRequest(
  */
 function resolveTimeSlot(timeParam: string | null): PromptScheduledTime | "all" {
   if (!timeParam || timeParam === "auto") {
-    // Detect hour in UTC (Vercel standard) or local
+    // Detect hour in UTC (Vercel standard) and map to hourly slot
     const now = new Date();
     const utcHour = now.getUTCHours();
-    if (utcHour === 6) return "6am";
-    if (utcHour === 9) return "9am";
-    if (utcHour === 13) return "1pm";
-    if (utcHour === 17) return "5pm";
-    return "all";
+    return hourToScheduledTime(utcHour);
   }
 
   if (timeParam === "all") return "all";

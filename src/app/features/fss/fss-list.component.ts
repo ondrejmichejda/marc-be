@@ -180,23 +180,17 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
 
               <div class="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
                 <button
-                  mat-stroked-button
+                  mat-icon-button
                   type="button"
                   (click)="exportDocx(s)"
                   [disabled]="isExporting() === s.id"
-                  class="!rounded-lg !text-xs !font-medium"
+                  class="!text-sky-600 dark:!text-sky-400 hover:!text-sky-700 dark:hover:!text-sky-300"
                   matTooltip="Stáhnout jako Microsoft Word dokument (.docx)"
                 >
                   @if (isExporting() === s.id) {
-                    <span class="flex items-center gap-1.5">
-                      <mat-spinner diameter="14"></mat-spinner>
-                      <span>Exportuji...</span>
-                    </span>
+                    <mat-spinner diameter="18"></mat-spinner>
                   } @else {
-                    <span class="flex items-center">
-                      <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-sky-500 dark:text-sky-400">description</mat-icon>
-                      <span>DOCX</span>
-                    </span>
+                    <mat-icon>description</mat-icon>
                   }
                 </button>
 

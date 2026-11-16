@@ -369,51 +369,42 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
             </div>
 
             <!-- Action Buttons Footer -->
-            <div class="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2">
-              <div class="flex items-center gap-1.5">
-                <button
-                  mat-stroked-button
-                  type="button"
-                  (click)="openEditModal(item)"
-                  class="!rounded-xl !text-xs !py-1 !px-2.5 !min-w-0 text-zinc-600 dark:text-zinc-300"
-                  matTooltip="Edit Tracker"
-                >
-                  <mat-icon class="!text-sm !w-3.5 !h-3.5 !mr-1">edit</mat-icon>
-                  <span>Edit</span>
-                </button>
-                <button
-                  mat-stroked-button
-                  type="button"
-                  (click)="confirmDelete(item)"
-                  class="!rounded-xl !text-xs !py-1 !px-2.5 !min-w-0 !text-rose-600 dark:!text-rose-400 hover:!bg-rose-50 dark:hover:!bg-rose-950/30"
-                  matTooltip="Delete Tracker"
-                >
-                  <mat-icon class="!text-sm !w-3.5 !h-3.5 !mr-1">delete</mat-icon>
-                  <span>Delete</span>
-                </button>
-              </div>
-
-              <!-- Main Reset Action Button -->
+            <div class="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
               <button
-                mat-flat-button
-                color="warn"
+                mat-icon-button
                 type="button"
                 (click)="openResetConfirmModal(item)"
                 [disabled]="resettingId() === item.id"
-                class="!rounded-xl !text-xs !font-semibold !px-4 !bg-amber-600 hover:!bg-amber-700 dark:!bg-amber-500 dark:hover:!bg-amber-600 text-white cursor-pointer shadow-sm"
+                class="!text-amber-600 dark:!text-amber-400 hover:!text-amber-700 dark:hover:!text-amber-300"
+                matTooltip="Reset tracker"
               >
-                <ng-container>
-                  @if (resettingId() === item.id) {
-                    <mat-spinner diameter="14" class="!mr-1.5 inline-block"></mat-spinner>
-                    <span>Resetting...</span>
-                  } @else {
-                    <span class="flex items-center gap-1">
-                      <mat-icon class="!text-sm !w-4 !h-4">restart_alt</mat-icon>
-                      <span>Reset</span>
-                    </span>
-                  }
-                </ng-container>
+                @if (resettingId() === item.id) {
+                  <mat-spinner diameter="18"></mat-spinner>
+                } @else {
+                  <mat-icon>restart_alt</mat-icon>
+                }
               </button>
+
+              <div class="flex items-center gap-1">
+                <button
+                  mat-icon-button
+                  type="button"
+                  (click)="openEditModal(item)"
+                  class="!text-zinc-500 dark:!text-zinc-400 hover:!text-indigo-600 dark:hover:!text-indigo-400"
+                  matTooltip="Edit Tracker"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  type="button"
+                  (click)="confirmDelete(item)"
+                  class="!text-zinc-400 dark:!text-zinc-500 hover:!text-rose-600 dark:hover:!text-rose-400"
+                  matTooltip="Delete Tracker"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
             </div>
           </div>
         }
