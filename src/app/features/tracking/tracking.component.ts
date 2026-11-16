@@ -1055,7 +1055,7 @@ export class TrackingComponent implements OnInit, OnDestroy {
     const totalSec = Math.max(1, item.totalDurationSeconds);
     const remainingSeconds = Math.max(0, item.totalDurationSeconds - elapsedSeconds);
     const overflowSeconds = Math.max(0, elapsedSeconds - item.totalDurationSeconds);
-    const rawProgress = (elapsedSeconds / totalSec) * 100;
+    const rawProgress = (remainingSeconds / totalSec) * 100;
     const progressPercentage = Math.min(100, Math.max(0, Math.round(rawProgress * 10) / 10));
     const isCompleted = elapsedSeconds >= item.totalDurationSeconds;
 

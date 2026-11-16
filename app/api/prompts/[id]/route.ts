@@ -63,7 +63,7 @@ export async function PUT(req: NextRequest, context: RouteContext) {
       } catch {
         return NextResponse.json(
           {
-            error: `Invalid scheduledTime '${body.scheduledTime}'. Allowed options are any hour of the day (e.g. 6am, 9am, 1pm, 5pm, 13:00, 08:00).`,
+            error: `Invalid scheduledTime '${body.scheduledTime}'. Allowed options are: 6am, 9am, 1pm, 5pm.`,
             allowedOptions: SCHEDULED_TIME_OPTIONS,
           },
           { status: 400 }
