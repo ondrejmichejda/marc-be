@@ -352,7 +352,7 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
     MatRippleModule,
   ],
   template: `
-    <div class="space-y-6 max-w-5xl">
+    <div class="space-y-6">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -366,17 +366,19 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
         </div>
 
         @if (config()?.apiKeyConfigured) {
-          <button
-            mat-stroked-button
-            color="warn"
-            type="button"
-            (click)="clearApiKey()"
-            [disabled]="isSaving()"
-            class="!rounded-xl !text-xs"
-          >
-            <mat-icon class="!text-sm !w-4 !h-4 !mr-1">delete</mat-icon>
-            Odstranit vlastní klíč
-          </button>
+          <div class="flex items-center gap-3">
+            <button
+              mat-stroked-button
+              color="warn"
+              type="button"
+              (click)="clearApiKey()"
+              [disabled]="isSaving()"
+              class="!rounded-xl !text-xs sm:!text-sm"
+            >
+              <mat-icon class="!text-base !w-4 !h-4 !mr-1">delete</mat-icon>
+              <span>Odstranit vlastní klíč</span>
+            </button>
+          </div>
         }
       </div>
 
@@ -597,7 +599,7 @@ export const ALL_OPENAI_MODELS: ModelItem[] = [
             <!-- CATEGORY FILTER & SEARCH BAR -->
             <div class="space-y-3 pt-2">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
                   @for (cat of filterCategories; track cat.id) {
                     <button
                       type="button"

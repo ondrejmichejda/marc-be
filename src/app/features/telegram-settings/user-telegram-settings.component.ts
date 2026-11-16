@@ -32,71 +32,51 @@ import { UserTelegramConfigStatus } from '../../core/models/telegram.models';
     MatRippleModule,
   ],
   template: `
-    <div class="p-6 max-w-5xl mx-auto space-y-6">
-      <!-- Header Banner -->
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+    <div class="space-y-6">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div class="flex items-center gap-3">
-            <div class="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 border border-sky-500/20">
-              <mat-icon class="!w-6 !h-6 !text-2xl">send</mat-icon>
-            </div>
-            <div>
-              <h1 class="text-xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
-                Personal Telegram Settings
-                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-500 border border-sky-500/20">
-                  Johan Bot
-                </span>
-              </h1>
-              <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                Configure your personal Telegram User/Chat ID for receiving AI responses, scheduled prompts, and Johan bot notifications.
-              </p>
-            </div>
-          </div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
+            <mat-icon class="!text-sky-500">send</mat-icon>
+            <span>Personal Telegram Settings</span>
+          </h1>
+          <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+            Configure your personal Telegram User/Chat ID for receiving AI responses, scheduled prompts, and Johan bot notifications.
+          </p>
         </div>
 
         <!-- Connection Status Badge -->
         <div class="flex items-center gap-2">
           @if (loading()) {
-            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs">
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs">
               <mat-spinner diameter="14"></mat-spinner>
               <span>Loading...</span>
             </div>
           } @else if (config()?.isConfigured) {
-            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-medium">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 text-xs font-medium">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <span>Connected (ID: {{ config()?.telegramId }})</span>
             </div>
           } @else {
-            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-medium">
-              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 text-xs font-medium">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
               <span>Not Configured</span>
             </div>
           }
         </div>
       </div>
 
-      <!-- Feedback Messages -->
+      <!-- Messages -->
       @if (successMessage()) {
-        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-between text-sm animate-fade-in">
-          <div class="flex items-center gap-2.5">
-            <mat-icon class="!w-5 !h-5 !text-lg">check_circle</mat-icon>
-            <span>{{ successMessage() }}</span>
-          </div>
-          <button type="button" (click)="successMessage.set(null)" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
-            <mat-icon class="!w-4 !h-4 !text-base">close</mat-icon>
-          </button>
+        <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between animate-in fade-in">
+          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-emerald-600 dark:text-emerald-400">check_circle</mat-icon> {{ successMessage() }}</span>
+          <button type="button" (click)="successMessage.set(null)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-white cursor-pointer"><mat-icon class="!text-sm !w-4 !h-4">close</mat-icon></button>
         </div>
       }
-
       @if (errorMessage()) {
-        <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-between text-sm animate-fade-in">
-          <div class="flex items-center gap-2.5">
-            <mat-icon class="!w-5 !h-5 !text-lg">error</mat-icon>
-            <span>{{ errorMessage() }}</span>
-          </div>
-          <button type="button" (click)="errorMessage.set(null)" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
-            <mat-icon class="!w-4 !h-4 !text-base">close</mat-icon>
-          </button>
+        <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs flex items-center justify-between animate-in fade-in">
+          <span class="flex items-center gap-1.5"><mat-icon class="!text-sm !w-4 !h-4 text-rose-600 dark:text-rose-400">error</mat-icon> {{ errorMessage() }}</span>
+          <button type="button" (click)="errorMessage.set(null)" class="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-white cursor-pointer"><mat-icon class="!text-sm !w-4 !h-4">close</mat-icon></button>
         </div>
       }
 
@@ -104,11 +84,11 @@ import { UserTelegramConfigStatus } from '../../core/models/telegram.models';
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Configuration Card (Left 2 cols) -->
         <div class="lg:col-span-2 space-y-6">
-          <mat-card class="!bg-white dark:!bg-zinc-900 !border !border-zinc-200/80 dark:!border-zinc-800/80 !rounded-2xl !p-6 shadow-sm">
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg">
             <div class="flex items-center justify-between pb-4 mb-6 border-b border-zinc-100 dark:border-zinc-800">
               <div class="flex items-center gap-2">
                 <mat-icon class="text-sky-500 !text-xl !w-5 !h-5">manage_accounts</mat-icon>
-                <h2 class="text-base font-semibold text-zinc-900 dark:text-white">Telegram ID Configuration</h2>
+                <h2 class="text-sm font-semibold text-zinc-900 dark:text-white">Telegram ID Configuration</h2>
               </div>
               <span class="text-xs text-zinc-500 dark:text-zinc-400">Direct User Communication</span>
             </div>
@@ -181,48 +161,65 @@ import { UserTelegramConfigStatus } from '../../core/models/telegram.models';
               <div class="pt-4 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-100 dark:border-zinc-800">
                 <div class="flex items-center gap-2">
                   <button
+                    mat-flat-button
+                    color="primary"
                     type="submit"
                     [disabled]="saving()"
-                    class="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-medium text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                    class="!rounded-xl !text-xs sm:!text-sm !font-semibold"
                   >
                     @if (saving()) {
-                      <mat-spinner diameter="14" class="!inline-block"></mat-spinner>
-                      <span>Saving...</span>
+                      <span class="flex items-center gap-1.5">
+                        <mat-spinner diameter="14"></mat-spinner>
+                        <span>Saving...</span>
+                      </span>
                     } @else {
-                      <mat-icon class="!text-base !w-4 !h-4">save</mat-icon>
-                      <span>Save Settings</span>
+                      <span class="flex items-center">
+                        <mat-icon class="!text-base !w-4 !h-4 !mr-1">save</mat-icon>
+                        <span>Save Settings</span>
+                      </span>
                     }
                   </button>
 
                   <button
+                    mat-stroked-button
                     type="button"
                     (click)="testConnection()"
                     [disabled]="testing() || !telegramId"
-                    class="px-4 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 text-zinc-800 dark:text-zinc-200 font-medium text-xs flex items-center gap-2 transition-all cursor-pointer"
+                    class="!rounded-xl !text-xs sm:!text-sm"
                   >
                     @if (testing()) {
-                      <mat-spinner diameter="14" class="!inline-block"></mat-spinner>
-                      <span>Sending Ping...</span>
+                      <span class="flex items-center gap-1.5">
+                        <mat-spinner diameter="14"></mat-spinner>
+                        <span>Sending Ping...</span>
+                      </span>
                     } @else {
-                      <mat-icon class="!text-base !w-4 !h-4 text-sky-400">send</mat-icon>
-                      <span>Send Test Message</span>
+                      <span class="flex items-center">
+                        <mat-icon class="!text-base !w-4 !h-4 !mr-1 text-sky-500 dark:text-sky-400">send</mat-icon>
+                        <span>Send Test Message</span>
+                      </span>
                     }
                   </button>
                 </div>
 
                 @if (config()?.isConfigured) {
                   <button
+                    mat-stroked-button
+                    color="warn"
                     type="button"
                     (click)="deleteSettings()"
                     [disabled]="deleting()"
-                    class="px-3.5 py-2 rounded-xl text-rose-500 hover:bg-rose-500/10 font-medium text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                    class="!rounded-xl !text-xs sm:!text-sm"
                   >
                     @if (deleting()) {
-                      <mat-spinner diameter="14" class="!inline-block"></mat-spinner>
-                      <span>Clearing...</span>
+                      <span class="flex items-center gap-1.5">
+                        <mat-spinner diameter="14"></mat-spinner>
+                        <span>Clearing...</span>
+                      </span>
                     } @else {
-                      <mat-icon class="!text-base !w-4 !h-4">delete_outline</mat-icon>
-                      <span>Disconnect ID</span>
+                      <span class="flex items-center">
+                        <mat-icon class="!text-base !w-4 !h-4 !mr-1">delete</mat-icon>
+                        <span>Disconnect ID</span>
+                      </span>
                     }
                   </button>
                 }
@@ -233,7 +230,7 @@ import { UserTelegramConfigStatus } from '../../core/models/telegram.models';
 
         <!-- Instructions & How-To (Right 1 col) -->
         <div class="space-y-6">
-          <mat-card class="!bg-white dark:!bg-zinc-900 !border !border-zinc-200/80 dark:!border-zinc-800/80 !rounded-2xl !p-6 shadow-sm">
+          <mat-card class="!p-6 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm dark:!shadow-lg">
             <div class="flex items-center gap-2 pb-4 mb-4 border-b border-zinc-100 dark:border-zinc-800">
               <mat-icon class="text-sky-500 !text-xl !w-5 !h-5">help_outline</mat-icon>
               <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">How to get your Telegram ID</h3>

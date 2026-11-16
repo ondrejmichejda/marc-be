@@ -29,6 +29,15 @@ const DEFAULT_NAV_ITEMS: NavRouteMapping[] = [
     category: 'General',
   },
   {
+    id: 'wish_list',
+    route: '/wish-list',
+    label: 'Wish List',
+    icon: 'card_giftcard',
+    badge: 'Wish',
+    description: 'Track wishes with waiting periods, created date metadata, and target counters',
+    category: 'General',
+  },
+  {
     id: 'fss_ai_prompts',
     route: '/fss-prompts',
     label: 'FSS AI Prompts',
@@ -81,12 +90,12 @@ const DEFAULT_NAV_ITEMS: NavRouteMapping[] = [
 
     <!-- Sidebar Container -->
     <aside
-      class="fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-zinc-950 border-r border-zinc-200/80 dark:border-zinc-800/80 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:h-full flex flex-col shrink-0"
+      class="fixed inset-y-0 left-0 z-50 w-72 sm:w-80 bg-white dark:bg-zinc-950 border-r border-zinc-200/80 dark:border-zinc-800/80 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:h-full flex flex-col shrink-0 shadow-2xl lg:shadow-none"
       [class.translate-x-0]="mobileOpen"
       [class.-translate-x-full]="!mobileOpen"
     >
       <!-- Top Brand inside mobile sidebar -->
-      <div class="h-16 flex items-center justify-between px-6 border-b border-zinc-200/80 dark:border-zinc-800/80 lg:hidden shrink-0">
+      <div class="h-16 flex items-center justify-between px-6 border-b border-zinc-200/80 dark:border-zinc-800/80 lg:hidden shrink-0 pt-safe">
         <div class="flex items-center gap-2.5">
           <app-logo size="sm"></app-logo>
           <span class="font-bold text-sm tracking-tight text-zinc-900 dark:text-white">Marc Platform</span>
@@ -94,14 +103,14 @@ const DEFAULT_NAV_ITEMS: NavRouteMapping[] = [
         <button
           type="button"
           (click)="closeSidebar.emit()"
-          class="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer"
+          class="p-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer active:scale-95 transition-transform"
         >
-          <mat-icon class="!text-zinc-500 dark:!text-zinc-400 !text-lg !w-5 !h-5">close</mat-icon>
+          <mat-icon class="!text-zinc-500 dark:!text-zinc-400 !text-xl !w-5 !h-5">close</mat-icon>
         </button>
       </div>
 
       <!-- Navigation Categories -->
-      <div class="flex-1 min-h-0 overflow-y-auto px-4 py-6 space-y-6">
+      <div class="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:py-6 space-y-6">
         @for (category of categories(); track category) {
           @if (getItemsForCategory(category).length > 0) {
             <div class="space-y-1.5">
@@ -139,29 +148,6 @@ const DEFAULT_NAV_ITEMS: NavRouteMapping[] = [
           }
         }
       </div>
-
-      <!-- Bottom User Card -->
-      @if (authService.currentUser(); as user) {
-        <div class="p-4 border-t border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-900/40 shrink-0">
-          <div class="flex items-center gap-3">
-            @if (user.picture) {
-              <img
-                [src]="user.picture"
-                [alt]="user.name"
-                class="w-8 h-8 rounded-lg object-cover"
-              />
-            } @else {
-              <div class="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs uppercase">
-                {{ user.name.charAt(0) }}
-              </div>
-            }
-            <div class="flex-1 min-w-0">
-              <p class="text-xs font-medium text-zinc-900 dark:text-white truncate">{{ user.name }}</p>
-              <p class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">{{ user.email }}</p>
-            </div>
-          </div>
-        </div>
-      }
     </aside>
   `,
 })

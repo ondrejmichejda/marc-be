@@ -66,6 +66,18 @@ export const routes: Routes = [
         loadComponent: () => import('./features/tracking/tracking.component').then(m => m.TrackingComponent),
       },
       {
+        path: 'wish-list',
+        loadComponent: () => import('./features/wish-list/wish-list.component').then(m => m.WishListComponent),
+      },
+      {
+        path: 'wishlist',
+        redirectTo: 'wish-list',
+      },
+      {
+        path: 'wishes',
+        redirectTo: 'wish-list',
+      },
+      {
         path: 'system',
         loadComponent: () => import('./features/system/system-admin.component').then(m => m.SystemAdminComponent),
       },

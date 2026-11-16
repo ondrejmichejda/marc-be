@@ -14,17 +14,17 @@ import { ThemeService, ThemeMode } from '../../core/services/theme.service';
   standalone: true,
   imports: [CommonModule, RouterLink, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule, LogoComponent],
   template: `
-    <header class="sticky top-0 z-40 w-full bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-200/80 dark:border-zinc-800/80 shadow-sm dark:shadow-md transition-colors">
-      <div class="px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
+    <header class="sticky top-0 z-40 w-full bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-200/80 dark:border-zinc-800/80 shadow-sm dark:shadow-md transition-colors pt-safe">
+      <div class="px-3 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-14 sm:h-16">
           <!-- Left: Mobile Menu Toggle & Brand -->
-          <div class="flex items-center gap-3 sm:gap-4">
+          <div class="flex items-center gap-2 sm:gap-4 min-w-0">
             @if (showSidebarToggle && showSidebar && showMenu && showToggle) {
               <button
                 mat-icon-button
                 type="button"
                 (click)="toggleSidebar.emit()"
-                class="lg:!hidden text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                class="lg:!hidden text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white shrink-0"
                 matTooltip="Toggle Navigation Menu"
               >
                 <mat-icon>menu</mat-icon>
@@ -33,23 +33,23 @@ import { ThemeService, ThemeMode } from '../../core/services/theme.service';
 
             <a
               routerLink="/"
-              class="flex items-center gap-3 group transition-transform active:scale-95"
+              class="flex items-center gap-2 sm:gap-3 group transition-transform active:scale-95 min-w-0"
             >
-              <app-logo size="md" className="group-hover:shadow-indigo-500/40 transition-shadow"></app-logo>
-              <div class="flex flex-col">
-                <span class="font-bold text-sm tracking-tight text-zinc-900 dark:text-white flex items-center gap-1.5">
+              <app-logo size="md" className="group-hover:shadow-indigo-500/40 transition-shadow shrink-0"></app-logo>
+              <div class="flex flex-col min-w-0">
+                <span class="font-bold text-xs sm:text-sm tracking-tight text-zinc-900 dark:text-white flex items-center gap-1.5 truncate">
                   Marc Platform
-                  <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <span class="px-1.5 py-0.2 rounded text-[9px] sm:text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
                     Live
                   </span>
                 </span>
-                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">Fire Safety &amp; AI System</span>
+                <span class="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 font-mono truncate hidden sm:inline">Fire Safety &amp; AI System</span>
               </div>
             </a>
           </div>
 
           <!-- Right: User info, Theme Switcher & Actions -->
-          <div class="flex items-center gap-2 sm:gap-3">
+          <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <!-- Theme Selection Trigger -->
             <button
               type="button"

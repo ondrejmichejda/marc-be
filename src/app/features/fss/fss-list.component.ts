@@ -231,28 +231,39 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
 
       <!-- Modal: Create / Edit Solution -->
       @if (isModalOpen()) {
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center p-2 sm:p-4 md:p-6 animate-in fade-in">
-          <mat-card class="relative w-full max-w-5xl !bg-white dark:!bg-zinc-900 !border !border-zinc-200 dark:!border-zinc-800 !rounded-2xl !shadow-2xl overflow-hidden flex flex-col max-h-[92vh] !p-0">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 md:p-6 animate-in fade-in">
+          <mat-card class="relative w-full max-w-5xl !bg-white dark:!bg-zinc-900 !border !border-zinc-200 dark:!border-zinc-800 !rounded-t-3xl sm:!rounded-2xl !shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[92vh] !p-0">
             <!-- Modal Header -->
-            <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-900/90">
-              <div class="flex items-center gap-3">
-                <div class="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 text-lg flex items-center justify-center border border-indigo-100 dark:border-indigo-500/20">
-                  <mat-icon class="!text-amber-500">local_fire_department</mat-icon>
+            <div class="px-4 py-3.5 sm:px-6 sm:py-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-col gap-3 bg-zinc-50/80 dark:bg-zinc-900/90 shrink-0">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 text-lg flex items-center justify-center border border-indigo-100 dark:border-indigo-500/20 shrink-0">
+                    <mat-icon class="!text-amber-500">local_fire_department</mat-icon>
+                  </div>
+                  <div class="min-w-0">
+                    <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white truncate">
+                      {{ editingId() ? 'Upravit řešení PBŘ' : 'Nové řešení PBŘ' }}
+                    </h2>
+                    <p class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate hidden xs:block">Údaje stavby, podklady a AI posouzení</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 class="text-base sm:text-lg font-bold text-zinc-900 dark:text-white">
-                    {{ editingId() ? 'Upravit řešení PBŘ & AI Posouzení' : 'Nové řešení PBŘ' }}
-                  </h2>
-                  <p class="text-xs text-zinc-500 dark:text-zinc-400">Vyplňte údaje stavby, přiložte projektové podklady a použijte AI pro technická posouzení.</p>
-                </div>
+
+                <button
+                  type="button"
+                  (click)="closeModal()"
+                  class="p-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer shrink-0"
+                >
+                  <mat-icon class="!text-base !w-4 !h-4">close</mat-icon>
+                </button>
               </div>
 
-              <div class="flex items-center gap-2">
+              <!-- Action Bar in Modal Header -->
+              <div class="flex flex-wrap items-center gap-2">
                 <button
                   mat-stroked-button
                   type="button"
                   (click)="activeCategory.set('files')"
-                  class="!rounded-xl !text-xs !font-medium"
+                  class="!rounded-xl !text-xs !font-medium flex-1 sm:flex-initial"
                   [class]="activeCategory() === 'files' ? '!text-sky-700 dark:!text-sky-300 !border-sky-400 dark:!border-sky-500/40 !bg-sky-50 dark:!bg-sky-600/10' : '!text-zinc-700 dark:!text-zinc-300 !border-zinc-200 dark:!border-zinc-700'"
                   matTooltip="Nahrát a spravovat přiložené soubory"
                 >
@@ -264,37 +275,30 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                   type="button"
                   (click)="triggerBatchGeneration()"
                   [disabled]="isGeneratingAi()"
-                  class="!rounded-xl !text-xs !font-semibold !bg-indigo-600 hover:!bg-indigo-500 !text-white disabled:!opacity-60 disabled:!bg-indigo-600 disabled:!text-white shadow-md cursor-pointer shrink-0"
+                  class="!rounded-xl !text-xs !font-semibold !bg-indigo-600 hover:!bg-indigo-500 !text-white disabled:!opacity-60 disabled:!bg-indigo-600 disabled:!text-white shadow-md cursor-pointer flex-1 sm:flex-initial"
                 >
                   @if (isGeneratingBatch()) {
-                    <span class="flex items-center gap-1.5">
+                    <span class="flex items-center justify-center gap-1.5">
                       <mat-spinner diameter="14"></mat-spinner>
-                      <span>Generování všech polí...</span>
+                      <span>Generování...</span>
                     </span>
                   } @else {
-                    <span class="flex items-center">
+                    <span class="flex items-center justify-center">
                       <mat-icon class="!text-sm !w-4 !h-4 !mr-1">auto_awesome</mat-icon>
                       <span>AI Vygenerovat celé PBŘ</span>
                     </span>
                   }
-                </button>
-                <button
-                  type="button"
-                  (click)="closeModal()"
-                  class="p-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
-                >
-                  <mat-icon class="!text-base !w-4 !h-4">close</mat-icon>
                 </button>
               </div>
             </div>
 
             <!-- AI Generation Progress Bar -->
             @if (isGeneratingAi()) {
-              <mat-progress-bar mode="indeterminate" class="!h-1"></mat-progress-bar>
+              <mat-progress-bar mode="indeterminate" class="!h-1 shrink-0"></mat-progress-bar>
             }
 
             <!-- Category Tabs -->
-            <div class="flex items-center gap-1 px-6 py-2.5 bg-zinc-100/70 dark:bg-zinc-950/60 border-b border-zinc-200 dark:border-zinc-800 overflow-x-auto text-xs">
+            <div class="flex items-center gap-1.5 px-3 py-2 sm:px-6 sm:py-2.5 bg-zinc-100/70 dark:bg-zinc-950/60 border-b border-zinc-200 dark:border-zinc-800 overflow-x-auto no-scrollbar text-xs shrink-0">
               @for (cat of formCategories; track cat.id) {
                 <button
                   matRipple
@@ -317,7 +321,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
             </div>
 
             <!-- Modal Body / Form -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div class="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-6">
               <!-- Quick Files Notification Banner if not on files tab -->
               @if (activeCategory() !== 'files') {
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-500/30 text-xs">
@@ -514,13 +518,13 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-6 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/90 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="px-4 py-3 sm:px-6 sm:py-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/90 dark:bg-zinc-900/90 backdrop-blur-md flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sticky bottom-0 z-10 shrink-0">
               <div class="flex items-center gap-2">
                 <button
                   mat-button
                   type="button"
                   (click)="closeModal()"
-                  class="!rounded-xl !text-zinc-600 dark:!text-zinc-300 !text-xs"
+                  class="!rounded-xl !text-zinc-600 dark:!text-zinc-300 !text-xs flex-1 sm:flex-initial"
                 >
                   Zrušit
                 </button>
@@ -528,7 +532,7 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                   mat-stroked-button
                   type="button"
                   (click)="exportCurrentDocx()"
-                  class="!rounded-xl !text-xs !font-medium"
+                  class="!rounded-xl !text-xs !font-medium flex-1 sm:flex-initial"
                 >
                   <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-sky-500 dark:text-sky-400">description</mat-icon>
                   Exportovat DOCX
@@ -541,15 +545,15 @@ const INITIAL_FORM_DATA: FireSafetySolutionProperties = {
                   type="button"
                   (click)="saveSolution()"
                   [disabled]="isSaving() || isGeneratingAi()"
-                  class="!rounded-xl !text-xs !font-semibold !bg-indigo-600 hover:!bg-indigo-500 !text-white disabled:!opacity-60 disabled:!bg-indigo-600 disabled:!text-white shadow-md cursor-pointer"
+                  class="!rounded-xl !text-xs !font-semibold !bg-indigo-600 hover:!bg-indigo-500 !text-white disabled:!opacity-60 disabled:!bg-indigo-600 disabled:!text-white shadow-md cursor-pointer w-full sm:w-auto"
                 >
                   @if (isSaving()) {
-                    <span class="flex items-center gap-1.5">
+                    <span class="flex items-center justify-center gap-1.5">
                       <mat-spinner diameter="14"></mat-spinner>
                       <span>Ukládání...</span>
                     </span>
                   } @else {
-                    <span class="flex items-center">
+                    <span class="flex items-center justify-center">
                       <mat-icon class="!text-sm !w-4 !h-4 !mr-1">save</mat-icon>
                       <span>{{ editingId() ? 'Uložit změny' : 'Vytvořit řešení PBŘ' }}</span>
                     </span>

@@ -114,25 +114,37 @@ const QUICK_PRESETS: QuickPreset[] = [
 
       <!-- Summary Metrics Cards -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <mat-card class="!p-4 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm space-y-1">
-          <span class="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 block">Celkem promptů</span>
-          <p class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">{{ summary()?.total || prompts().length }}</p>
-        </mat-card>
+        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-xs dark:shadow-none">
+          <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400 text-xs">
+            <span>Celkem promptů</span>
+            <mat-icon class="!text-base !w-4 !h-4 text-zinc-400">schedule</mat-icon>
+          </div>
+          <p class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white mt-1">{{ summary()?.total || prompts().length }}</p>
+        </div>
 
-        <mat-card class="!p-4 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm space-y-1">
-          <span class="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 block">Aktivní v plánovači</span>
-          <p class="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-300">{{ summary()?.active || 0 }}</p>
-        </mat-card>
+        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-xs dark:shadow-none">
+          <div class="flex items-center justify-between text-emerald-600 dark:text-emerald-400 text-xs font-medium">
+            <span>Aktivní v plánovači</span>
+            <mat-icon class="!text-base !w-4 !h-4">check_circle</mat-icon>
+          </div>
+          <p class="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-300 mt-1">{{ summary()?.active || 0 }}</p>
+        </div>
 
-        <mat-card class="!p-4 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm space-y-1">
-          <span class="text-[11px] font-medium text-amber-600 dark:text-amber-400 block">Pozastavené</span>
-          <p class="text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-300">{{ summary()?.paused || 0 }}</p>
-        </mat-card>
+        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-xs dark:shadow-none">
+          <div class="flex items-center justify-between text-amber-600 dark:text-amber-400 text-xs font-medium">
+            <span>Pozastavené</span>
+            <mat-icon class="!text-base !w-4 !h-4">pause_circle</mat-icon>
+          </div>
+          <p class="text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-300 mt-1">{{ summary()?.paused || 0 }}</p>
+        </div>
 
-        <mat-card class="!p-4 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm space-y-1">
-          <span class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 block">Časové sloty</span>
-          <p class="text-xl sm:text-2xl font-bold text-indigo-600 dark:text-indigo-300">4 / den</p>
-        </mat-card>
+        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-xs dark:shadow-none">
+          <div class="flex items-center justify-between text-indigo-600 dark:text-indigo-400 text-xs font-medium">
+            <span>Časové sloty</span>
+            <mat-icon class="!text-base !w-4 !h-4">timelapse</mat-icon>
+          </div>
+          <p class="text-xl sm:text-2xl font-bold text-indigo-600 dark:text-indigo-300 mt-1">4 / den</p>
+        </div>
       </div>
 
       <!-- Quick Preset Templates -->
@@ -291,47 +303,52 @@ const QUICK_PRESETS: QuickPreset[] = [
           <mat-icon class="!text-zinc-400 dark:!text-zinc-500 !text-sm !w-4 !h-4 absolute left-3 top-2.5">search</mat-icon>
         </div>
 
-        <div class="flex items-center gap-1.5 overflow-x-auto text-xs">
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs">
           <button
+            matRipple
             type="button"
             (click)="selectedTimeFilter.set('all')"
-            class="px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === 'all' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
+            class="px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer whitespace-nowrap text-xs"
+            [class]="selectedTimeFilter() === 'all' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
           >
             Všechny časy
           </button>
           <button
+            matRipple
             type="button"
             (click)="selectedTimeFilter.set('6am')"
-            class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === '6am' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
+            class="flex items-center gap-1 px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer whitespace-nowrap text-xs"
+            [class]="selectedTimeFilter() === '6am' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
           >
             <mat-icon class="!text-xs !w-3.5 !h-3.5">wb_twilight</mat-icon>
             <span>6:00 AM</span>
           </button>
           <button
+            matRipple
             type="button"
             (click)="selectedTimeFilter.set('9am')"
-            class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === '9am' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
+            class="flex items-center gap-1 px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer whitespace-nowrap text-xs"
+            [class]="selectedTimeFilter() === '9am' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
           >
             <mat-icon class="!text-xs !w-3.5 !h-3.5">wb_sunny</mat-icon>
             <span>9:00 AM</span>
           </button>
           <button
+            matRipple
             type="button"
             (click)="selectedTimeFilter.set('1pm')"
-            class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === '1pm' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
+            class="flex items-center gap-1 px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer whitespace-nowrap text-xs"
+            [class]="selectedTimeFilter() === '1pm' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
           >
             <mat-icon class="!text-xs !w-3.5 !h-3.5">light_mode</mat-icon>
             <span>13:00 PM</span>
           </button>
           <button
+            matRipple
             type="button"
             (click)="selectedTimeFilter.set('5pm')"
-            class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === '5pm' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
+            class="flex items-center gap-1 px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer whitespace-nowrap text-xs"
+            [class]="selectedTimeFilter() === '5pm' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
           >
             <mat-icon class="!text-xs !w-3.5 !h-3.5">nights_stay</mat-icon>
             <span>17:00 PM</span>
@@ -442,32 +459,42 @@ const QUICK_PRESETS: QuickPreset[] = [
 
       <!-- Modal: Create / Edit Prompt -->
       @if (isModalOpen()) {
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center p-3 sm:p-6 animate-in fade-in">
-          <div class="relative w-full max-w-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 space-y-5">
-            <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
-              <div>
-                <h2 class="text-base font-bold text-zinc-900 dark:text-white">
-                  {{ editingId() ? 'Upravit naplánovaný prompt' : 'Nový naplánovaný prompt' }}
-                </h2>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400">Zadejte text promptu a vyberte denní čas spuštění.</p>
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 md:p-6 animate-in fade-in">
+          <mat-card
+            class="relative w-full max-w-2xl !bg-white dark:!bg-zinc-900 !border !border-zinc-200 dark:border-zinc-800 !rounded-t-3xl sm:!rounded-2xl !shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[92vh] !p-0"
+            (click)="$event.stopPropagation()"
+          >
+            <!-- Modal Header -->
+            <div class="px-4 py-3.5 sm:px-6 sm:py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-zinc-50/80 dark:bg-zinc-900/90 shrink-0">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 text-lg flex items-center justify-center border border-indigo-100 dark:border-indigo-500/20 shrink-0">
+                  <mat-icon class="!text-indigo-600 dark:text-indigo-400">schedule</mat-icon>
+                </div>
+                <div class="min-w-0">
+                  <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white truncate">
+                    {{ editingId() ? 'Upravit naplánovaný prompt' : 'Nový naplánovaný prompt' }}
+                  </h2>
+                  <p class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate hidden xs:block">Zadejte text promptu a vyberte denní čas spuštění</p>
+                </div>
               </div>
               <button
                 type="button"
                 (click)="closeModal()"
-                class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
+                class="p-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer shrink-0"
               >
                 <mat-icon class="!text-base !w-4 !h-4">close</mat-icon>
               </button>
             </div>
 
-            <div class="space-y-4 text-xs">
+            <!-- Modal Body / Form -->
+            <div class="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
               <div class="space-y-1.5">
                 <label class="block font-semibold text-zinc-700 dark:text-zinc-300">Název / Cíl promptu</label>
                 <input
                   type="text"
                   [(ngModel)]="formTitle"
                   placeholder="např. Ranní motivační zpráva & BJJ tip"
-                  class="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
@@ -521,7 +548,7 @@ const QUICK_PRESETS: QuickPreset[] = [
                   rows="5"
                   [(ngModel)]="formPrompt"
                   placeholder="Zadejte podrobné instrukce pro model..."
-                  class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono leading-relaxed resize-none overflow-hidden"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono leading-relaxed resize-none overflow-hidden"
                 ></textarea>
               </div>
 
@@ -537,55 +564,73 @@ const QUICK_PRESETS: QuickPreset[] = [
               </div>
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+            <!-- Modal Footer -->
+            <div class="px-4 py-3 sm:px-6 sm:py-3.5 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/90 flex items-center justify-end gap-2.5 shrink-0">
               <button
+                mat-stroked-button
                 type="button"
                 (click)="closeModal()"
-                class="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-medium cursor-pointer"
+                class="!rounded-xl !text-xs"
               >
                 Zrušit
               </button>
               <button
+                mat-flat-button
+                color="primary"
                 type="button"
                 (click)="savePrompt()"
                 [disabled]="isSaving() || !formPrompt"
-                class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer shadow-md disabled:opacity-50"
+                class="!rounded-xl !text-xs !font-semibold"
               >
-                {{ isSaving() ? 'Ukládání...' : (editingId() ? 'Uložit změny' : 'Vytvořit prompt') }}
+                @if (isSaving()) {
+                  <span class="flex items-center gap-1.5">
+                    <mat-spinner diameter="14"></mat-spinner>
+                    <span>Ukládání...</span>
+                  </span>
+                } @else {
+                  <span>{{ editingId() ? 'Uložit změny' : 'Vytvořit prompt' }}</span>
+                }
               </button>
             </div>
-          </div>
+          </mat-card>
         </div>
       }
 
       <!-- Modal: Run Result Inspection -->
       @if (lastRunResponse(); as run) {
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center p-3 sm:p-6 animate-in fade-in">
-          <div class="relative w-full max-w-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
-              <div>
-                <h3 class="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 md:p-6 animate-in fade-in">
+          <mat-card
+            class="relative w-full max-w-2xl !bg-white dark:!bg-zinc-900 !border !border-zinc-200 dark:border-zinc-800 !rounded-t-3xl sm:!rounded-2xl !shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[85vh] !p-0"
+            (click)="$event.stopPropagation()"
+          >
+            <!-- Modal Header -->
+            <div class="px-4 py-3.5 sm:px-6 sm:py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-zinc-50/80 dark:bg-zinc-900/90 shrink-0">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="p-2 rounded-xl bg-amber-50 dark:bg-amber-600/20 text-amber-600 dark:text-amber-400 text-lg flex items-center justify-center border border-amber-100 dark:border-amber-500/20 shrink-0">
                   <mat-icon class="!text-amber-500 dark:text-amber-400">bolt</mat-icon>
-                  <span>Výsledek spuštění promptu</span>
-                </h3>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400">Výstup byl vygenerován modelem a zpracován.</p>
+                </div>
+                <div class="min-w-0">
+                  <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white truncate">Výsledek spuštění promptu</h2>
+                  <p class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate hidden xs:block">Výstup byl vygenerován modelem a zpracován</p>
+                </div>
               </div>
               <button
                 type="button"
                 (click)="lastRunResponse.set(null)"
-                class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
+                class="p-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer shrink-0"
               >
                 <mat-icon class="!text-base !w-4 !h-4">close</mat-icon>
               </button>
             </div>
 
-            <div class="space-y-3 text-xs">
+            <!-- Modal Body -->
+            <div class="p-4 sm:p-6 space-y-3 text-xs overflow-y-auto flex-1">
               <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap leading-relaxed font-sans max-h-96 overflow-y-auto">
                 {{ run.completion || run.execution?.completionPreview || 'Žádný textový výstup' }}
               </div>
 
               @if (run.execution?.telegramDelivery; as tg) {
-                <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/80 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/80 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
                   <span class="text-zinc-600 dark:text-zinc-400">Doručení do Telegramu:</span>
                   <span
                     class="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold"
@@ -602,16 +647,18 @@ const QUICK_PRESETS: QuickPreset[] = [
               }
             </div>
 
-            <div class="flex justify-end pt-3 border-t border-zinc-200 dark:border-zinc-800">
+            <!-- Modal Footer -->
+            <div class="px-4 py-3 sm:px-6 sm:py-3.5 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/90 flex items-center justify-end shrink-0">
               <button
+                mat-stroked-button
                 type="button"
                 (click)="lastRunResponse.set(null)"
-                class="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-white text-xs font-medium cursor-pointer"
+                class="!rounded-xl !text-xs"
               >
                 Zavřít
               </button>
             </div>
-          </div>
+          </mat-card>
         </div>
       }
     </div>
