@@ -14,6 +14,7 @@ import { PromptsService } from '../../core/services/prompts.service';
 import {
   ScheduledAiPrompt,
   PromptScheduledTime,
+  SCHEDULED_TIME_OPTIONS,
   SCHEDULED_TIME_DETAILS,
   ScheduledPromptsSummary,
   PromptCronBatchSummary,
@@ -80,7 +81,7 @@ const QUICK_PRESETS: QuickPreset[] = [
             <span>Naplánované AI Prompty (Vercel Cron)</span>
           </h1>
           <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            Automatické periodické spouštění AI promptů v pevných slotech (6:00, 9:00, 13:00, 17:00) a odesílání do Telegramu.
+            Automatické periodické spouštění AI promptů každou hodinu (0-23h) přes Vercel Cron a odesílání do Telegramu.
           </p>
         </div>
 
@@ -131,7 +132,7 @@ const QUICK_PRESETS: QuickPreset[] = [
 
         <mat-card class="!p-4 !rounded-2xl !bg-white dark:!bg-zinc-900/80 !border !border-zinc-200 dark:!border-zinc-800 !shadow-sm space-y-1">
           <span class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 block">Časové sloty</span>
-          <p class="text-xl sm:text-2xl font-bold text-indigo-600 dark:text-indigo-300">4 / den</p>
+          <p class="text-xl sm:text-2xl font-bold text-indigo-600 dark:text-indigo-300">24 / den</p>
         </mat-card>
       </div>
 
@@ -192,6 +193,17 @@ const QUICK_PRESETS: QuickPreset[] = [
 
         <div class="flex flex-wrap items-center gap-2">
           <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            (click)="triggerCron('auto')"
+            [disabled]="isTriggeringCron()"
+            class="!rounded-xl !text-xs !font-semibold"
+          >
+            <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1">schedule</mat-icon>
+            Spustit aktuální hodinu (Auto)
+          </button>
+          <button
             mat-stroked-button
             type="button"
             (click)="triggerCron('6am')"
@@ -199,7 +211,7 @@ const QUICK_PRESETS: QuickPreset[] = [
             class="!rounded-xl !text-xs !font-medium"
           >
             <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1">wb_twilight</mat-icon>
-            Spustit slot 6:00
+            6:00
           </button>
           <button
             mat-stroked-button
@@ -209,7 +221,7 @@ const QUICK_PRESETS: QuickPreset[] = [
             class="!rounded-xl !text-xs !font-medium"
           >
             <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1">wb_sunny</mat-icon>
-            Spustit slot 9:00
+            9:00
           </button>
           <button
             mat-stroked-button
@@ -219,7 +231,7 @@ const QUICK_PRESETS: QuickPreset[] = [
             class="!rounded-xl !text-xs !font-medium"
           >
             <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1">light_mode</mat-icon>
-            Spustit slot 13:00
+            13:00
           </button>
           <button
             mat-stroked-button
@@ -229,18 +241,17 @@ const QUICK_PRESETS: QuickPreset[] = [
             class="!rounded-xl !text-xs !font-medium"
           >
             <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1">nights_stay</mat-icon>
-            Spustit slot 17:00
+            17:00
           </button>
           <button
-            mat-flat-button
-            color="primary"
+            mat-stroked-button
             type="button"
             (click)="triggerCron('all')"
             [disabled]="isTriggeringCron()"
-            class="!rounded-xl !text-xs !font-semibold"
+            class="!rounded-xl !text-xs !font-medium"
           >
             <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1">bolt</mat-icon>
-            Spustit VŠECHNY aktivní prompty
+            Všechny prompty
           </button>
         </div>
 
@@ -291,7 +302,7 @@ const QUICK_PRESETS: QuickPreset[] = [
           <mat-icon class="!text-zinc-400 dark:!text-zinc-500 !text-sm !w-4 !h-4 absolute left-3 top-2.5">search</mat-icon>
         </div>
 
-        <div class="flex items-center gap-1.5 overflow-x-auto text-xs">
+        <div class="flex items-center gap-2 overflow-x-auto text-xs">
           <button
             type="button"
             (click)="selectedTimeFilter.set('all')"
@@ -300,42 +311,18 @@ const QUICK_PRESETS: QuickPreset[] = [
           >
             Všechny časy
           </button>
-          <button
-            type="button"
-            (click)="selectedTimeFilter.set('6am')"
-            class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === '6am' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
+          <select
+            [ngModel]="selectedTimeFilter()"
+            (ngModelChange)="selectedTimeFilter.set($event)"
+            class="px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white text-xs font-medium focus:outline-none focus:border-indigo-500 cursor-pointer"
           >
-            <mat-icon class="!text-xs !w-3.5 !h-3.5">wb_twilight</mat-icon>
-            <span>6:00 AM</span>
-          </button>
-          <button
-            type="button"
-            (click)="selectedTimeFilter.set('9am')"
-            class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === '9am' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
-          >
-            <mat-icon class="!text-xs !w-3.5 !h-3.5">wb_sunny</mat-icon>
-            <span>9:00 AM</span>
-          </button>
-          <button
-            type="button"
-            (click)="selectedTimeFilter.set('1pm')"
-            class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === '1pm' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
-          >
-            <mat-icon class="!text-xs !w-3.5 !h-3.5">light_mode</mat-icon>
-            <span>13:00 PM</span>
-          </button>
-          <button
-            type="button"
-            (click)="selectedTimeFilter.set('5pm')"
-            class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            [class]="selectedTimeFilter() === '5pm' ? 'bg-indigo-600 text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'"
-          >
-            <mat-icon class="!text-xs !w-3.5 !h-3.5">nights_stay</mat-icon>
-            <span>17:00 PM</span>
-          </button>
+            <option value="all">Filtrovat podle hodiny (všechny)</option>
+            @for (opt of timeOptions; track opt) {
+              <option [value]="opt">
+                {{ timeDetails[opt].displayTime }} ({{ timeDetails[opt].timeLabel }})
+              </option>
+            }
+          </select>
         </div>
       </div>
 
@@ -395,22 +382,17 @@ const QUICK_PRESETS: QuickPreset[] = [
 
               <div class="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
                 <button
-                  mat-stroked-button
+                  mat-icon-button
                   type="button"
                   (click)="runNow(p)"
                   [disabled]="runningId() === p.id"
-                  class="!rounded-lg !text-xs !font-medium"
+                  class="!text-amber-500 dark:!text-amber-400 hover:!text-amber-600 dark:hover:!text-amber-300"
+                  matTooltip="Spustit ihned"
                 >
                   @if (runningId() === p.id) {
-                    <span class="flex items-center gap-1.5">
-                      <mat-spinner diameter="14"></mat-spinner>
-                      <span>Spouštím...</span>
-                    </span>
+                    <mat-spinner diameter="18"></mat-spinner>
                   } @else {
-                    <span class="flex items-center">
-                      <mat-icon class="!text-xs !w-3.5 !h-3.5 !mr-1 text-amber-500 dark:text-amber-400">bolt</mat-icon>
-                      <span>Spustit ihned</span>
-                    </span>
+                    <mat-icon>bolt</mat-icon>
                   }
                 </button>
 
@@ -419,7 +401,7 @@ const QUICK_PRESETS: QuickPreset[] = [
                     mat-icon-button
                     type="button"
                     (click)="openEditModal(p)"
-                    class="!text-zinc-500 dark:!text-zinc-300 hover:!text-zinc-900 dark:hover:!text-white"
+                    class="!text-zinc-500 dark:!text-zinc-400 hover:!text-indigo-600 dark:hover:!text-indigo-400"
                     matTooltip="Upravit prompt"
                   >
                     <mat-icon>edit</mat-icon>
@@ -473,43 +455,53 @@ const QUICK_PRESETS: QuickPreset[] = [
 
               <div class="space-y-1.5">
                 <label class="block font-semibold text-zinc-700 dark:text-zinc-300">Časový slot spuštění</label>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  <button
-                    type="button"
-                    (click)="formScheduledTime = '6am'"
-                    class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl font-medium border text-center transition-all cursor-pointer"
-                    [class]="formScheduledTime === '6am' ? 'bg-indigo-600 border-indigo-500 text-white shadow-xs' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
+                <div class="space-y-2">
+                  <select
+                    [(ngModel)]="formScheduledTime"
+                    class="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:border-indigo-500 font-medium cursor-pointer"
                   >
-                    <mat-icon class="!text-sm !w-4 !h-4">wb_twilight</mat-icon>
-                    <span>6:00 AM</span>
-                  </button>
-                  <button
-                    type="button"
-                    (click)="formScheduledTime = '9am'"
-                    class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl font-medium border text-center transition-all cursor-pointer"
-                    [class]="formScheduledTime === '9am' ? 'bg-indigo-600 border-indigo-500 text-white shadow-xs' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
-                  >
-                    <mat-icon class="!text-sm !w-4 !h-4">wb_sunny</mat-icon>
-                    <span>9:00 AM</span>
-                  </button>
-                  <button
-                    type="button"
-                    (click)="formScheduledTime = '1pm'"
-                    class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl font-medium border text-center transition-all cursor-pointer"
-                    [class]="formScheduledTime === '1pm' ? 'bg-indigo-600 border-indigo-500 text-white shadow-xs' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
-                  >
-                    <mat-icon class="!text-sm !w-4 !h-4">light_mode</mat-icon>
-                    <span>13:00 PM</span>
-                  </button>
-                  <button
-                    type="button"
-                    (click)="formScheduledTime = '5pm'"
-                    class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl font-medium border text-center transition-all cursor-pointer"
-                    [class]="formScheduledTime === '5pm' ? 'bg-indigo-600 border-indigo-500 text-white shadow-xs' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
-                  >
-                    <mat-icon class="!text-sm !w-4 !h-4">nights_stay</mat-icon>
-                    <span>17:00 PM</span>
-                  </button>
+                    @for (opt of timeOptions; track opt) {
+                      <option [value]="opt">
+                        {{ timeDetails[opt].displayTime }} ({{ timeDetails[opt].timeLabel }}) — {{ timeDetails[opt].period }}
+                      </option>
+                    }
+                  </select>
+
+                  <div class="flex items-center gap-1.5 overflow-x-auto text-[11px]">
+                    <span class="text-zinc-400 text-[10px] mr-1">Rychlá volba:</span>
+                    <button
+                      type="button"
+                      (click)="formScheduledTime = '6am'"
+                      class="px-2 py-1 rounded-lg border text-center transition-all cursor-pointer font-medium"
+                      [class]="formScheduledTime === '6am' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
+                    >
+                      6:00
+                    </button>
+                    <button
+                      type="button"
+                      (click)="formScheduledTime = '9am'"
+                      class="px-2 py-1 rounded-lg border text-center transition-all cursor-pointer font-medium"
+                      [class]="formScheduledTime === '9am' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
+                    >
+                      9:00
+                    </button>
+                    <button
+                      type="button"
+                      (click)="formScheduledTime = '1pm'"
+                      class="px-2 py-1 rounded-lg border text-center transition-all cursor-pointer font-medium"
+                      [class]="formScheduledTime === '1pm' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
+                    >
+                      13:00
+                    </button>
+                    <button
+                      type="button"
+                      (click)="formScheduledTime = '5pm'"
+                      class="px-2 py-1 rounded-lg border text-center transition-all cursor-pointer font-medium"
+                      [class]="formScheduledTime === '5pm' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
+                    >
+                      17:00
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -638,6 +630,8 @@ export class AiPromptsComponent implements OnInit {
   readonly cronSummary = signal<PromptCronBatchSummary | null>(null);
 
   readonly quickPresets = QUICK_PRESETS;
+  readonly timeOptions = SCHEDULED_TIME_OPTIONS;
+  readonly timeDetails = SCHEDULED_TIME_DETAILS;
 
   formTitle: string = '';
   formScheduledTime: PromptScheduledTime = '9am';

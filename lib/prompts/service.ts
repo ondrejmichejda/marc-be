@@ -10,6 +10,7 @@ import {
   UpdateScheduledPromptInput,
   ScheduledPromptsSummary,
   PromptScheduledTime,
+  SCHEDULED_TIME_OPTIONS,
   PromptCronBatchSummary,
   PromptCronExecutionResult,
   normalizeScheduledTime,
@@ -22,9 +23,12 @@ interface StorageSchema {
 
 function mapPromptRow(row: Record<string, unknown>): ScheduledAiPrompt {
   const scheduledTimeRaw = String(row.scheduled_time || "9am").toLowerCase();
-  const scheduledTime: PromptScheduledTime = isValidScheduledTime(scheduledTimeRaw)
-    ? scheduledTimeRaw
-    : "9am";
+  let scheduledTime: PromptScheduledTime = "9am";
+  try {
+    scheduledTime = normalizeScheduledTime(scheduledTimeRaw);
+  } catch {
+    scheduledTime = "9am";
+  }
 
   return {
     id: String(row.id),
@@ -526,16 +530,19 @@ export class ScheduledPromptService {
   static async getSummary(userId: string): Promise<ScheduledPromptsSummary> {
     const list = await this.getPromptsByUser(userId);
 
+    const byTime: Record<string, number> = {};
+    for (const opt of SCHEDULED_TIME_OPTIONS) {
+      byTime[opt] = 0;
+    }
+    for (const p of list) {
+      byTime[p.scheduledTime] = (byTime[p.scheduledTime] || 0) + 1;
+    }
+
     const summary: ScheduledPromptsSummary = {
       total: list.length,
       active: list.filter((p) => p.isActive).length,
       paused: list.filter((p) => !p.isActive).length,
-      byTime: {
-        "6am": list.filter((p) => p.scheduledTime === "6am").length,
-        "9am": list.filter((p) => p.scheduledTime === "9am").length,
-        "1pm": list.filter((p) => p.scheduledTime === "1pm").length,
-        "5pm": list.filter((p) => p.scheduledTime === "5pm").length,
-      },
+      byTime,
     };
 
     return summary;
