@@ -38,6 +38,46 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="bg-zinc-50 dark:bg-gray-950 text-zinc-900 dark:text-gray-100 min-h-screen antialiased font-sans overscroll-none touch-manipulation">
-  <app-root></app-root>
+  <app-root>
+    <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #030712; color: #f3f4f6;">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+        <!-- Pulsing Brand Icon -->
+        <div style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 55%, #06b6d4 100%); box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.35); animation: marcPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="marcShieldGradLoading" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.28" />
+                <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.06" />
+              </linearGradient>
+              <linearGradient id="marcFlameGradLoading" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#F97316" />
+                <stop offset="50%" stop-color="#EF4444" />
+                <stop offset="100%" stop-color="#FBBF24" />
+              </linearGradient>
+            </defs>
+            <path d="M18 6.5L26 10.2V17.5C26 22.8 22.6 27.6 18 29.5C13.4 27.6 10 22.8 10 17.5V10.2L18 6.5Z" fill="url(#marcShieldGradLoading)" stroke="white" stroke-width="1.25" stroke-linejoin="round" stroke-opacity="0.9" />
+            <path d="M13.5 20.5V13.5L17.5 19L18.5 19L22.5 13.5V20.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M18 10.5C18.8 12.2 20 13.5 20 15.2C20 16.3 19.1 17.2 18 17.2C16.9 17.2 16 16.3 16 15.2C16 13.5 17.2 12.2 18 10.5Z" fill="url(#marcFlameGradLoading)" />
+            <circle cx="18" cy="24.5" r="1.2" fill="#E0F2FE" />
+          </svg>
+        </div>
+
+        <!-- Status Indicator -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #3b82f6; animation: marcPing 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+          <p style="margin: 0; font-size: 14px; font-weight: 500; color: #9ca3af; letter-spacing: 0.02em;">Loading Marc Platform...</p>
+        </div>
+      </div>
+    </div>
+    <style>
+      @keyframes marcPulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(0.96); opacity: 0.85; }
+      }
+      @keyframes marcPing {
+        75%, 100% { transform: scale(2); opacity: 0; }
+      }
+    </style>
+  </app-root>
 </body>
 </html>
