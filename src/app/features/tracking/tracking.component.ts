@@ -278,12 +278,12 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
                     @if (getTrackerMetrics(item).overflowSeconds > 0) {
                       <span class="text-rose-600 dark:text-rose-400 flex items-center gap-1 font-semibold">
                         <mat-icon class="!text-[14px] !w-3.5 !h-3.5">alarm_on</mat-icon>
-                        <span>Overflow: +{{ getOverflowFormatted(item) }}</span>
+                        <span>Overflow: +{{ getOverflowFormatted(item) }} (+{{ getTrackerMetrics(item).overflowPercentage }}%)</span>
                       </span>
                     } @else {
                       <span class="text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
                         <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-zinc-400">schedule</mat-icon>
-                        <span>Overflow: 0s</span>
+                        <span>Overflow: 0s (0%)</span>
                       </span>
                     }
                   </div>
@@ -291,7 +291,11 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
                   <!-- Status Percentage with Gradient Status Color -->
                   <div class="flex items-center gap-1.5 text-xs font-bold" [style.color]="getStatusColor(getTrackerMetrics(item).progressPercentage)">
                     <span class="w-2 h-2 rounded-full" [style.backgroundColor]="getStatusColor(getTrackerMetrics(item).progressPercentage)"></span>
-                    <span>Status: {{ getTrackerMetrics(item).progressPercentage }}%</span>
+                    @if (getTrackerMetrics(item).overflowPercentage > 0) {
+                      <span>Status: 0% (+{{ getTrackerMetrics(item).overflowPercentage }}% over)</span>
+                    } @else {
+                      <span>Status: {{ getTrackerMetrics(item).progressPercentage }}%</span>
+                    }
                   </div>
                 </div>
 
@@ -319,7 +323,7 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
                   </span>
                   <span class="flex items-center gap-1.5 text-[11px]" [style.color]="getStatusColor(getTrackerMetrics(item).progressPercentage)">
                     <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="getStatusColor(getTrackerMetrics(item).progressPercentage)"></span>
-                    <span class="font-medium">{{ getStatusLabel(getTrackerMetrics(item).progressPercentage) }}</span>
+                    <span class="font-medium">{{ getStatusLabel(getTrackerMetrics(item).progressPercentage, getTrackerMetrics(item).overflowPercentage) }}</span>
                   </span>
                 </div>
               </div>
@@ -580,21 +584,27 @@ const DURATION_PRESETS: QuickDurationPreset[] = [
                   <span>Time overflow:</span>
                   <strong class="text-zinc-900 dark:text-white">
                     @if (getTrackerMetrics(resetConfirmItem()!).overflowSeconds > 0) {
-                      <span class="text-rose-600 dark:text-rose-400 font-semibold">+{{ getOverflowFormatted(resetConfirmItem()!) }}</span>
+                      <span class="text-rose-600 dark:text-rose-400 font-semibold">+{{ getOverflowFormatted(resetConfirmItem()!) }} (+{{ getTrackerMetrics(resetConfirmItem()!).overflowPercentage }}%)</span>
                     } @else {
-                      <span class="text-zinc-500 dark:text-zinc-400">0s (within target duration)</span>
+                      <span class="text-zinc-500 dark:text-zinc-400">0s (0%)</span>
                     }
                   </strong>
                 </div>
                 <div class="flex justify-between">
                   <span>Current progress:</span>
-                  <strong class="text-zinc-900 dark:text-white">{{ getTrackerMetrics(resetConfirmItem()!).progressPercentage }}%</strong>
+                  <strong class="text-zinc-900 dark:text-white">
+                    @if (getTrackerMetrics(resetConfirmItem()!).overflowPercentage > 0) {
+                      0% (+{{ getTrackerMetrics(resetConfirmItem()!).overflowPercentage }}% over)
+                    } @else {
+                      {{ getTrackerMetrics(resetConfirmItem()!).progressPercentage }}%
+                    }
+                  </strong>
                 </div>
                 <div class="flex justify-between">
                   <span>Status:</span>
                   <span class="font-semibold flex items-center gap-1" [style.color]="getStatusColor(getTrackerMetrics(resetConfirmItem()!).progressPercentage)">
                     <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="getStatusColor(getTrackerMetrics(resetConfirmItem()!).progressPercentage)"></span>
-                    {{ getStatusLabel(getTrackerMetrics(resetConfirmItem()!).progressPercentage) }}
+                    {{ getStatusLabel(getTrackerMetrics(resetConfirmItem()!).progressPercentage, getTrackerMetrics(resetConfirmItem()!).overflowPercentage) }}
                   </span>
                 </div>
                 <p class="text-[11px] text-zinc-400 dark:text-zinc-500 pt-1.5 border-t border-zinc-200/50 dark:border-zinc-800">
@@ -1065,6 +1075,7 @@ export class TrackingComponent implements OnInit, OnDestroy {
     elapsedSeconds: number;
     remainingSeconds: number;
     overflowSeconds: number;
+    overflowPercentage: number;
     progressPercentage: number;
     isCompleted: boolean;
   } {
@@ -1076,12 +1087,15 @@ export class TrackingComponent implements OnInit, OnDestroy {
     const overflowSeconds = Math.max(0, elapsedSeconds - item.totalDurationSeconds);
     const rawProgress = (remainingSeconds / totalSec) * 100;
     const progressPercentage = Math.min(100, Math.max(0, Math.round(rawProgress * 10) / 10));
+    const rawOverflow = (overflowSeconds / totalSec) * 100;
+    const overflowPercentage = Math.max(0, Math.round(rawOverflow * 10) / 10);
     const isCompleted = elapsedSeconds >= item.totalDurationSeconds;
 
     return {
       elapsedSeconds,
       remainingSeconds,
       overflowSeconds,
+      overflowPercentage,
       progressPercentage,
       isCompleted,
     };
@@ -1120,21 +1134,21 @@ export class TrackingComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Generates a status color along the red-to-green gradient.
-   * 0% -> Red (#ef4444 / rgb(239, 68, 68))
-   * 50% -> Amber (#f59e0b / rgb(245, 158, 11))
-   * 100% -> Green (#10b981 / rgb(16, 185, 129))
+   * Generates a status color along the red-to-green gradient over time.
+   * 100% remaining (start) -> Red (#ef4444 / rgb(239, 68, 68))
+   * 50% remaining (halfway) -> Amber (#f59e0b / rgb(245, 158, 11))
+   * 0% remaining (completed / elapsed) -> Green (#10b981 / rgb(16, 185, 129))
    */
   getStatusColor(percentage: number): string {
     const p = Math.min(100, Math.max(0, percentage));
     let r: number, g: number, b: number;
-    if (p <= 50) {
-      const factor = p / 50;
+    if (p >= 50) {
+      const factor = (100 - p) / 50;
       r = Math.round(239 + (245 - 239) * factor);
       g = Math.round(68 + (158 - 68) * factor);
       b = Math.round(68 + (11 - 68) * factor);
     } else {
-      const factor = (p - 50) / 50;
+      const factor = (50 - p) / 50;
       r = Math.round(245 + (16 - 245) * factor);
       g = Math.round(158 + (185 - 158) * factor);
       b = Math.round(11 + (129 - 11) * factor);
@@ -1145,13 +1159,13 @@ export class TrackingComponent implements OnInit, OnDestroy {
   getStatusBgColor(percentage: number, opacity = 0.12): string {
     const p = Math.min(100, Math.max(0, percentage));
     let r: number, g: number, b: number;
-    if (p <= 50) {
-      const factor = p / 50;
+    if (p >= 50) {
+      const factor = (100 - p) / 50;
       r = Math.round(239 + (245 - 239) * factor);
       g = Math.round(68 + (158 - 68) * factor);
       b = Math.round(68 + (11 - 68) * factor);
     } else {
-      const factor = (p - 50) / 50;
+      const factor = (50 - p) / 50;
       r = Math.round(245 + (16 - 245) * factor);
       g = Math.round(158 + (185 - 158) * factor);
       b = Math.round(11 + (129 - 11) * factor);
@@ -1163,10 +1177,11 @@ export class TrackingComponent implements OnInit, OnDestroy {
     return this.getStatusBgColor(percentage, opacity);
   }
 
-  getStatusLabel(percentage: number): string {
-    if (percentage >= 100) return 'Elapsed (100%)';
-    if (percentage >= 75) return 'Nearly Done';
-    if (percentage >= 40) return 'In Progress';
+  getStatusLabel(percentage: number, overflowPercentage = 0): string {
+    if (overflowPercentage > 0) return `Overdue (+${overflowPercentage}%)`;
+    if (percentage <= 0) return 'Elapsed (0%)';
+    if (percentage <= 25) return 'Nearly Done';
+    if (percentage <= 60) return 'In Progress';
     return 'Just Started';
   }
 }

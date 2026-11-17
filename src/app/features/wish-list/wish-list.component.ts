@@ -338,17 +338,17 @@ import {
                     class="!text-zinc-500 dark:!text-zinc-400 hover:!text-zinc-900 dark:hover:!text-white"
                     matTooltip="Edit wish and maximum counter"
                   >
-                    <mat-icon class="!text-base !w-4 !h-4">edit</mat-icon>
+                    <mat-icon>edit</mat-icon>
                   </button>
 
                   <button
                     mat-icon-button
                     type="button"
                     (click)="openDeleteConfirm(wish)"
-                    class="!text-rose-500 hover:!text-rose-700"
+                    class="!text-zinc-400 dark:!text-zinc-500 hover:!text-rose-600 dark:hover:!text-rose-400"
                     matTooltip="Delete wish"
                   >
-                    <mat-icon class="!text-base !w-4 !h-4">delete_outline</mat-icon>
+                    <mat-icon>delete</mat-icon>
                   </button>
                 </div>
               </div>
