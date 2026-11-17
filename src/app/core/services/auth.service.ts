@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, of, map } from 'rxjs';
+import { Observable, tap, catchError, of, map, shareReplay } from 'rxjs';
 import { User, RoleDefinition, MenuItem, AuthStatusResponse, RolesResponse } from '../models/auth.models';
 
 @Injectable({
@@ -24,13 +24,31 @@ export class AuthService {
   readonly isAdmin = computed(() => this.userRole() === 'admin');
   readonly isOperator = computed(() => this.userRole() === 'operator' || this.userRole() === 'admin');
 
+  private authCheck$: Observable<AuthStatusResponse> | null = null;
+  private initialCheckCompleted = false;
+
   constructor() {
     this.checkAuth().subscribe();
   }
 
-  checkAuth(): Observable<AuthStatusResponse> {
+  checkAuth(force = false): Observable<AuthStatusResponse> {
+    if (!force && this.initialCheckCompleted && !this.authCheck$) {
+      return of({
+        authenticated: this.isAuthenticated(),
+        user: this.currentUser(),
+        role: this.userRole(),
+        roleInfo: this.roleInfo(),
+        menu: this.menuItems(),
+        configured: this.isConfigured(),
+      });
+    }
+
+    if (this.authCheck$) {
+      return this.authCheck$;
+    }
+
     this.isLoading.set(true);
-    return this.http.get<AuthStatusResponse>('/api/auth/me').pipe(
+    this.authCheck$ = this.http.get<AuthStatusResponse>('/api/auth/me').pipe(
       tap((res) => {
         if (res.authenticated && res.user) {
           this.currentUser.set(res.user);
@@ -42,12 +60,16 @@ export class AuthService {
           this.clearState();
           this.isConfigured.set(res.configured ?? true);
         }
+        this.initialCheckCompleted = true;
         this.isLoading.set(false);
+        this.authCheck$ = null;
       }),
       catchError((err) => {
         console.error('Failed to check auth status:', err);
         this.clearState();
+        this.initialCheckCompleted = true;
         this.isLoading.set(false);
+        this.authCheck$ = null;
         return of({
           authenticated: false,
           user: null,
@@ -56,8 +78,11 @@ export class AuthService {
           menu: [],
           configured: true,
         });
-      })
+      }),
+      shareReplay(1)
     );
+
+    return this.authCheck$;
   }
 
   signInWithGoogleCredential(credential: string): Observable<AuthStatusResponse> {
