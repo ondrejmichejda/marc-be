@@ -38,8 +38,10 @@ export function computeTrackerMetrics(
   const totalSec = Math.max(1, tracker.totalDurationSeconds);
   const remainingSeconds = Math.max(0, tracker.totalDurationSeconds - elapsedSeconds);
   const overflowSeconds = Math.max(0, elapsedSeconds - tracker.totalDurationSeconds);
-  const rawProgress = (elapsedSeconds / totalSec) * 100;
+  const rawProgress = (remainingSeconds / totalSec) * 100;
   const progressPercentage = Math.min(100, Math.max(0, Math.round(rawProgress * 10) / 10));
+  const rawOverflow = (overflowSeconds / totalSec) * 100;
+  const overflowPercentage = Math.max(0, Math.round(rawOverflow * 10) / 10);
   const isCompleted = elapsedSeconds >= tracker.totalDurationSeconds;
 
   return {
@@ -47,6 +49,7 @@ export function computeTrackerMetrics(
     elapsedSeconds,
     remainingSeconds,
     overflowSeconds,
+    overflowPercentage,
     progressPercentage,
     isCompleted,
   };

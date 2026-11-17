@@ -37,7 +37,7 @@ test("Tracking: Duration calculations and conversion helpers", () => {
   assert.equal(calculateTotalDurationSeconds(-1, -5, 30), 1800);
 });
 
-test("Tracking: Metric computation and progress percentage (gradient 0% red to 100% green)", () => {
+test("Tracking: Metric computation and progress percentage (remaining from 100% to 0%)", () => {
   const baseTime = new Date("2026-11-16T10:00:00.000Z");
   const dummyTracker = {
     id: "trk_test_1",
@@ -53,39 +53,43 @@ test("Tracking: Metric computation and progress percentage (gradient 0% red to 1
     updatedAt: baseTime.toISOString(),
   };
 
-  // At start (0 elapsed) -> 0% progress (Red), 0 overflow
+  // At start (0 elapsed) -> 100% remaining (Red color), 0 overflow
   const startMetrics = computeTrackerMetrics(dummyTracker, baseTime);
   assert.equal(startMetrics.elapsedSeconds, 0);
   assert.equal(startMetrics.remainingSeconds, 7200);
   assert.equal(startMetrics.overflowSeconds, 0);
-  assert.equal(startMetrics.progressPercentage, 0);
+  assert.equal(startMetrics.overflowPercentage, 0);
+  assert.equal(startMetrics.progressPercentage, 100);
   assert.equal(startMetrics.isCompleted, false);
 
-  // After 1 hour (3600 sec) -> 50% progress (Amber / Transitioning), 0 overflow
+  // After 1 hour (3600 sec) -> 50% remaining (Amber color), 0 overflow
   const halfTime = new Date(baseTime.getTime() + 3600 * 1000);
   const halfMetrics = computeTrackerMetrics(dummyTracker, halfTime);
   assert.equal(halfMetrics.elapsedSeconds, 3600);
   assert.equal(halfMetrics.remainingSeconds, 3600);
   assert.equal(halfMetrics.overflowSeconds, 0);
+  assert.equal(halfMetrics.overflowPercentage, 0);
   assert.equal(halfMetrics.progressPercentage, 50);
   assert.equal(halfMetrics.isCompleted, false);
 
-  // After 2 hours (7200 sec) -> 100% progress (Green / Target Reached), 0 overflow
+  // After 2 hours (7200 sec) -> 0% remaining (Green color / Target Reached), 0 overflow
   const fullTime = new Date(baseTime.getTime() + 7200 * 1000);
   const fullMetrics = computeTrackerMetrics(dummyTracker, fullTime);
   assert.equal(fullMetrics.elapsedSeconds, 7200);
   assert.equal(fullMetrics.remainingSeconds, 0);
   assert.equal(fullMetrics.overflowSeconds, 0);
-  assert.equal(fullMetrics.progressPercentage, 100);
+  assert.equal(fullMetrics.overflowPercentage, 0);
+  assert.equal(fullMetrics.progressPercentage, 0);
   assert.equal(fullMetrics.isCompleted, true);
 
-  // After 3 hours (10800 sec / overdue) -> clamped to 100% progress, 0 remaining, 3600 sec (1 hour) overflow
+  // After 3 hours (10800 sec / overdue) -> 0% remaining (Green color), 3600 sec (1 hour) overflow (50% overflow)
   const overTime = new Date(baseTime.getTime() + 10800 * 1000);
   const overMetrics = computeTrackerMetrics(dummyTracker, overTime);
   assert.equal(overMetrics.elapsedSeconds, 10800);
   assert.equal(overMetrics.remainingSeconds, 0);
   assert.equal(overMetrics.overflowSeconds, 3600);
-  assert.equal(overMetrics.progressPercentage, 100);
+  assert.equal(overMetrics.overflowPercentage, 50);
+  assert.equal(overMetrics.progressPercentage, 0);
   assert.equal(overMetrics.isCompleted, true);
 });
 

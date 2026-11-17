@@ -25,6 +25,7 @@ export interface TrackedItem {
   elapsedSeconds?: number;
   remainingSeconds?: number;
   overflowSeconds?: number;
+  overflowPercentage?: number;
   progressPercentage?: number;
   isCompleted?: boolean;
   resetsCount?: number;
