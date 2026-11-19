@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
 
     const userId = (typeof body?.userId === "string" && body.userId.trim()) || resolvedUserId;
     const createdAt = typeof body?.createdAt === "string" && body.createdAt.trim() ? body.createdAt.trim() : undefined;
+    const notifyTelegram = body?.notifyTelegram !== undefined ? Boolean(body.notifyTelegram) : true;
 
     const wish = await WishListService.createWish({
       userId,
@@ -88,6 +89,7 @@ export async function POST(req: NextRequest) {
       waitingPeriod,
       counter,
       maxCounter,
+      notifyTelegram,
       createdAt,
     });
 

@@ -19,6 +19,12 @@ import {
   DELETE as deleteWishByIdApi,
 } from "../app/api/wish-list/[id]/route";
 import { POST as postIncrementWishApi } from "../app/api/wish-list/[id]/increment/route";
+import { POST as postNotifyWishApi } from "../app/api/wish-list/[id]/notify/route";
+import {
+  GET as getWishListCronApi,
+  POST as postWishListCronApi,
+} from "../app/api/cron/wishlist/route";
+import { UserTelegramSettingsService } from "../lib/telegram/userSettings";
 
 test("Wish List: Waiting period options, normalization and day calculations", () => {
   // Check available options
@@ -321,4 +327,129 @@ test("Wish List API Endpoints: /api/wish-list, /api/wish-list/[id], and /api/wis
   const getAfterDelRes = await getWishListApi(getAfterDelReq);
   const getAfterDelData = await getAfterDelRes.json();
   assert.equal(getAfterDelData.count, 0);
+});
+
+test("Wish List Telegram Notification: notify on waiting period elapsed and duplicate prevention", async () => {
+  await WishListService.clearAll();
+
+  const user = "user_telegram_notify_test";
+  await UserTelegramSettingsService.saveSettings(user, {
+    telegramId: "987654321",
+    notificationsEnabled: true,
+  });
+
+  const now = new Date();
+  // 1. Create a wish created 8 days ago with 1week (7 days) waiting period -> period completed!
+  const pastDate = new Date(now.getTime() - 8 * 86400 * 1000).toISOString();
+  const wishPassed = await WishListService.createWish({
+    userId: user,
+    name: "Mechanical Keyboard (Custom 75%)",
+    description: "Waiting period elapsed",
+    waitingPeriod: "1week",
+    counter: 5,
+    maxCounter: 5,
+    notifyTelegram: true,
+    createdAt: pastDate,
+  });
+
+  assert.equal(wishPassed.isPeriodCompleted, true);
+  assert.equal(wishPassed.notificationSentAt, undefined);
+
+  // 2. Create another wish created today with 2weeks waiting period -> period NOT completed
+  const wishActive = await WishListService.createWish({
+    userId: user,
+    name: "MacBook Pro M4 Max",
+    description: "Still waiting",
+    waitingPeriod: "2weeks",
+    counter: 1,
+    maxCounter: 10,
+    notifyTelegram: true,
+  });
+
+  assert.equal(wishActive.isPeriodCompleted, false);
+
+  // 3. Test checkAndSendDueNotifications: only wishPassed should be notified
+  const cronRun1 = await WishListService.checkAndSendDueNotifications({
+    timeSlot: "12pm",
+  });
+
+  assert.equal(cronRun1.sent, 1);
+  assert.equal(cronRun1.errors.length, 0);
+
+  // Verify wishPassed now has notificationSentAt recorded
+  const reloadedPassed = await WishListService.getWishById(wishPassed.id, user);
+  assert.ok(reloadedPassed?.notificationSentAt);
+
+  // 4. Run checkAndSendDueNotifications again: duplicate notifications must be prevented!
+  const cronRun2 = await WishListService.checkAndSendDueNotifications({
+    timeSlot: "12pm",
+  });
+  assert.equal(cronRun2.sent, 0, "Should not re-notify already notified wishes");
+
+  // 5. Test manual notify endpoint /api/wish-list/[id]/notify
+  const notifyReq = new NextRequest(
+    `http://localhost:3000/api/wish-list/${wishPassed.id}/notify`,
+    {
+      method: "POST",
+      headers: { "x-user-id": user },
+    }
+  );
+  const notifyRes = await postNotifyWishApi(notifyReq, {
+    params: Promise.resolve({ id: wishPassed.id }),
+  });
+  assert.equal(notifyRes.status, 200);
+  const notifyData = await notifyRes.json();
+  assert.equal(notifyData.success, true);
+  assert.equal(notifyData.message, "Telegram notification delivered successfully.");
+});
+
+test("Wish List Vercel Cron Task: /api/cron/wishlist with optional 12am/12pm noon parameter", async () => {
+  await WishListService.clearAll();
+
+  const user = "cron_wishlist_user";
+  await UserTelegramSettingsService.saveSettings(user, {
+    telegramId: "123456789",
+    notificationsEnabled: true,
+  });
+
+  // Create an expired wish item
+  const pastDate = new Date(Date.now() - 10 * 86400 * 1000).toISOString();
+  await WishListService.createWish({
+    userId: user,
+    name: "4K OLED Monitor",
+    description: "Vercel task cron notification test",
+    waitingPeriod: "1week",
+    createdAt: pastDate,
+  });
+
+  // Test GET /api/cron/wishlist with optional time=12am parameter
+  const getCronReq12am = new NextRequest(
+    "http://localhost:3000/api/cron/wishlist?time=12am",
+    {
+      method: "GET",
+    }
+  );
+  const getCronRes12am = await getWishListCronApi(getCronReq12am);
+  assert.equal(getCronRes12am.status, 200);
+  const getCronData12am = await getCronRes12am.json();
+  assert.equal(getCronData12am.success, true);
+  assert.equal(getCronData12am.scheduler, "Vercel Cron / Task Scheduler");
+  assert.equal(getCronData12am.time, "12am");
+  assert.equal(getCronData12am.result.sent, 1);
+
+  // Test POST /api/cron/wishlist with optional time=12pm (noon) parameter
+  const postCronReq12pm = new NextRequest(
+    "http://localhost:3000/api/cron/wishlist?time=12pm",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ time: "12pm" }),
+    }
+  );
+  const postCronRes12pm = await postWishListCronApi(postCronReq12pm);
+  assert.equal(postCronRes12pm.status, 200);
+  const postCronData12pm = await postCronRes12pm.json();
+  assert.equal(postCronData12pm.success, true);
+  assert.equal(postCronData12pm.time, "12pm");
+  assert.equal(postCronData12pm.result.sent, 0); // Already notified
 });

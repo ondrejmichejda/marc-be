@@ -344,10 +344,16 @@ export async function initDatabase(): Promise<void> {
           waiting_period TEXT NOT NULL DEFAULT '1week',
           counter INT NOT NULL DEFAULT 0,
           max_counter INT NOT NULL DEFAULT 5,
+          notify_telegram BOOLEAN NOT NULL DEFAULT TRUE,
+          notification_sent_at TIMESTAMPTZ,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
       `;
+
+      // Ensure columns exist if table was created in an earlier schema version
+      await sql`ALTER TABLE wishes ADD COLUMN IF NOT EXISTS notify_telegram BOOLEAN NOT NULL DEFAULT TRUE;`;
+      await sql`ALTER TABLE wishes ADD COLUMN IF NOT EXISTS notification_sent_at TIMESTAMPTZ;`;
 
       // Create roles table for dynamic role management
       await sql`

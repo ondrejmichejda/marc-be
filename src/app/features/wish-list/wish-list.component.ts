@@ -217,18 +217,40 @@ import {
                     {{ wish.name }}
                   </h3>
 
-                  <!-- Waiting Period Status Badge -->
-                  <span
-                    [class]="wish.isPeriodCompleted
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'"
-                    class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border flex items-center gap-1 shrink-0"
-                  >
-                    <mat-icon class="!text-xs !w-3.5 !h-3.5">
-                      {{ wish.isPeriodCompleted ? 'verified' : 'hourglass_top' }}
-                    </mat-icon>
-                    <span>{{ getWaitingPeriodLabel(wish.waitingPeriod) }}</span>
-                  </span>
+                  <!-- Badges Container -->
+                  <div class="flex flex-col items-end gap-1.5 shrink-0">
+                    <!-- Waiting Period Status Badge -->
+                    <span
+                      [class]="wish.isPeriodCompleted
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'"
+                      class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border flex items-center gap-1 shrink-0"
+                    >
+                      <mat-icon class="!text-xs !w-3.5 !h-3.5">
+                        {{ wish.isPeriodCompleted ? 'verified' : 'hourglass_top' }}
+                      </mat-icon>
+                      <span>{{ getWaitingPeriodLabel(wish.waitingPeriod) }}</span>
+                    </span>
+
+                    <!-- Telegram Notification Status Chip -->
+                    @if (wish.notificationSentAt) {
+                      <span
+                        class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center gap-1"
+                        matTooltip="Telegram alert delivered on {{ formatDate(wish.notificationSentAt) }}"
+                      >
+                        <mat-icon class="!text-[12px] !w-3 !h-3">send</mat-icon>
+                        <span>Telegram Sent</span>
+                      </span>
+                    } @else if (wish.notifyTelegram !== false) {
+                      <span
+                        class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 flex items-center gap-1"
+                        matTooltip="Telegram notification will be sent at 12pm when waiting period passes"
+                      >
+                        <mat-icon class="!text-[12px] !w-3 !h-3">notifications_active</mat-icon>
+                        <span>Telegram Alerts</span>
+                      </span>
+                    }
+                  </div>
                 </div>
 
                 @if (wish.description) {
@@ -313,7 +335,7 @@ import {
                 </div>
               </div>
 
-              <!-- Footer Actions: Increment +1, Edit, Delete -->
+              <!-- Footer Actions: Increment +1, Notify, Edit, Delete -->
               <div class="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800/60">
                 <button
                   mat-icon-button
@@ -331,6 +353,21 @@ import {
                 </button>
 
                 <div class="flex items-center gap-1">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    (click)="notifyWish(wish)"
+                    [disabled]="notifyingWish() === wish.id"
+                    class="!text-purple-600 dark:!text-purple-400 hover:!text-purple-700 dark:hover:!text-purple-300"
+                    matTooltip="Send Telegram Notification"
+                  >
+                    @if (notifyingWish() === wish.id) {
+                      <mat-spinner diameter="18"></mat-spinner>
+                    } @else {
+                      <mat-icon>send</mat-icon>
+                    }
+                  </button>
+
                   <button
                     mat-icon-button
                     type="button"
@@ -464,6 +501,25 @@ import {
                   <p class="text-[10px] text-zinc-400">Target maximum goal</p>
                 </div>
               </div>
+
+              <!-- Telegram Notification Option -->
+              <div class="p-3.5 rounded-xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-800/40 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <mat-icon class="!text-sm !w-4 !h-4 text-purple-600 dark:text-purple-400 shrink-0">notifications_active</mat-icon>
+                  <div class="min-w-0">
+                    <span class="text-xs font-semibold text-zinc-900 dark:text-white block">Telegram Notification</span>
+                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block truncate">Notify via Telegram at 12pm when waiting period passes</span>
+                  </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="formData.notifyTelegram"
+                    class="sr-only peer"
+                  />
+                  <div class="w-9 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
+              </div>
             </div>
 
             <!-- Modal Footer -->
@@ -559,6 +615,7 @@ export class WishListComponent implements OnInit {
   loading = signal<boolean>(false);
   submitting = signal<boolean>(false);
   actionInProgress = signal<string | null>(null);
+  notifyingWish = signal<string | null>(null);
 
   wishes = signal<WishItem[]>([]);
   summary = signal<WishesSummary>({ total: 0, waiting: 0, ready: 0, completed: 0 });
@@ -579,6 +636,7 @@ export class WishListComponent implements OnInit {
     waitingPeriod: '1week' as WaitingPeriod,
     counter: 0,
     maxCounter: 5,
+    notifyTelegram: true,
   };
 
   ngOnInit(): void {
@@ -641,6 +699,7 @@ export class WishListComponent implements OnInit {
       waitingPeriod: '1week',
       counter: 0,
       maxCounter: 5,
+      notifyTelegram: true,
     };
     this.modalOpen.set(true);
   }
@@ -653,6 +712,7 @@ export class WishListComponent implements OnInit {
       waitingPeriod: wish.waitingPeriod,
       counter: wish.counter,
       maxCounter: wish.maxCounter,
+      notifyTelegram: wish.notifyTelegram !== false,
     };
     this.modalOpen.set(true);
   }
@@ -677,6 +737,7 @@ export class WishListComponent implements OnInit {
         waitingPeriod: this.formData.waitingPeriod,
         counter: Math.max(0, Number(this.formData.counter) || 0),
         maxCounter: Math.max(1, Number(this.formData.maxCounter) || 1),
+        notifyTelegram: Boolean(this.formData.notifyTelegram),
       };
 
       this.wishService.updateWish(wishToEdit.id, input).subscribe({
@@ -698,6 +759,7 @@ export class WishListComponent implements OnInit {
         waitingPeriod: this.formData.waitingPeriod,
         counter: Math.max(0, Number(this.formData.counter) || 0),
         maxCounter: Math.max(1, Number(this.formData.maxCounter) || 5),
+        notifyTelegram: Boolean(this.formData.notifyTelegram),
       };
 
       this.wishService.createWish(input).subscribe({
@@ -713,6 +775,23 @@ export class WishListComponent implements OnInit {
         },
       });
     }
+  }
+
+  notifyWish(wish: WishItem): void {
+    this.notifyingWish.set(wish.id);
+    this.errorMessage.set(null);
+
+    this.wishService.notifyWish(wish.id).subscribe({
+      next: () => {
+        this.notifyingWish.set(null);
+        this.successMessage.set(`Telegram notification for '${wish.name}' delivered successfully.`);
+        this.loadWishes();
+      },
+      error: (err) => {
+        this.notifyingWish.set(null);
+        this.errorMessage.set(err?.error?.error || 'Failed to send Telegram notification.');
+      },
+    });
   }
 
   incrementCounter(wish: WishItem): void {
