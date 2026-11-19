@@ -79,6 +79,8 @@ export async function PUT(
       body?.maxCounter !== undefined && Number.isFinite(Number(body?.maxCounter))
         ? Math.max(1, Math.floor(Number(body.maxCounter)))
         : undefined;
+    const notifyTelegram =
+      body?.notifyTelegram !== undefined ? Boolean(body.notifyTelegram) : undefined;
 
     const updated = await WishListService.updateWish(
       id,
@@ -88,6 +90,7 @@ export async function PUT(
         waitingPeriod,
         counter,
         maxCounter,
+        notifyTelegram,
       },
       userId
     );

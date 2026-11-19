@@ -22,6 +22,8 @@ export interface WishItem {
   waitingPeriod: WaitingPeriod;
   counter: number;
   maxCounter: number;
+  notifyTelegram?: boolean;
+  notificationSentAt?: string;
   targetDate?: string;
   daysTotal?: number;
   daysElapsed?: number;
@@ -39,6 +41,7 @@ export interface CreateWishInput {
   waitingPeriod: WaitingPeriod;
   counter?: number;
   maxCounter?: number;
+  notifyTelegram?: boolean;
 }
 
 export interface UpdateWishInput {
@@ -47,6 +50,7 @@ export interface UpdateWishInput {
   waitingPeriod?: WaitingPeriod;
   counter?: number;
   maxCounter?: number;
+  notifyTelegram?: boolean;
 }
 
 export interface WishesSummary {

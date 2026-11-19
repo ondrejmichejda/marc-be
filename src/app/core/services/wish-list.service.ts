@@ -46,6 +46,17 @@ export class WishListService {
     });
   }
 
+  notifyWish(
+    id: string
+  ): Observable<{ success: boolean; messageId?: number; message?: string; error?: string }> {
+    return this.http.post<{
+      success: boolean;
+      messageId?: number;
+      message?: string;
+      error?: string;
+    }>(`/api/wish-list/${encodeURIComponent(id)}/notify`, {});
+  }
+
   deleteWish(id: string): Observable<{ success: boolean; id: string; message: string }> {
     return this.http.delete<{ success: boolean; id: string; message: string }>(
       `/api/wish-list/${encodeURIComponent(id)}`

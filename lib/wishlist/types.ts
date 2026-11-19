@@ -22,6 +22,8 @@ export interface WishItem {
   waitingPeriod: WaitingPeriod;
   counter: number;
   maxCounter: number;
+  notifyTelegram?: boolean;
+  notificationSentAt?: string; // ISO string when Telegram notification was dispatched
   // Computed helpers
   targetDate?: string; // ISO string: createdAt + waiting period
   daysTotal?: number;
@@ -40,6 +42,7 @@ export interface CreateWishInput {
   waitingPeriod?: WaitingPeriod | string;
   counter?: number;
   maxCounter?: number;
+  notifyTelegram?: boolean;
   createdAt?: string; // Optional custom created date (for testing or backdating)
 }
 
@@ -49,6 +52,7 @@ export interface UpdateWishInput {
   waitingPeriod?: WaitingPeriod | string;
   counter?: number;
   maxCounter?: number;
+  notifyTelegram?: boolean;
 }
 
 export interface WishesSummary {
