@@ -1,1 +1,1 @@
-export { POST } from "../../wish-list/[id]/notify/route";
+export { POST } from "../../../wish-list/[id]/notify/route";
