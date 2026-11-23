@@ -9,7 +9,7 @@
     "build": "npm run build:ng && next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "npx tsx --test test/auth.test.ts test/fire-safety.test.ts test/fss-templates.test.ts test/openai.test.ts test/prompts.test.ts test/prompts-cron.test.ts test/telegram-user-matching.test.ts test/theme.test.ts test/tracking.test.ts test/user-ai-settings.test.ts test/user-telegram-settings.test.ts test/wish-list.test.ts",
+    "test": "npx tsx --test test/auth.test.ts test/fire-safety.test.ts test/fss-templates.test.ts test/openai.test.ts test/prompts.test.ts test/prompts-cron.test.ts test/registration-notifications.test.ts test/telegram-user-matching.test.ts test/theme.test.ts test/tracking.test.ts test/user-ai-settings.test.ts test/user-telegram-settings.test.ts test/wish-list.test.ts",
     "tunnel": "ngrok http 3000",
     "tunnel:localtunnel": "npx localtunnel --port 3000"
   },

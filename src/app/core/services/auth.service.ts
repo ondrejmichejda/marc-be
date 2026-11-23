@@ -124,7 +124,11 @@ export class AuthService {
   }
 
   updateUserRole(userId: string, role: string): Observable<{ success: boolean; user: User }> {
-    return this.http.post<{ success: boolean; user: User }>('/api/auth/users', { userId, role });
+    return this.http.patch<{ success: boolean; user: User }>('/api/auth/users', { userId, role });
+  }
+
+  deleteUser(userId: string): Observable<{ success: boolean; userId: string }> {
+    return this.http.delete<{ success: boolean; userId: string }>(`/api/auth/users?userId=${encodeURIComponent(userId)}`);
   }
 
   getRoles(): Observable<RolesResponse> {

@@ -11,11 +11,58 @@ import {
   Subscriber,
   TaskItem,
 } from "./types";
+import type { User } from "../auth/types";
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 /**
  * Service for outgoing Telegram operations from the backend.
  */
 export class TelegramService {
+  /**
+   * Notifies configured system administrators when a new user registers.
+   */
+  static async notifySystemAdministratorsOfRegistration(
+    user: Pick<User, "name" | "email">
+  ): Promise<void> {
+    if (!isTelegramConfigured()) return;
+
+    let administrators: User[];
+    try {
+      administrators = await UserService.getSystemAdministrators();
+    } catch (err) {
+      console.warn("[TelegramService] Could not load system administrators for registration notification:", err);
+      return;
+    }
+
+    const text =
+      `🆕 <b>New user registration</b>\n\n` +
+      `<b>Name:</b> ${escapeHtml(user.name)}\n` +
+      `<b>Email:</b> ${escapeHtml(user.email)}`;
+
+    for (const administrator of administrators) {
+      try {
+        const settings = await UserTelegramSettingsService.getSettings(administrator.id);
+        const telegramId = settings?.telegramId?.trim();
+        if (!telegramId || !settings?.notificationsEnabled) continue;
+
+        await this.sendMessage(telegramId, text, { parseMode: "HTML" });
+      } catch (err) {
+        console.warn(
+          `[TelegramService] Could not send registration notification to administrator '${administrator.id}':`,
+          err
+        );
+      }
+    }
+  }
+
   /**
    * Sends a plain or Markdown message to a Telegram chat.
    */

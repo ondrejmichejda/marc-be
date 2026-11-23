@@ -244,6 +244,7 @@ Set `AUTO_NOTIFY_DEPLOYMENT=true` in your `.env.local` / Vercel environment vari
 | `DELETE` | `/api/auth/roles` | Delete a custom role (Administrator only) |
 | `GET` | `/api/auth/users` | List registered accounts with role assignments (Admin only) |
 | `PATCH` | `/api/auth/users` | Assign registered user to any active role (Administrator only) |
+| `DELETE` | `/api/auth/users?userId=...` | Delete a registered user (Administrator only; cannot delete the active administrator account) |
 | `GET` | `/api/draculino/where` | Query training units for today or a specific day/branch (`?day=...&branch=...`) |
 | `GET` | `/api/draculino/sitemap` | Verified sitemap of Draculino gym branches and timetable links |
 | `POST` | `/api/telegram/webhook` | Telegram webhook receiver (validates secret header and executes handlers) |
