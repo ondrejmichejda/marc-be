@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { of, throwError } from "rxjs";
 import { NextRequest } from "next/server";
 import { signSessionToken, verifySessionToken } from "../lib/auth/crypto";
 import { UserService } from "../lib/auth/userService";
@@ -15,7 +16,11 @@ import {
 } from "../lib/auth";
 import { GET as getMe } from "../app/api/auth/me/route";
 import { POST as logoutUser } from "../app/api/auth/logout/route";
-import { GET as listUsersApi, PATCH as updateUserRoleApi } from "../app/api/auth/users/route";
+import {
+  GET as listUsersApi,
+  PATCH as updateUserRoleApi,
+  DELETE as deleteUserApi,
+} from "../app/api/auth/users/route";
 import {
   GET as getRolesApi,
   POST as createRoleApi,
@@ -171,6 +176,152 @@ test("Authentication API Endpoints: /api/auth/me, /api/auth/users, /api/auth/log
 
   // Cleanup
   await UserService.deleteUser(user.id);
+});
+
+test("User Administration API: Role Authorization, User Deletion, and Session Invalidation", async () => {
+  const timestamp = Date.now();
+  const { user: adminUser, token: adminToken } = await UserService.registerOrLoginGoogleUser({
+    id: `user_admin_${timestamp}`,
+    email: `user.admin.${timestamp}@gmail.com`,
+    name: "User Admin",
+    emailVerified: true,
+  });
+  const { user: memberUser, token: memberToken } = await UserService.registerOrLoginGoogleUser({
+    id: `user_member_${timestamp}`,
+    email: `user.member.${timestamp}@gmail.com`,
+    name: "User Member",
+    emailVerified: true,
+  });
+  const { user: targetUser, token: targetToken } = await UserService.registerOrLoginGoogleUser({
+    id: `user_target_${timestamp}`,
+    email: `user.target.${timestamp}@gmail.com`,
+    name: "User Target",
+    emailVerified: true,
+  });
+  await UserService.updateUserRole(adminUser.id, "admin");
+
+  const roleRequest = (token?: string, userId = targetUser.id, role = "operator") =>
+    new NextRequest("http://localhost:3000/api/auth/users", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ userId, role }),
+    });
+  const deleteRequest = (userId: string, token?: string) =>
+    new NextRequest(`http://localhost:3000/api/auth/users?userId=${encodeURIComponent(userId)}`, {
+      method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+
+  assert.equal((await updateUserRoleApi(roleRequest())).status, 403, "Unauthenticated role updates must be forbidden");
+  assert.equal((await updateUserRoleApi(roleRequest(memberToken))).status, 403, "Non-admin role updates must be forbidden");
+  assert.equal((await updateUserRoleApi(roleRequest(adminToken, targetUser.id, "unknown-role"))).status, 400);
+  assert.equal((await updateUserRoleApi(roleRequest(adminToken, "missing-user"))).status, 404);
+  const updateRes = await updateUserRoleApi(roleRequest(adminToken));
+  assert.equal(updateRes.status, 200);
+  assert.equal((await updateRes.json()).user.role, "operator");
+
+  assert.equal((await deleteUserApi(deleteRequest(targetUser.id))).status, 403, "Unauthenticated deletion must be forbidden");
+  assert.equal((await deleteUserApi(deleteRequest(targetUser.id, memberToken))).status, 403, "Non-admin deletion must be forbidden");
+  assert.equal((await deleteUserApi(deleteRequest(adminUser.id, adminToken))).status, 400, "Admins must not delete their own account");
+  assert.equal((await deleteUserApi(deleteRequest("missing-user", adminToken))).status, 404);
+
+  const deleteRes = await deleteUserApi(deleteRequest(targetUser.id, adminToken));
+  assert.equal(deleteRes.status, 200);
+  assert.equal((await deleteRes.json()).success, true);
+  assert.equal(await UserService.deleteUser("missing-user"), false, "Deleting a missing user must report no deletion");
+
+  const deletedSessionRes = await getMe(
+    new NextRequest("http://localhost:3000/api/auth/me", {
+      headers: { Authorization: `Bearer ${targetToken}` },
+    })
+  );
+  assert.equal((await deletedSessionRes.json()).authenticated, false, "A deleted user must no longer resolve to an active session");
+
+  await UserService.deleteUser(adminUser.id);
+  await UserService.deleteUser(memberUser.id);
+});
+
+test("AuthService: User role updates use PATCH and deletion uses DELETE", async () => {
+  await import("@angular/compiler");
+  const { AuthService } = await import("../src/app/core/services/auth.service");
+  const requests: Array<{ method: string; url: string; body?: unknown }> = [];
+  const http = {
+    get: (url: string) => {
+      requests.push({ method: "GET", url });
+      return of({ authenticated: false, user: null, role: null, roleInfo: null, menu: [], configured: true });
+    },
+    post: (url: string, body: unknown) => {
+      requests.push({ method: "POST", url, body });
+      return of({ success: true });
+    },
+    patch: (url: string, body: unknown) => {
+      requests.push({ method: "PATCH", url, body });
+      return of({ success: true, user: { id: "user/1", role: "operator" } });
+    },
+    delete: (url: string) => {
+      requests.push({ method: "DELETE", url });
+      return of({ success: true, userId: "user/1" });
+    },
+  };
+  const authService = Object.assign(Object.create(AuthService.prototype), { http }) as InstanceType<typeof AuthService>;
+
+  authService.updateUserRole("user/1", "operator").subscribe();
+  authService.deleteUser("user/1").subscribe();
+
+  assert.deepEqual(requests, [
+    { method: "PATCH", url: "/api/auth/users", body: { userId: "user/1", role: "operator" } },
+    { method: "DELETE", url: "/api/auth/users?userId=user%2F1" },
+  ]);
+});
+
+test("SystemAdminComponent: Failed role changes roll back and user deletion refreshes the list", async () => {
+  await import("@angular/compiler");
+  const [{ signal }, { SystemAdminComponent }] = await Promise.all([
+    import("@angular/core"),
+    import("../src/app/features/system/system-admin.component"),
+  ]);
+  const user = { id: "component-user", email: "component.user@example.com", role: "user" };
+  let failDelete = true;
+  const component = Object.assign(Object.create(SystemAdminComponent.prototype), {
+    authService: {
+      currentUser: signal({ id: "component-admin" }),
+      updateUserRole: () => throwError(() => new Error("Role update failed")),
+      deleteUser: () => failDelete
+        ? throwError(() => new Error("User deletion failed"))
+        : of({ success: true, userId: user.id }),
+      getUsers: () => of({ users: [] }),
+    },
+    users: signal([user]),
+    userActionsInProgress: signal(new Set<string>()),
+    isLoadingUsers: signal(false),
+    successMessage: signal(null),
+    errorMessage: signal(null),
+  }) as InstanceType<typeof SystemAdminComponent>;
+
+  component.onUserRoleChange(user.id, "operator");
+  assert.equal(component.users()[0].role, "user", "Failed role updates must restore the previous role selection");
+  assert.equal(component.isUserActionInProgress(user.id), false);
+
+  const originalConfirm = Object.getOwnPropertyDescriptor(globalThis, "confirm");
+  Object.defineProperty(globalThis, "confirm", { configurable: true, value: () => true });
+  try {
+    component.deleteUser(user as Parameters<typeof component.deleteUser>[0]);
+    assert.equal(component.users().length, 1, "Failed deletion must keep the user in the list");
+    assert.equal(component.isUserActionInProgress(user.id), false);
+
+    failDelete = false;
+    component.deleteUser(user as Parameters<typeof component.deleteUser>[0]);
+    assert.equal(component.users().length, 0, "Successful deletion must refresh the user list");
+  } finally {
+    if (originalConfirm) {
+      Object.defineProperty(globalThis, "confirm", originalConfirm);
+    } else {
+      delete (globalThis as { confirm?: () => boolean }).confirm;
+    }
+  }
 });
 
 test("Fire Safety Solutions, AI Prompts and Administrator-Only System Menu", async () => {

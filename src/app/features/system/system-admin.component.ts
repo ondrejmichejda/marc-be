@@ -133,6 +133,7 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
                 mat-stroked-button
                 type="button"
                 (click)="loadUsers()"
+                [disabled]="isLoadingUsers() || userActionsInProgress().size > 0"
                 class="!rounded-xl !text-xs"
               >
                 <mat-icon class="!text-sm !w-4 !h-4 !mr-1">refresh</mat-icon>
@@ -175,6 +176,7 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
                           <select
                             [ngModel]="u.role"
                             (ngModelChange)="onUserRoleChange(u.id, $event)"
+                            [disabled]="isUserActionInProgress(u.id)"
                             class="px-2.5 py-1 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
                           >
                             @for (role of availableRoles(); track role.id) {
@@ -184,9 +186,22 @@ type SystemTab = 'users' | 'roles' | 'mappings' | 'telegram' | 'openai';
                         </td>
                         <td class="py-3 px-3 text-zinc-500">{{ (u.createdAt | date:'shortDate') || '–' }}</td>
                         <td class="py-3 px-3 text-right">
-                          <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
-                            Aktivní
-                          </span>
+                          <div class="flex items-center justify-end gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                              Aktivní
+                            </span>
+                            <button
+                              mat-stroked-button
+                              type="button"
+                              (click)="deleteUser(u)"
+                              [disabled]="isUserActionInProgress(u.id) || isCurrentUser(u.id)"
+                              [matTooltip]="isCurrentUser(u.id) ? 'Nelze smazat vlastní účet' : 'Smazat uživatele'"
+                              [attr.aria-label]="'Smazat uživatele ' + u.email"
+                              class="!min-w-0 !w-8 !h-8 !p-0 !rounded-lg !text-rose-600"
+                            >
+                              <mat-icon class="!text-base !w-4 !h-4 !m-0">delete</mat-icon>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     }
@@ -717,6 +732,7 @@ export class SystemAdminComponent implements OnInit {
   // Users & Roles state
   readonly users = signal<User[]>([]);
   readonly isLoadingUsers = signal<boolean>(false);
+  readonly userActionsInProgress = signal<Set<string>>(new Set());
   readonly availableRoles = signal<RoleDefinition[]>([]);
   readonly allMenuItems = signal<MenuItem[]>([]);
   readonly menuMappings = signal<Record<string, string[]>>({});
@@ -781,14 +797,61 @@ export class SystemAdminComponent implements OnInit {
   }
 
   onUserRoleChange(userId: string, role: string): void {
+    if (this.isUserActionInProgress(userId)) return;
+
+    const previousRole = this.users().find((user) => user.id === userId)?.role;
+    this.setUserActionInProgress(userId, true);
     this.authService.updateUserRole(userId, role).subscribe({
       next: () => {
+        this.setUserActionInProgress(userId, false);
         this.successMessage.set(`Role uživatele byla aktualizována na '${role}'.`);
         this.loadUsers();
       },
       error: (err) => {
+        if (previousRole) {
+          this.users.update((users) => users.map((user) => user.id === userId ? { ...user, role: previousRole } : user));
+        }
+        this.setUserActionInProgress(userId, false);
         this.errorMessage.set(err.message || 'Chyba při změně role uživatele.');
       },
+    });
+  }
+
+  deleteUser(user: User): void {
+    if (this.isCurrentUser(user.id) || this.isUserActionInProgress(user.id)) return;
+    if (!confirm(`Opravdu chcete smazat uživatele '${user.email}'? Tuto akci nelze vrátit.`)) return;
+
+    this.setUserActionInProgress(user.id, true);
+    this.authService.deleteUser(user.id).subscribe({
+      next: () => {
+        this.setUserActionInProgress(user.id, false);
+        this.successMessage.set(`Uživatel '${user.email}' byl smazán.`);
+        this.loadUsers();
+      },
+      error: (err) => {
+        this.setUserActionInProgress(user.id, false);
+        this.errorMessage.set(err.message || 'Chyba při mazání uživatele.');
+      },
+    });
+  }
+
+  isUserActionInProgress(userId: string): boolean {
+    return this.userActionsInProgress().has(userId);
+  }
+
+  isCurrentUser(userId: string): boolean {
+    return this.authService.currentUser()?.id === userId;
+  }
+
+  private setUserActionInProgress(userId: string, inProgress: boolean): void {
+    this.userActionsInProgress.update((current) => {
+      const updated = new Set(current);
+      if (inProgress) {
+        updated.add(userId);
+      } else {
+        updated.delete(userId);
+      }
+      return updated;
     });
   }
 

@@ -291,6 +291,13 @@ export class UserService {
     this.localUsers.set(newUser.id, newUser);
     this.saveStorage();
 
+    try {
+      const { TelegramService } = await import("../telegram/service");
+      await TelegramService.notifySystemAdministratorsOfRegistration(newUser);
+    } catch (err) {
+      console.warn("[UserService] Could not notify system administrators of registration:", err);
+    }
+
     const token = signSessionToken(
       {
         userId: newUser.id,
@@ -402,15 +409,51 @@ export class UserService {
   }
 
   /**
+   * Lists every system administrator, without the pagination limit used by the admin UI.
+   */
+  static async getSystemAdministrators(): Promise<User[]> {
+    if (isDbConfigured()) {
+      try {
+        const sql = await ensureDb();
+        const rows = (await sql`
+          SELECT * FROM users
+          WHERE REGEXP_REPLACE(LOWER(COALESCE(role, '')), '[^a-z0-9_-]', '', 'g')
+            IN ('admin', 'administrator', 'superuser');
+        `) as Record<string, unknown>[];
+
+        return rows
+          .map(mapUserRow)
+          .filter((user) => normalizeRole(user.role) === "admin");
+      } catch (err) {
+        console.warn("[UserService] DB query for system administrators failed, falling back to local store:", err);
+      }
+    }
+
+    this.loadStorage();
+    return Array.from(this.localUsers.values())
+      .filter((user) => normalizeRole(user.role) === "admin")
+      .map((user) => ({ ...user, role: normalizeRole(user.role) }));
+  }
+
+  /**
    * Deletes a user by ID.
    */
   static async deleteUser(id: string): Promise<boolean> {
     if (isDbConfigured()) {
       try {
         const sql = await ensureDb();
-        await sql`DELETE FROM users WHERE id = ${id};`;
+        const rows = (await sql`
+          DELETE FROM users WHERE id = ${id}
+          RETURNING id;
+        `) as { id: string }[];
+
+        this.loadStorage();
+        this.localUsers.delete(id);
+        this.saveStorage();
+        return rows.length > 0;
       } catch (err) {
-        console.warn("[UserService] DB delete failed:", err);
+        console.error("[UserService] DB delete failed:", err);
+        throw err;
       }
     }
 
